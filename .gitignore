@@ -2,6 +2,10 @@
 .bsp/
 .metals/
 .vscode/
+.trashbin/
+.template/
 generated/
 project/
 target/
+obj_dir/
+test_run_dir/
