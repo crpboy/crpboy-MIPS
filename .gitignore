@@ -4,6 +4,7 @@
 .vscode/
 .trashbin/
 .template/
+.idea/
 generated/
 project/
 target/

@@ -8,7 +8,7 @@ import chisel3.tester.RawTester.test
 import cpu._
 
 object testMain extends App{
-    test{new CrpboyMips} { c =>
-      
-    }
+  test{new Top} { c =>
+    
+  }
 }

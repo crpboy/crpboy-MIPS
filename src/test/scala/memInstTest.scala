@@ -6,8 +6,8 @@ import org.scalatest.flatspec.AnyFlatSpec
 import java.io.PrintWriter
 import java.io.File
 
-import cpu.config.Config._
-import cpu.core.pipeline.fetch._
+import cpu.common.Config._
+import cpu.core.pipeline.components.MemInst
 
 trait MemInstTestFunc {
   // 生成MEM_INST_SIZE条随机指令进行测试
@@ -32,7 +32,7 @@ trait MemInstTestFunc {
     for (i <- 0 to MEM_INST_SIZE - 1) {
       // TODO: compile failed
       // dut.io.addr.poke((i * INST_BYTE_WIDTH).U)   // 作为地址，应该左移两位，即乘以4
-      dut.io.inst.expect(inst_list(i).U)
+      dut.io.out.expect(inst_list(i).U)
     }
   }
 }

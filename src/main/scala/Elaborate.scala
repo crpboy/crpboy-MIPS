@@ -6,7 +6,7 @@ import cpu._
 
 object elaborateMain extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(
-    new CrpboyMips(), Array("--target-dir", "generated"),
+    new Top(), Array("--target-dir", "generated"),
   )
   println("-- MAIN RUNNING ---------")
 }
