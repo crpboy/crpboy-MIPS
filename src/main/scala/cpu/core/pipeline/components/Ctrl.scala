@@ -8,7 +8,6 @@ import cpu.utils._
 
 class CtrlIO extends Bundle {
   val inst = Input(new BundleInst)
-  val aluUseImm = Output(Bool())
 }
 
 class Ctrl extends Module {

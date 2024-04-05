@@ -4,31 +4,39 @@ import chisel3._
 import chisel3.util._
 import cpu.common.Config._
 import cpu.common.Const._
+import cpu.utils.Functions._
 import cpu.utils._
 
 class ALUIO extends Bundle {
-  val opt    = Input(UInt(OP_WIDTH.W))
-  val useImm = Input(Bool())
-  val imm    = Input(UInt(IMM_WIDTH.W))
-  val data   = Input(new BundleRegData)
-  val res    = Output(UInt(DATA_WIDTH.W)) // to reg & mem
+  val op1Type  = Input(Bool())                    // decoder
+  val op2Type  = Input(Bool())                    // decoder
+  val instType = Input(UInt(DECODE_INST_WIDTH.W)) // decoder
+  val imm      = Input(UInt(IMM_WIDTH.W))         // decoder
+  val shamt    = Input(UInt(SHAMT_WIDTH.W))       // decoder
+  val regData  = Input(new BundleRegData)         // register
+  val aluRes   = Output(UInt(DATA_WIDTH.W))       // -> reg & mem
 }
 
 class ALU extends Module {
-  val io  = IO(new ALUIO)
-  val op1 = io.data.rs
-  val op2 = Mux(io.useImm, io.imm, io.data.rt)
-  val clo = WireInit(32.U)
-  val clz = WireInit(32.U)
-  for (i <- 0 until 32) {
-    when(!op1(i)) {
-      clo := (31 - i).U
-    }.otherwise {
-      clz := (31 - i).U
-    }
-  }
-  io.res := MuxLookup(
-    io.opt,
+  val io = IO(new ALUIO)
+  val op1 = MuxLookup(
+    io.op1Type,
+    0.U,
+    Seq(
+      OPn_RF  -> io.regData.rs,
+      OPn_IMM -> io.imm,
+    ),
+  )
+  val op2 = MuxLookup(
+    io.op2Type,
+    0.U,
+    Seq(
+      OPn_RF  -> io.regData.rt,
+      OPn_IMM -> io.imm,
+    ),
+  )
+  io.aluRes := MuxLookup(
+    io.instType,
     0.U,
     Seq(
       OP_N     -> 0.U,
@@ -46,8 +54,8 @@ class ALU extends Module {
       ALU_SUB  -> (op1 - op2),
       ALU_SUBU -> (op1 - op2),
       ALU_MUL  -> (op1 * op2),
-      ALU_CLO  -> (clo),
-      ALU_CLZ  -> (clz),
+      ALU_CLO  -> (getclo(op1)),
+      ALU_CLZ  -> (getclz(op1)),
     ),
   )
 }

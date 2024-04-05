@@ -5,6 +5,7 @@
 .trashbin/
 .template/
 .idea/
+out/
 generated/
 project/
 target/

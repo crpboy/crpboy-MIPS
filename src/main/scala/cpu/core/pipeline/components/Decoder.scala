@@ -57,7 +57,7 @@ class Decoder extends Module {
       // cmp
       SLT  -> List(Y, OPn_RF, OPn_RF, INST_ALU, ALU_SLT, WR_Y, WRA_T1, IMM_N),
       SLTU -> List(Y, OPn_RF, OPn_RF, INST_ALU, ALU_SLTU, WR_Y, WRA_T1, IMM_N),
-      
+
       // imm
       SLTI  -> List(Y, OPn_RF, OPn_IMM, INST_ALU, ALU_SLT, WR_Y, WRA_T2, IMM_LSE),
       SLTIU -> List(Y, OPn_RF, OPn_IMM, INST_ALU, ALU_SLTU, WR_Y, WRA_T2, IMM_LSE),
@@ -154,26 +154,36 @@ class Decoder extends Module {
       CACHE -> List(Y, OPn_RF, OPn_X, INST_MEM, MEM_CAC, WR_N, WRA_X, IMM_N),
     ),
   )
-  val (instValid: Bool) :: num1Type :: num2Type :: instType :: opType :: (writeReg: Bool) :: wrAddrType :: immType :: Nil =
+  val (instValid: Bool) :: op1Type :: op2Type :: srcType :: instType :: (writeReg: Bool) :: wrAddrType :: immType :: Nil =
     signal
 
   // send signal
-  io.out.instValid  := instValid
-  io.out.num1Type   := num1Type
-  io.out.num2Type   := num2Type
-  io.out.instType   := instType
-  io.out.opType     := opType
-  io.out.writeReg   := writeReg
-  io.out.wrAddrType := wrAddrType
-  io.out.immType    := immType
+  io.out.instValid := instValid
+  io.out.op1Type   := op1Type
+  io.out.op2Type   := op2Type
+  io.out.srcType   := srcType
+  io.out.instType  := instType
+  io.out.writeReg  := writeReg
+  // [DELETED] io.out.wrAddrType := wrAddrType
+  // [DELETED] io.out.immType    := immType
 
   // get operand & immediate num
-  io.out.rs    := io.inst(25, 21)
-  io.out.rt    := io.inst(20, 16)
-  io.out.rd    := io.inst(15, 11)
-  io.out.shamt := io.inst(10, 6)
+  io.out.regAddr.rs := io.inst(25, 21)
+  io.out.regAddr.rt := io.inst(20, 16)
+  io.out.shamt      := io.inst(10, 6)
 
-  // use raw imm and decoded imm type, get 32bit imm
+  // get rd with WR addr target
+  io.out.regAddr.rd := MuxLookup(
+    wrAddrType,
+    0.U,
+    Seq(
+      WRA_T1 -> io.inst(15, 11),
+      WRA_T2 -> io.inst(20, 16),
+      WRA_T3 -> REG_RA31_ADDR.U,
+    ),
+  )
+
+  // get 32bit imm
   val rawImm = io.inst(15, 0)
   io.out.imm := MuxLookup(
     immType,
