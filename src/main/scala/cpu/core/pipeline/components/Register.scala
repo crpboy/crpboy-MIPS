@@ -7,26 +7,27 @@ import cpu.common.Const._
 import cpu.utils._
 
 class RegisterIO extends Bundle {
-  val regAddr    = Input(new BundleReg)            // decoder
-  val writeReg   = Input(Bool())                   // decoder
-  val srcType    = Input(UInt(DECODE_SRC_WIDTH.W)) // decoder
-  val aluRes     = Input(UInt(DATA_WIDTH.W))       // alu
-  val memDataRes = Input(UInt(DATA_WIDTH.W))       // mem
-  val regData    = Output(new BundleRegData)       // -> alu & mem
+  // decoder
+  val regAddr      = Input(new BundleReg)
+  val instOp1Type  = Input(UInt(op_len.W))
+  val instOp2Type  = Input(UInt(op_len.W))
+  val instSrcType  = Input(UInt(src_len.W))
+  val aluRes       = Input(UInt(DATA_WIDTH.W))
+  val memDataRes   = Input(UInt(DATA_WIDTH.W))
+  val regData      = Output(new BundleRegData)
 }
 class Register extends Module {
   val io  = IO(new RegisterIO)
   val reg = Reg(Vec(REG_NUMS, UInt(DATA_WIDTH.W)))
-  io.regData.rs := reg(io.regAddr.rs)
-  io.regData.rt := reg(io.regAddr.rt)
-  when(io.writeReg) {
+  io.regData.rs := Mux(io.instOp1Type === op_reg, reg(io.regAddr.rs), 0.U)
+  io.regData.rt := Mux(io.instOp2Type === op_reg, reg(io.regAddr.rt), 0.U)
+  when(io.instSrcType =/= src_x) {
     reg(io.regAddr.rd) := MuxLookup(
-      io.srcType,
+      io.instSrcType,
       reg(io.regAddr.rd),
       Seq(
-        INST_N   -> reg(io.regAddr.rd),
-        INST_ALU -> io.aluRes,
-        INST_MEM -> io.memDataRes,
+        src_alu -> io.aluRes,
+        src_mem -> io.memDataRes,
       ),
     )
   }

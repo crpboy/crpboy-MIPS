@@ -8,54 +8,55 @@ import cpu.utils.Functions._
 import cpu.utils._
 
 class ALUIO extends Bundle {
-  val op1Type  = Input(Bool())                    // decoder
-  val op2Type  = Input(Bool())                    // decoder
-  val instType = Input(UInt(DECODE_INST_WIDTH.W)) // decoder
-  val imm      = Input(UInt(IMM_WIDTH.W))         // decoder
-  val shamt    = Input(UInt(SHAMT_WIDTH.W))       // decoder
-  val regData  = Input(new BundleRegData)         // register
-  val aluRes   = Output(UInt(DATA_WIDTH.W))       // -> reg & mem
+  val instOp1Type = Input(Bool())              // decoder
+  val instOp2Type = Input(Bool())              // decoder
+  val instAluType = Input(UInt(alu_len.W))     // decoder
+  val imm         = Input(UInt(DATA_WIDTH.W))  // decoder
+  val regData     = Input(new BundleRegData)   // register
+  val aluRes      = Output(UInt(DATA_WIDTH.W)) // -> reg & mem
 }
 
 class ALU extends Module {
   val io = IO(new ALUIO)
   val op1 = MuxLookup(
-    io.op1Type,
+    io.instOp1Type,
     0.U,
     Seq(
-      OPn_RF  -> io.regData.rs,
-      OPn_IMM -> io.imm,
+      op_reg -> io.regData.rs,
+      op_imm -> io.imm,
     ),
   )
   val op2 = MuxLookup(
-    io.op2Type,
+    io.instOp2Type,
     0.U,
     Seq(
-      OPn_RF  -> io.regData.rt,
-      OPn_IMM -> io.imm,
+      op_reg -> io.regData.rt,
+      op_imm -> io.imm,
     ),
   )
-  io.aluRes := MuxLookup(
-    io.instType,
+  val res = MuxLookup(
+    io.instAluType,
     0.U,
     Seq(
-      OP_N     -> 0.U,
-      ALU_OR   -> (op1 | op2),
-      ALU_AND  -> (op1 & op2),
-      ALU_XOR  -> (op1 ^ op2),
-      ALU_NOR  -> ~(op1 | op2),
-      ALU_SLL  -> (op2 << op1(4, 0)),
-      ALU_SRL  -> (op2 >> op1(4, 0)),
-      ALU_SRA  -> (op2.asSInt() >> op1(4, 0)).asUInt,
-      ALU_SLT  -> (op1.asSInt() < op2.asSInt()),
-      ALU_SLTU -> (op1 < op2),
-      ALU_ADD  -> (op1 + op2),
-      ALU_ADDU -> (op1 + op2),
-      ALU_SUB  -> (op1 - op2),
-      ALU_SUBU -> (op1 - op2),
-      ALU_MUL  -> (op1 * op2),
-      ALU_CLO  -> (getclo(op1)),
-      ALU_CLZ  -> (getclz(op1)),
+      alu_x    -> 0.U,
+      alu_or   -> (op1 | op2),
+      alu_and  -> (op1 & op2),
+      alu_xor  -> (op1 ^ op2),
+      alu_nor  -> ~(op1 | op2),
+      alu_sll  -> (op2 << op1(4, 0)),
+      alu_srl  -> (op2 >> op1(4, 0)),
+      alu_sra  -> (op2.asSInt() >> op1(4, 0)).asUInt,
+      alu_add  -> (op1 + op2),
+      alu_addu -> (op1 + op2),
+      alu_sub  -> (op1 - op2),
+      alu_subu -> (op1 - op2),
+      alu_mul  -> (op1 * op2),
+      alu_div  -> (op1 / op2),
+      alu_slt  -> (op1.asSInt() < op2.asSInt()),
+      alu_sltu -> (op1 < op2),
+      alu_clo  -> (getclo(op1)),
+      alu_clz  -> (getclz(op1)),
     ),
   )
+  io.aluRes := res
 }
