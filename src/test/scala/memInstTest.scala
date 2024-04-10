@@ -7,7 +7,7 @@ import java.io.PrintWriter
 import java.io.File
 
 import cpu.common.Config._
-import cpu.core.pipeline.components.MemInst
+import cpu.core.pipeline.components.fetch._
 
 trait MemInstTestFunc {
   // 生成MEM_INST_SIZE条随机指令进行测试

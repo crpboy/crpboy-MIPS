@@ -7,7 +7,7 @@ import cpu.common.Const._
 import cpu.utils._
 
 object Functions {
-  def signedExtend(data: UInt, width: Int = DATA_WIDTH): UInt = {
+  def signExtend(data: UInt, width: Int = DATA_WIDTH): UInt = {
     val len = data.getWidth
     return Cat(Fill(width - len, data(len - 1)), data)
   }
