@@ -2,15 +2,13 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
-import cpu.common.Config._
 import cpu.utils._
+import cpu.common.Const._
 
-class JumpCtrlIO extends Bundle {
-  val inst = Input(new InstInfoEXE)
-  val writePC = Input(Bool())
-}
-
-class JumpCtrl extends Module{
-  val io = IO(new JumpCtrlIO)
-
+class JumpCtrl extends Module {
+  val io = IO(new Bundle {
+    val inst    = Input(new InstInfo)
+    val wen = Output(Bool())
+    val waddr = Output(UInt(PC_WIDTH.W))
+  })
 }

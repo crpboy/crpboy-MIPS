@@ -2,61 +2,137 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
-import cpu.common.Config._
-import cpu.common.Instructions._
 import cpu.common.Const._
 import cpu.utils._
 import cpu.utils.Functions._
 
-class DecoderIO extends Bundle {
-  val en       = Input(Bool())
-  val rawInst  = Input(UInt(INST_WIDTH.W))
-  val instInfo = Output(new InstInfoEXE)
-}
-
 class Decoder extends Module {
-  val io   = IO(new DecoderIO)
+  val io = IO(new Bundle {
+    val rawInst  = Input(UInt(INST_WIDTH.W))
+    val instInfo = Output(new InstInfoExt)
+    val regAddr  = Output(new RegAddr)
+  })
   val inst = io.rawInst
   val res: List[UInt] = ListLookup(
-    io.rawInst, // op1, op2, wb, srcWR, aluOpt, wraType, immType
-    List(op_reg, op_reg, wb_n, inst_aluu, src_alu, alu_x, wra_x, imm_x),
+    io.rawInst,
+    List(instInvalid, instRN, wb_n, fu_nop, fuop_n),
     Array(
-      OR  -> List(op_reg, op_reg, wb_y, inst_aluu, src_alu, alu_or, wra_i15, imm_x),
-      ORI -> List(op_reg, op_imm, wb_n, inst_aluu, src_alu, alu_or, wra_i15, imm_sh),
+      NOP -> List(iy, instRN, wb_n, fu_nop, fuop_n),
+      // arithmetic
+      ADD   -> List(iy, instRN, wb_y, fu_alu, alu_add),
+      ADDI  -> List(iy, instIS, wb_y, fu_alu, alu_add),
+      ADDU  -> List(iy, instRN, wb_y, fu_alu, alu_addu),
+      ADDIU -> List(iy, instIS, wb_y, fu_alu, alu_addu),
+      SUB   -> List(iy, instRN, wb_y, fu_alu, alu_sub),
+      SUBU  -> List(iy, instRN, wb_y, fu_alu, alu_subu),
+      SLT   -> List(iy, instRN, wb_y, fu_alu, alu_slt),
+      SLTI  -> List(iy, instIS, wb_y, fu_alu, alu_slt),
+      SLTU  -> List(iy, instRN, wb_y, fu_alu, alu_sltu),
+      SLTIU -> List(iy, instIS, wb_y, fu_alu, alu_sltu),
+      DIV   -> List(iy, instRN, wb_y, fu_mul, md_div),
+      DIVU  -> List(iy, instRN, wb_y, fu_mul, md_divu),
+      MULT  -> List(iy, instRN, wb_n, fu_mul, md_mult),
+      MULTU -> List(iy, instRN, wb_n, fu_mul, md_multu),
+      // logical
+      AND  -> List(iy, instRN, wb_y, fu_alu, alu_and),
+      ANDI -> List(iy, instIZ, wb_y, fu_alu, alu_and),
+      LUI  -> List(iy, instIL, wb_y, fu_oth, oth_lui),
+      NOR  -> List(iy, instRN, wb_y, fu_alu, alu_nor),
+      OR   -> List(iy, instRN, wb_y, fu_alu, alu_or),
+      ORI  -> List(iy, instIZ, wb_y, fu_alu, alu_or),
+      XOR  -> List(iy, instRN, wb_y, fu_alu, alu_xor),
+      XORI -> List(iy, instIZ, wb_y, fu_alu, alu_xor),
+      // shift
+      SLLV -> List(iy, instRN, wb_y, fu_alu, alu_sll),
+      SLL  -> List(iy, instRS, wb_y, fu_alu, alu_sll),
+      SRAV -> List(iy, instRN, wb_y, fu_alu, alu_sra),
+      SRA  -> List(iy, instRS, wb_y, fu_alu, alu_sra),
+      SRLV -> List(iy, instRN, wb_y, fu_alu, alu_srl),
+      SRL  -> List(iy, instRS, wb_y, fu_alu, alu_srl),
+      // branch
+      BEQ    -> List(iy, instIS, wb_n, fu_bra, bra_beq),
+      BNE    -> List(iy, instIS, wb_n, fu_bra, bra_bne),
+      BGEZ   -> List(iy, instIS, wb_n, fu_bra, bra_bgez),
+      BGTZ   -> List(iy, instIS, wb_n, fu_bra, bra_bgtz),
+      BLEZ   -> List(iy, instIS, wb_n, fu_bra, bra_blez),
+      BLTZ   -> List(iy, instIS, wb_n, fu_bra, bra_bltz),
+      BLTZAL -> List(iy, instIS, wb_n, fu_bra, bra_bltzal),
+      BGEZAL -> List(iy, instIS, wb_n, fu_bra, bra_bgezal),
+      // jump
+      J    -> List(iy, instJ, wb_n, fu_jmp, jmp_j),
+      JAL  -> List(iy, instJ, wb_n, fu_jmp, jmp_jal),
+      JR   -> List(iy, instRN, wb_n, fu_jmp, jmp_jr),
+      JALR -> List(iy, instRN, wb_n, fu_jmp, jmp_jalr),
+      // move
+      MFHI -> List(iy, instRN, wb_y, fu_mov, mov_mfhi),
+      MFLO -> List(iy, instRN, wb_y, fu_mov, mov_mflo),
+      MTHI -> List(iy, instRN, wb_n, fu_mov, mov_mthi),
+      MTLO -> List(iy, instRN, wb_n, fu_mov, mov_mtlo),
+      // trap
+      BREAK   -> List(iy, instO, wb_n, fu_oth, oth_break),
+      SYSCALL -> List(iy, instO, wb_n, fu_oth, oth_syscall),
     ),
   )
-  val op1Type :: op2Type :: wb :: instType :: srcType :: aluType :: wraType :: immType :: Nil = res
+  val valid :: t :: wb :: fu :: fuop :: Nil = res
+
+  // get operand info
+  val op1 = MuxLookup(
+    t,
+    op_x,
+    Seq(
+      instRN -> op_reg,
+      instRS -> op_imm,
+      instIS -> op_reg,
+      instIZ -> op_reg,
+      instIL -> op_x,
+      instJ  -> op_x,
+    ),
+  )
+  val op2 = MuxLookup(
+    t,
+    op_x,
+    Seq(
+      instRN -> op_reg,
+      instRS -> op_reg,
+      instIS -> op_imm,
+      instIZ -> op_imm,
+      instIL -> op_x,
+      instJ  -> op_x,
+    ),
+  )
 
   // decoded info
-  io.instInfo.op1Type  := op1Type
-  io.instInfo.op2Type  := op2Type
-  io.instInfo.wb       := wb
-  io.instInfo.instType := instType
-  io.instInfo.srcType  := srcType
-  io.instInfo.aluType  := aluType
+  io.instInfo.op1  := op1
+  io.instInfo.op2  := op2
+  io.instInfo.wb   := wb
+  io.instInfo.fu   := fu
+  io.instInfo.fuop := fuop
 
-  // reg fetch
-  io.instInfo.regAddr.rs := inst(25, 21)
-  io.instInfo.regAddr.rt := inst(20, 16)
+  // reg
+  io.regAddr.rs := inst(25, 21)
+  io.regAddr.rt := inst(20, 16)
   io.instInfo.rd := MuxLookup(
-    wraType,
+    t,
     0.U,
     Seq(
-      wra_x   -> REG_ZERO_HOME.U,
-      wra_i15 -> inst(15, 11),
-      wra_i20 -> inst(20, 16),
-      wra_r31 -> REG_RA31_HOME.U,
+      instRN -> inst(15, 11),
+      instRS -> inst(15, 11),
+      instIS -> inst(20, 16),
+      instIZ -> inst(20, 16),
+      instIL -> inst(20, 16),
     ),
   )
 
-  // imm fetch
+  // imm
   io.instInfo.imm := MuxLookup(
-    immType,
-    zeroExtend(inst(10, 6)),
+    t,
+    0.U,
     Seq(
-      imm_sh -> zeroExtend(inst(10, 6)), // shift
-      imm_se -> signExtend(inst(15, 0)), // signed extend
-      imm_ze -> zeroExtend(inst(15, 0)), // zero extend
+      instRS -> zeroExtend(inst(10, 6)),    // shift
+      instIS -> signExtend(inst(15, 0)),    // signed extend
+      instIZ -> zeroExtend(inst(15, 0)),    // zero extend
+      instJ  -> signExtend(inst(25, 0)),    // jump
+      instIL -> zeroExtendHigh(inst(15, 0)),// lui
     ),
   )
 }

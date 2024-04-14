@@ -6,9 +6,8 @@ import chisel3.tester._
 import chisel3.tester.RawTester.test
 import cpu.core.CoreTop
 
-
 object testMain extends App{
   test{new CoreTop} { c =>
-    
+    c.io.debug.en.poke(true.B)
   }
 }
