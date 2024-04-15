@@ -10,7 +10,8 @@ class Decoder extends Module {
   val io = IO(new Bundle {
     val rawInst  = Input(UInt(INST_WIDTH.W))
     val instInfo = Output(new InstInfoExt)
-    val regAddr  = Output(new RegAddr)
+    val rsaddr   = Output(UInt(REG_WIDTH.W))
+    val rtaddr   = Output(UInt(REG_WIDTH.W))
   })
   val inst = io.rawInst
   val res: List[UInt] = ListLookup(
@@ -109,8 +110,8 @@ class Decoder extends Module {
   io.instInfo.fuop := fuop
 
   // reg
-  io.regAddr.rs := inst(25, 21)
-  io.regAddr.rt := inst(20, 16)
+  io.rsaddr := inst(25, 21)
+  io.rtaddr := inst(20, 16)
   io.instInfo.rd := MuxLookup(
     t,
     0.U,

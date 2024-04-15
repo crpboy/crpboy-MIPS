@@ -18,5 +18,6 @@ lazy val root = (project in file(".")) // create a sbt project definition
 			"-P:chiselplugin:genBundleElements",
 			"-Yrangepos",
 		),
+    // scalacOptions ++= Seq("-nowarn"),
 		addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % chiselVersion cross CrossVersion.full),
 	)

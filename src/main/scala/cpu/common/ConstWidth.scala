@@ -25,11 +25,11 @@ trait ConstWidth {
   val INST_BYTE_WIDTH     = 4
   val INST_BYTE_WIDTH_LOG = log2Ceil(INST_BYTE_WIDTH).toInt
 
-  val PC_WIDTH               = 32
-  val PC_BYTE_WIDTH          = 4
-  val PC_INIT_ADDR: Long     = if(build) 0xbcf00000 else 0x00000000
-  val REG_NUM                = 32
-  val REG_WIDTH              = log2Ceil(REG_NUM).toInt // register addr width
-  val REG_ZERO_HOME          = 0
-  val REG_RA31_HOME          = 31
+  val PC_WIDTH           = 32
+  val PC_BYTE_WIDTH      = 4
+  val PC_INIT_ADDR: Long = if (build) 0xbcf00000 else 0x00000000
+  val REG_NUM            = 32
+  val REG_WIDTH          = log2Ceil(REG_NUM).toInt // register addr width
+  val REG_ZERO_HOME      = 0
+  val REG_RA31_HOME      = 31
 }

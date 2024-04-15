@@ -4,23 +4,12 @@ import chisel3._
 import chisel3.util._
 import cpu.common.Const._
 
-// register bundle
-class RegAddr extends Bundle {
-  val rs = UInt(REG_WIDTH.W)
-  val rt = UInt(REG_WIDTH.W)
-}
-class RegData extends Bundle {
-  val rs = UInt(DATA_WIDTH.W)
-  val rt = UInt(DATA_WIDTH.W)
-}
-
 // inst info
 class InstInfo extends Bundle {
   val wb   = Bool()
   val fu   = UInt(FUOP_LEN.W)
   val fuop = UInt(FU_LEN.W)
   val rd   = UInt(REG_WIDTH.W)
-
 }
 class InstInfoExt extends InstInfo {
   val op1 = UInt(OPR_LEN.W)
@@ -28,44 +17,25 @@ class InstInfoExt extends InstInfo {
   val imm = UInt(DATA_WIDTH.W)
 }
 
-// soc info
-class DebugInput extends Bundle {
-  // val clk             = Bool()
-  val resetn          = Bool()
-  val inst_sram_rdata = UInt(INST_WIDTH.W)
-  // val data_sram_rdata = UInt(DATA_WIDTH.W)
-}
-
-class DebugOutput extends Bundle {
-  // val inst_sram_en    = Bool()
-  // val inst_sram_wen   = UInt(WEN_WIDTH.W)
-  val inst_sram_addr = UInt(ADDR_WIDTH.W)
-  // val inst_sram_wdata = UInt(DATA_WIDTH.W)
-
-  // val data_sram_en    = Bool()
-  // val data_sram_wen   = UInt(WEN_WIDTH.W)
-  // val data_sram_addr  = UInt(ADDR_WIDTH.W)
-  // val data_sram_wdata = UInt(DATA_WIDTH.W)
-
-  // val debug_wb_pc       = UInt(PC_WIDTH.W)
-  // val debug_wb_rf_wen   = UInt(WEN_WIDTH.W)
-  // val debug_wb_rf_wnum  = UInt(REG_WIDTH.W)
-  // val debug_wb_rd_wdata = UInt(DATA_WIDTH.W)
-}
-
-class DebugIO extends Bundle {
-  val in  = Input(new DebugInput)
-  val out = Output(new DebugOutput)
+// top debug io
+class DebugInfo extends Bundle {
+  val debug_wb_pc       = UInt(PC_WIDTH.W)
+  val debug_wb_rf_wen   = UInt(WEN_WIDTH.W)
+  val debug_wb_rf_wnum  = UInt(REG_WIDTH.W)
+  val debug_wb_rd_wdata = UInt(DATA_WIDTH.W)
 }
 
 // pipeline stage bundle
-class PipelineStage extends Bundle {}
+class PipelineStage extends Bundle {
+  val debug_wb_pc = UInt(PC_WIDTH.W)
+}
 class StageFetchDecode extends PipelineStage {
   val inst = UInt(INST_WIDTH.W)
 }
 class StageDecodeExecute extends PipelineStage {
   val inst = new InstInfoExt
-  val data = new RegData
+  val rs   = UInt(DATA_WIDTH.W)
+  val rt   = UInt(DATA_WIDTH.W)
 }
 class StageExecuteMemory extends PipelineStage {
   val inst = new InstInfo

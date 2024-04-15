@@ -7,6 +7,7 @@ all: clean run test
 CLEAR_INPUT += ./generated
 CLEAR_INPUT += ./obj_dir
 CLEAR_INPUT += ./logs
+CLEAR_INPUT += ./test_run_dir
 
 clean:
 	rm -rf $(CLEAR_INPUT)

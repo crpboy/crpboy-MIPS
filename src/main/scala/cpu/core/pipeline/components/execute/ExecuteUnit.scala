@@ -20,8 +20,10 @@ class ExecuteUnit extends Module {
 
   input.inst <> alu.inst
   input.inst <> mul.inst
-  input.data <> alu.data
-  input.data <> mul.data
+  input.rs <> alu.rs
+  input.rt <> alu.rt
+  input.rs <> mul.rs
+  input.rt <> mul.rt
 
   hilo.wen <> mul.wen
   hilo.wdata <> mul.wdata
@@ -42,10 +44,11 @@ class ExecuteUnit extends Module {
     ),
   )
 
-  output.inst.fu   := input.inst.fu
-  output.inst.fuop := input.inst.fuop
-  output.inst.rd   := input.inst.rd
-  output.inst.wb   := input.inst.wb
+  output.inst.fu     := input.inst.fu
+  output.inst.fuop   := input.inst.fuop
+  output.inst.rd     := input.inst.rd
+  output.inst.wb     := input.inst.wb
+  output.debug_wb_pc := input.debug_wb_pc
 
   io.in.ready  := true.B
   io.out.valid := true.B

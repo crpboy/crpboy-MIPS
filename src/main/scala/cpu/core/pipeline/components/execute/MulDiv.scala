@@ -8,10 +8,11 @@ import cpu.utils._
 
 class MulDiv extends Module {
   val io = IO(new Bundle {
-    val inst    = Input(new InstInfoExt)
-    val data = Input(new RegData)
-    val wen     = Output(Bool())
-    val wdata   = Output(UInt(HILO_WIDTH.W))
+    val inst  = Input(new InstInfoExt)
+    val rs    = Input(UInt(DATA_WIDTH.W))
+    val rt    = Input(UInt(DATA_WIDTH.W))
+    val wen   = Output(Bool())
+    val wdata = Output(UInt(HILO_WIDTH.W))
   })
   // TODO: 需要添加乘除法模块
   val en = io.inst.fu === fu_mul
@@ -22,8 +23,8 @@ class MulDiv extends Module {
       io.inst.fuop,
       0.U,
       Seq(
-        md_mult  -> (io.data.rs.asSInt * io.data.rt.asSInt).asUInt,
-        md_multu -> io.data.rs * io.data.rt,
+        md_mult  -> (io.rs.asSInt * io.rt.asSInt).asUInt,
+        md_multu -> io.rs * io.rt,
       ),
     ),
     0.U,

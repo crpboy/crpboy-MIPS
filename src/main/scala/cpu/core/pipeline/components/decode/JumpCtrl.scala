@@ -8,7 +8,6 @@ import cpu.common.Const._
 class JumpCtrl extends Module {
   val io = IO(new Bundle {
     val inst    = Input(new InstInfoExt)
-    val regData = Input(new RegData)
     val out     = Output(new JmpInfo)
   })
   io.out.jwen := io.inst.fu === fu_jmp

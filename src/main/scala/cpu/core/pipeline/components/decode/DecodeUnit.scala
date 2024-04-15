@@ -17,19 +17,23 @@ class DecodeUnit extends Module {
   val decoder = Module(new Decoder).io
   val reg     = Module(new RegFile).io
   val jmp     = Module(new JumpCtrl).io
-  val input   = io.in.bits
-  val output  = io.out.bits
+
+  val input  = io.in.bits
+  val output = io.out.bits
 
   input.inst <> decoder.rawInst
-  decoder.regAddr <> reg.raddr
+  decoder.rsaddr <> reg.rsaddr
+  decoder.rtaddr <> reg.rtaddr
   io.wb <> reg.wb
 
   decoder.instInfo <> jmp.inst
-  reg.data <> jmp.regData
   io.jinfo <> jmp.out
 
-  output.inst  := decoder.instInfo
-  output.data  := reg.data
+  output.inst        := decoder.instInfo
+  output.rs          := reg.rsdata
+  output.rt          := reg.rtdata
+  output.debug_wb_pc := input.debug_wb_pc
+
   io.in.ready  := true.B
   io.out.valid := true.B
 }

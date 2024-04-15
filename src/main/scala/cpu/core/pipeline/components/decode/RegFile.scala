@@ -7,13 +7,15 @@ import cpu.common.Const._
 
 class RegFile extends Module {
   val io = IO(new Bundle {
-    val raddr = Input(new RegAddr)
-    val wb    = new WBInfo
-    val data  = Output(new RegData)
+    val rsaddr = Input(UInt(REG_WIDTH.W))
+    val rtaddr = Input(UInt(REG_WIDTH.W))
+    val wb     = new WBInfo
+    val rsdata = Output(UInt(DATA_WIDTH.W))
+    val rtdata = Output(UInt(DATA_WIDTH.W))
   })
   val reg = Reg(Vec(REG_NUM, UInt(DATA_WIDTH.W)))
-  io.data.rs := reg(io.raddr.rs)
-  io.data.rt := reg(io.raddr.rt)
+  io.rsdata := reg(io.rsaddr)
+  io.rtdata := reg(io.rtaddr)
   when(io.wb.wen) {
     reg(io.wb.waddr) := io.wb.wdata
   }

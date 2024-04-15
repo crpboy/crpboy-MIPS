@@ -8,7 +8,13 @@ import cpu.core.pipeline.components.fetch._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
-    val debug = new DebugIO
+    val reset = Input(Bool())
+    val iCache = new Bundle {
+      val inst_sram_rdata = Input(UInt(INST_WIDTH.W))
+      val inst_sram_en    = Output(Bool())
+      val inst_sram_addr  = Output(UInt(ADDR_WIDTH.W))
+    }
+
     // val binfo = Input(new BranchInfo)
     val jinfo = Input(new JmpInfo)
     val out   = Decoupled(Output(new StageFetchDecode))
@@ -19,12 +25,15 @@ class FetchUnit extends Module {
 
   pcNext.en := true.B
   io.jinfo <> pcNext.jinfo
-  io.debug.in.resetn <> pcNext.rst
+  io.reset <> pcNext.rst
 
-  pcNext.in                   := pcReg
-  pcReg                       := pcNext.out
-  io.debug.out.inst_sram_addr := pcReg
+  pcNext.in                := pcReg
+  pcReg                    := pcNext.out
+  io.iCache.inst_sram_addr := pcReg
 
-  output.inst  := io.debug.in.inst_sram_rdata
-  io.out.valid := true.B
+  output.inst        := io.iCache.inst_sram_rdata
+  output.debug_wb_pc := pcReg
+
+  io.out.valid           := true.B
+  io.iCache.inst_sram_en := true.B
 }

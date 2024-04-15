@@ -7,13 +7,20 @@ import cpu.core.pipeline.components.writeback._
 
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(Input(new StageMemoryWriteback)))
-    val out = Output(new WBInfo)
+    val in    = Flipped(Decoupled(Input(new StageMemoryWriteback)))
+    val out   = Output(new WBInfo)
+    val debug = Output(new DebugInfo)
   })
-  val input  = io.in.bits
-  val output = io.out
-  output.wen   := input.inst.wb
-  output.wdata := input.data
-  output.waddr := input.inst.rd
-  io.in.ready  := true.B
+  val input = io.in.bits
+
+  io.out.wen   := input.inst.wb
+  io.out.wdata := input.data
+  io.out.waddr := input.inst.rd
+
+  io.debug.debug_wb_pc       := input.debug_wb_pc
+  io.debug.debug_wb_rd_wdata := input.data
+  io.debug.debug_wb_rf_wen   := input.inst.wb
+  io.debug.debug_wb_rf_wnum  := input.inst.rd
+
+  io.in.ready := true.B
 }
