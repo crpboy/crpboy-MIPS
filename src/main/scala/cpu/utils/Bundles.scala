@@ -17,12 +17,29 @@ class InstInfoExt extends InstInfo {
   val imm = UInt(DATA_WIDTH.W)
 }
 
-// top debug io
+// top IO
+// inst IO
+class ICacheIO extends Bundle {
+  val sram_rdata = Input(UInt(INST_WIDTH.W))
+  val sram_en    = Output(Bool())
+  val sram_wen   = Output(UInt(WEN_WIDTH.W))
+  val sram_addr  = Output(UInt(ADDR_WIDTH.W))
+  val sram_wdata = Output(UInt(DATA_WIDTH.W))
+}
+// data IO
+class DCacheIO extends Bundle {
+  val sram_rdata = Input(UInt(DATA_WIDTH.W))
+  val sram_en    = Output(Bool())
+  val sram_wen   = Output(UInt(WEN_WIDTH.W))
+  val sram_addr  = Output(UInt(ADDR_WIDTH.W))
+  val sram_wdata = Output(UInt(DATA_WIDTH.W))
+}
+// debug info
 class DebugInfo extends Bundle {
-  val debug_wb_pc       = UInt(PC_WIDTH.W)
-  val debug_wb_rf_wen   = UInt(WEN_WIDTH.W)
-  val debug_wb_rf_wnum  = UInt(REG_WIDTH.W)
-  val debug_wb_rd_wdata = UInt(DATA_WIDTH.W)
+  val wb_pc       = UInt(PC_WIDTH.W)
+  val wb_rf_wen   = UInt(WEN_WIDTH.W)
+  val wb_rf_wnum  = UInt(REG_WIDTH.W)
+  val wb_rd_wdata = UInt(DATA_WIDTH.W)
 }
 
 // pipeline stage bundle

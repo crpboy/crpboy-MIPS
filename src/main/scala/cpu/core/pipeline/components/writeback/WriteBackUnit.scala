@@ -17,10 +17,10 @@ class WriteBackUnit extends Module {
   io.out.wdata := input.data
   io.out.waddr := input.inst.rd
 
-  io.debug.debug_wb_pc       := input.debug_wb_pc
-  io.debug.debug_wb_rd_wdata := input.data
-  io.debug.debug_wb_rf_wen   := input.inst.wb
-  io.debug.debug_wb_rf_wnum  := input.inst.rd
+  io.debug.wb_pc       := input.debug_wb_pc
+  io.debug.wb_rd_wdata := input.data
+  io.debug.wb_rf_wen   := input.inst.wb
+  io.debug.wb_rf_wnum  := input.inst.rd
 
   io.in.ready := true.B
 }

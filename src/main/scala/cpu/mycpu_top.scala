@@ -2,17 +2,19 @@ package cpu
 
 import chisel3._
 import chisel3.util._
+
 import cpu.utils._
-import cpu.core._
+import cpu.common.Const._
+import cpu.core.pipeline._
 
 class mycpu_top extends Module {
-  val io = IO(new Bundle {
-    val debug  = Output(new DebugInfo)
-    // val iCache = new ICacheIO
-    // val dCache = new DCacheIO
-  })
+  val inst  = IO(new ICacheIO).suggestName("inst")
+  val data  = IO(new DCacheIO).suggestName("data")
+  val debug = IO(Output(new DebugInfo)).suggestName("debug")
+
   val core = Module(new CoreTop).io
-  io.debug <> core.debug
-  // io.iCache <> core.iCache
-  // io.iCache <> core.dCache
+  
+  inst <> core.iCache
+  data <> core.dCache
+  debug <> core.debug
 }

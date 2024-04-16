@@ -8,7 +8,6 @@ import cpu.core.pipeline.components.fetch._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
-    val reset = Input(Bool())
     val iCache = new Bundle {
       val inst_sram_rdata = Input(UInt(INST_WIDTH.W))
       val inst_sram_en    = Output(Bool())
@@ -25,7 +24,6 @@ class FetchUnit extends Module {
 
   pcNext.en := true.B
   io.jinfo <> pcNext.jinfo
-  io.reset <> pcNext.rst
 
   pcNext.in                := pcReg
   pcReg                    := pcNext.out

@@ -2,7 +2,7 @@ import chisel3._
 import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 import chiseltest._
-import cpu.core.CoreTop
+import cpu.core.pipeline.CoreTop
 import cpu.core.pipeline.components.decode.RegFile
 import cpu.utils._
 
@@ -31,15 +31,15 @@ class SimpleTest extends AnyFlatSpec with ChiselScalatestTester {
   "Core" should "pass" in {
     test(new CoreTop)
       .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
-        c.io.iCache.inst_sram_rdata.poke(0x20010001.U)
+        c.io.iCache.sram_rdata.poke(0x20010014.U)
         c.clock.step() // addi r1 r0 0x0000001
-        c.io.iCache.inst_sram_rdata.poke(0x20020002.U)
+        c.io.iCache.sram_rdata.poke(0x200200fa.U)
         c.clock.step() // addi r2 r0 0x0000002
         c.clock.step()
         c.clock.step()
         c.clock.step()
         c.clock.step()
-        c.io.iCache.inst_sram_rdata.poke(0x00221820.U)
+        c.io.iCache.sram_rdata.poke(0x00221820.U)
         c.clock.step() // add r3 r1 r2
         c.clock.step()
         c.clock.step()

@@ -7,7 +7,6 @@ import cpu.utils._
 
 class GenNextPC extends Module {
   val io = IO(new Bundle {
-    val rst   = Input(Bool())
     val in    = Input(UInt(PC_WIDTH.W)) // current pc
     val en    = Input(Bool())           // can gen next pc
     val jinfo = new JmpInfo             // jump info
@@ -17,7 +16,6 @@ class GenNextPC extends Module {
   io.out := MuxCase(
     Mux(io.en, io.in + PC_BYTE_WIDTH.U, io.in),
     Seq(
-      io.rst        -> PC_INIT_ADDR.U,
       io.jinfo.jwen -> io.jinfo.jwaddr,
       // io.b.bwen -> io.b.bwaddr,
     ),

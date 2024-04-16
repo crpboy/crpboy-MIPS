@@ -25,8 +25,8 @@ trait ConstDecode {
   val instIS = 2.U(INST_TYPE_LEN.W) // imm signed extend
   val instIZ = 3.U(INST_TYPE_LEN.W) // imm zero extend
   val instIL = 4.U(INST_TYPE_LEN.W) // imm lui
-  val instJ  = 5.U(INST_TYPE_LEN.W) // jump
-  val instO  = 6.U(INST_TYPE_LEN.W) // special inst
+  val instJP = 5.U(INST_TYPE_LEN.W) // jump
+  val instSP = 6.U(INST_TYPE_LEN.W) // special inst
 
   // operand type
   val op_x   = 0.U(OPR_LEN.W)
@@ -44,7 +44,8 @@ trait ConstDecode {
   val fu_jmp = 3.U(FU_LEN.W)
   val fu_mul = 4.U(FU_LEN.W)
   val fu_mov = 5.U(FU_LEN.W)
-  val fu_oth = 6.U(FU_LEN.W)
+  val fu_mem = 6.U(FU_LEN.W)
+  val fu_oth = 7.U(FU_LEN.W)
 
   // function operator
   val fuop_n = 0.U(FUOP_LEN.W)
@@ -86,7 +87,20 @@ trait ConstDecode {
   val mov_mflo = 2.U(FUOP_LEN.W)
   val mov_mthi = 3.U(FUOP_LEN.W)
   val mov_mtlo = 4.U(FUOP_LEN.W)
-  // other function
+  // load & store
+  val mem_lb  = 1.U(FUOP_LEN.W)
+  val mem_lbu = 2.U(FUOP_LEN.W)
+  val mem_lh  = 3.U(FUOP_LEN.W)
+  val mem_lhu = 4.U(FUOP_LEN.W)
+  val mem_lw  = 5.U(FUOP_LEN.W)
+  val mem_lwl = 6.U(FUOP_LEN.W)
+  val mem_lwr = 7.U(FUOP_LEN.W)
+  val mem_sb  = 8.U(FUOP_LEN.W)
+  val mem_sh  = 9.U(FUOP_LEN.W)
+  val mem_sw  = 10.U(FUOP_LEN.W)
+  val mem_swl = 11.U(FUOP_LEN.W)
+  val mem_swr = 12.U(FUOP_LEN.W)
+  // other functions
   val oth_lui     = 1.U(FUOP_LEN.W)
   val oth_break   = 2.U(FUOP_LEN.W)
   val oth_syscall = 3.U(FUOP_LEN.W)

@@ -60,8 +60,8 @@ class Decoder extends Module {
       BLTZAL -> List(iy, instIS, wb_n, fu_bra, bra_bltzal),
       BGEZAL -> List(iy, instIS, wb_n, fu_bra, bra_bgezal),
       // jump
-      J    -> List(iy, instJ, wb_n, fu_jmp, jmp_j),
-      JAL  -> List(iy, instJ, wb_n, fu_jmp, jmp_jal),
+      J    -> List(iy, instJP, wb_n, fu_jmp, jmp_j),
+      JAL  -> List(iy, instJP, wb_n, fu_jmp, jmp_jal),
       JR   -> List(iy, instRN, wb_n, fu_jmp, jmp_jr),
       JALR -> List(iy, instRN, wb_n, fu_jmp, jmp_jalr),
       // move
@@ -70,8 +70,22 @@ class Decoder extends Module {
       MTHI -> List(iy, instRN, wb_n, fu_mov, mov_mthi),
       MTLO -> List(iy, instRN, wb_n, fu_mov, mov_mtlo),
       // trap
-      BREAK   -> List(iy, instO, wb_n, fu_oth, oth_break),
-      SYSCALL -> List(iy, instO, wb_n, fu_oth, oth_syscall),
+      BREAK   -> List(iy, instSP, wb_n, fu_oth, oth_break),
+      SYSCALL -> List(iy, instSP, wb_n, fu_oth, oth_syscall),
+      // load
+      LB  -> List(iy, instIS, wb_y, fu_mem, mem_lb),
+      LBU -> List(iy, instIS, wb_y, fu_mem, mem_lbu),
+      LH  -> List(iy, instIS, wb_y, fu_mem, mem_lh),
+      LHU -> List(iy, instIS, wb_y, fu_mem, mem_lhu),
+      LW  -> List(iy, instIS, wb_y, fu_mem, mem_lw),
+      LWL -> List(iy, instIS, wb_y, fu_mem, mem_lwl), // word << (3-offset).Byte + rt(offset.Byte,0)
+      LWR -> List(iy, instIS, wb_y, fu_mem, mem_lwr), // rt << (3-offset).Byte + word(offset.Byte,0)
+      // store
+      SB  -> List(iy, instIS, wb_n, fu_mem, mem_sb),
+      SH  -> List(iy, instIS, wb_n, fu_mem, mem_sh),
+      SW  -> List(iy, instIS, wb_n, fu_mem, mem_sw),
+      SWL -> List(iy, instIS, wb_n, fu_mem, mem_swl),
+      SWR -> List(iy, instIS, wb_n, fu_mem, mem_swr),
     ),
   )
   val valid :: t :: wb :: fu :: fuop :: Nil = res
@@ -86,7 +100,7 @@ class Decoder extends Module {
       instIS -> op_reg,
       instIZ -> op_reg,
       instIL -> op_x,
-      instJ  -> op_x,
+      instJP -> op_x,
     ),
   )
   val op2 = MuxLookup(
@@ -98,7 +112,7 @@ class Decoder extends Module {
       instIS -> op_imm,
       instIZ -> op_imm,
       instIL -> op_x,
-      instJ  -> op_x,
+      instJP -> op_x,
     ),
   )
 
@@ -132,7 +146,7 @@ class Decoder extends Module {
       instRS -> zeroExtend(inst(10, 6)),    // shift
       instIS -> signExtend(inst(15, 0)),    // signed extend
       instIZ -> zeroExtend(inst(15, 0)),    // zero extend
-      instJ  -> signExtend(inst(25, 0)),    // jump
+      instJP -> signExtend(inst(25, 0)),    // jump
       instIL -> zeroExtendHigh(inst(15, 0)),// lui
     ),
   )

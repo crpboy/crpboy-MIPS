@@ -19,21 +19,9 @@ object Functions {
     Cat(data, Fill(width - len, 0.U))
   }
   def getclo(data: UInt): UInt = {
-    val clo = WireInit(32.U)
-    for (i <- 0 until 32) {
-      when(!data(i)) {
-        clo := (31 - i).U
-      }
-    }
-    return clo
+    PopCount(data)
   }
   def getclz(data: UInt): UInt = {
-    val clz = WireInit(32.U)
-    for (i <- 0 until 32) {
-      when(data(i)) {
-        clz := (31 - i).U
-      }
-    }
-    return clz
+    data.getWidth.U - PopCount(data)
   }
 }

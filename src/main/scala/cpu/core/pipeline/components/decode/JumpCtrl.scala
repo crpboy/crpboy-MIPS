@@ -11,15 +11,11 @@ class JumpCtrl extends Module {
     val out     = Output(new JmpInfo)
   })
   io.out.jwen := io.inst.fu === fu_jmp
-  io.out.jwaddr := Mux(
-    io.inst.fu === fu_jmp,
-    MuxLookup(
-      io.inst.fuop,
-      0.U,
-      Seq(
-        jmp_j -> io.inst.imm,
-      ),
-    ),
+  io.out.jwaddr := MuxLookup(
+    io.inst.fuop,
     0.U,
+    Seq(
+      jmp_j -> io.inst.imm,
+    ),
   )
 }
