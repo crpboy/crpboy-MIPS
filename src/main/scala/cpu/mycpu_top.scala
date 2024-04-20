@@ -10,7 +10,10 @@ import cpu.core.pipeline._
 class mycpu_top extends Module {
   val inst  = IO(new ICacheIO).suggestName("inst")
   val data  = IO(new DCacheIO).suggestName("data")
-  val debug = IO(Output(new DebugInfo)).suggestName("debug")
+  val debug = IO(new DebugIO).suggestName("debug")
+
+  // this.clock.suggestName("clk")
+  // this.reset.suggestName("resetn")
 
   val core = Module(new CoreTop).io
   

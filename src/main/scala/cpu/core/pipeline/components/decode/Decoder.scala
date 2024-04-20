@@ -16,9 +16,9 @@ class Decoder extends Module {
   val inst = io.rawInst
   val res: List[UInt] = ListLookup(
     io.rawInst,
-    List(instInvalid, instRN, wb_n, fu_nop, fuop_n),
+    List(instInvalid, instRN, wb_n, fu_nop, fuop_nop),
     Array(
-      NOP -> List(iy, instRN, wb_n, fu_nop, fuop_n),
+      NOP -> List(iy, instRN, wb_n, fu_nop, fuop_nop),
       // arithmetic
       ADD   -> List(iy, instRN, wb_y, fu_alu, alu_add),
       ADDI  -> List(iy, instIS, wb_y, fu_alu, alu_add),

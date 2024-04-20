@@ -7,15 +7,16 @@ import cpu.common.Const._
 
 class JumpCtrl extends Module {
   val io = IO(new Bundle {
-    val inst    = Input(new InstInfoExt)
-    val out     = Output(new JmpInfo)
+    val inst = Input(new InstInfoExt)
+    val out  = Output(new JmpInfo)
   })
   io.out.jwen := io.inst.fu === fu_jmp
+  val target = (io.inst.imm << 2)
   io.out.jwaddr := MuxLookup(
     io.inst.fuop,
     0.U,
     Seq(
-      jmp_j -> io.inst.imm,
+      jmp_j -> target,
     ),
   )
 }

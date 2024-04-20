@@ -18,7 +18,7 @@ class CoreTop extends Module {
   val io = IO(new Bundle {
     val iCache = new ICacheIO
     val dCache = new DCacheIO
-    val debug  = Output(new DebugInfo)
+    val debug  = new DebugIO
   })
   val fetchUnit     = Module(new FetchUnit)
   val decodeUnit    = Module(new DecodeUnit)
@@ -46,6 +46,7 @@ class CoreTop extends Module {
   io.dCache <> memory.dCache
 
   fetch.jinfo <> decode.jinfo
+  fetch.binfo <> execute.binfo
 
   writeback.out.waddr <> decode.wb.waddr
   writeback.out.wdata <> decode.wb.wdata

@@ -48,7 +48,7 @@ trait ConstDecode {
   val fu_oth = 7.U(FU_LEN.W)
 
   // function operator
-  val fuop_n = 0.U(FUOP_LEN.W)
+  val fuop_nop = 0.U(FUOP_LEN.W)
   // mul / div operator
   val md_mult  = 1.U(FUOP_LEN.W)
   val md_multu = 2.U(FUOP_LEN.W)
@@ -77,11 +77,11 @@ trait ConstDecode {
   val bra_bltz   = 6.U(FUOP_LEN.W)
   val bra_bltzal = 7.U(FUOP_LEN.W)
   val bra_bgezal = 8.U(FUOP_LEN.W)
-  // jump operator
-  val jmp_j    = 1.U(FUOP_LEN.W)
-  val jmp_jal  = 2.U(FUOP_LEN.W)
-  val jmp_jr   = 3.U(FUOP_LEN.W)
-  val jmp_jalr = 4.U(FUOP_LEN.W)
+  // jump operator (begin with 9)
+  val jmp_j    = 9.U(FUOP_LEN.W)
+  val jmp_jal  = 10.U(FUOP_LEN.W)
+  val jmp_jr   = 11.U(FUOP_LEN.W)
+  val jmp_jalr = 12.U(FUOP_LEN.W)
   // move operator
   val mov_mfhi = 1.U(FUOP_LEN.W)
   val mov_mflo = 2.U(FUOP_LEN.W)

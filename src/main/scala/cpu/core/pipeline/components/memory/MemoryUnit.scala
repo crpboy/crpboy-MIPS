@@ -11,8 +11,8 @@ import cpu.core.pipeline.components.memory._
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
     val dCache = new DCacheIO
-    val in     = Flipped(Decoupled(Input(new StageExecuteMemory)))
-    val out    = Decoupled(Output(new StageMemoryWriteback))
+    val in     = Flipped(Decoupled(new StageExecuteMemory))
+    val out    = Decoupled(new StageMemoryWriteback)
   })
   val input  = io.in.bits
   val output = io.out.bits
@@ -37,5 +37,5 @@ class MemoryUnit extends Module {
   output.debug_wb_pc := input.debug_wb_pc
 
   io.in.ready  := true.B
-  io.out.valid := true.B
+  io.out.valid := io.in.valid
 }

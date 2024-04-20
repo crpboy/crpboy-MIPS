@@ -5,13 +5,10 @@ import chisel3.util._
 import cpu.common.Config
 
 object StageConnect {
-  def stageConnect[T <: Data](left: DecoupledIO[T], right: DecoupledIO[T]) = {
-    if(Config.isPipeline) {
-      right.bits <> RegEnable(left.bits, left.fire)
-    }else{
-      right.bits <> left.bits
-    }
-    right.valid <> left.valid
-    right.ready <> left.ready
+  def stageConnect[T <: Bundle](left: DecoupledIO[T], right: DecoupledIO[T]) = {
+    val fire = left.valid && right.ready
+    right.bits <> RegEnable(left.bits, 0.U.asTypeOf(left.bits), fire)
+    right.valid <> RegEnable(left.valid, true.B, fire)
+    left.ready <> RegEnable(right.ready, true.B, fire)
   }
 }

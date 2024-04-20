@@ -8,8 +8,8 @@ import cpu.core.pipeline.components.decode._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
-    val in    = Flipped(Decoupled(Input(new StageFetchDecode)))
-    val out   = Decoupled(Output(new StageDecodeExecute))
+    val in    = Flipped(Decoupled(new StageFetchDecode))
+    val out   = Decoupled(new StageDecodeExecute)
     val wb    = Input(new WBInfo)
     val jinfo = Output(new JmpInfo)
   })
@@ -27,7 +27,8 @@ class DecodeUnit extends Module {
   io.wb <> reg.wb
 
   decoder.instInfo <> jmp.inst
-  io.jinfo <> jmp.out
+  io.jinfo.jwen   := jmp.out.jwen && io.out.valid
+  io.jinfo.jwaddr := jmp.out.jwaddr
 
   output.inst        := decoder.instInfo
   output.rs          := reg.rsdata
@@ -35,5 +36,5 @@ class DecodeUnit extends Module {
   output.debug_wb_pc := input.debug_wb_pc
 
   io.in.ready  := true.B
-  io.out.valid := true.B
+  io.out.valid := io.in.valid
 }
