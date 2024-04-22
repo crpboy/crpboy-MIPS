@@ -50,7 +50,7 @@ class FetchUnit extends Module {
   io.iCache.inst_sram_en   := !(reset.asBool)
 
   output.inst     := io.iCache.inst_sram_rdata
-  output.pc       := pcNext
+  output.pc       := pcNextTmp
   output.debug_pc := pcReg
 
   io.out.valid := !io.binfo.bwen
