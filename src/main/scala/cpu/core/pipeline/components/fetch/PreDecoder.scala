@@ -2,7 +2,6 @@ package cpu.core.pipeline.components.fetch
 
 import chisel3._
 import chisel3.util._
-import cpu.utils._
 import cpu.common.Const._
 
 class PreDecoder extends Module {
@@ -30,6 +29,7 @@ class PreDecoder extends Module {
     ),
   )
   val fuop :: isjInfo :: Nil = res
+  // TODO: fuop maight be added into pipeline signal
 
   io.isbr := isjInfo
 }

@@ -4,7 +4,6 @@ import chisel3._
 import chisel3.util._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.utils._
 
 class Hilo extends Module {
   val io = IO(new Bundle {

@@ -3,8 +3,8 @@ package cpu.core.pipeline.components.decode
 import chisel3._
 import chisel3.util._
 import cpu.common.Const._
-import cpu.utils._
 import cpu.utils.Functions._
+import cpu.common._
 
 class Decoder extends Module {
   val io = IO(new Bundle {
@@ -57,13 +57,13 @@ class Decoder extends Module {
       BGTZ   -> List(iy, instIS, wb_n, fu_bra, bra_bgtz),
       BLEZ   -> List(iy, instIS, wb_n, fu_bra, bra_blez),
       BLTZ   -> List(iy, instIS, wb_n, fu_bra, bra_bltz),
-      BLTZAL -> List(iy, instIS, wb_n, fu_bra, bra_bltzal),
-      BGEZAL -> List(iy, instIS, wb_n, fu_bra, bra_bgezal),
+      BLTZAL -> List(iy, instBA, wb_y, fu_bra, bra_bltzal),
+      BGEZAL -> List(iy, instBA, wb_y, fu_bra, bra_bgezal),
       // jump
       J    -> List(iy, instJP, wb_n, fu_jmp, jmp_j),
-      JAL  -> List(iy, instJP, wb_n, fu_jmp, jmp_jal),
+      JAL  -> List(iy, instJP, wb_y, fu_jmp, jmp_jal),
       JR   -> List(iy, instRN, wb_n, fu_jmp, jmp_jr),
-      JALR -> List(iy, instRN, wb_n, fu_jmp, jmp_jalr),
+      JALR -> List(iy, instRN, wb_y, fu_jmp, jmp_jalr),
       // move
       MFHI -> List(iy, instRN, wb_y, fu_mov, mov_mfhi),
       MFLO -> List(iy, instRN, wb_y, fu_mov, mov_mflo),
@@ -99,8 +99,7 @@ class Decoder extends Module {
       instRS -> op_imm,
       instIS -> op_reg,
       instIZ -> op_reg,
-      instIL -> op_x,
-      instJP -> op_x,
+      instBA -> op_reg,
     ),
   )
   val op2 = MuxLookup(
@@ -111,8 +110,6 @@ class Decoder extends Module {
       instRS -> op_reg,
       instIS -> op_imm,
       instIZ -> op_imm,
-      instIL -> op_x,
-      instJP -> op_x,
     ),
   )
 
@@ -135,6 +132,8 @@ class Decoder extends Module {
       instIS -> inst(20, 16),
       instIZ -> inst(20, 16),
       instIL -> inst(20, 16),
+      instBA -> 31.U,
+      instJP -> 31.U,
     ),
   )
 

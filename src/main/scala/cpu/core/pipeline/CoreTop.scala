@@ -4,8 +4,8 @@ import chisel3._
 import chisel3.util._
 
 import cpu.core.pipeline._
-import cpu.utils._
 import cpu.utils.StageConnect._
+import cpu.common._
 import cpu.common.Const._
 
 import cpu.core.pipeline.components.fetch._
@@ -40,10 +40,16 @@ class CoreTop extends Module {
   io.iCache.sram_rdata <> fetch.iCache.inst_sram_rdata
   io.iCache.sram_en <> fetch.iCache.inst_sram_en
   io.iCache.sram_addr <> fetch.iCache.inst_sram_addr
+  io.iCache.sram_wen   := 0.U
+  io.iCache.sram_wdata := 0.U
 
   io.debug <> writeback.debug
 
-  io.dCache <> memory.dCache
+  io.dCache.sram_rdata <> memory.dCache.sram_rdata
+  io.dCache.sram_en <> execute.dCache.sram_en
+  io.dCache.sram_addr <> execute.dCache.sram_addr
+  io.dCache.sram_wen <> execute.dCache.sram_wen
+  io.dCache.sram_wdata <> execute.dCache.sram_wdata
 
   fetch.jinfo <> decode.jinfo
   fetch.binfo <> execute.binfo
@@ -51,7 +57,4 @@ class CoreTop extends Module {
   writeback.out.waddr <> decode.wb.waddr
   writeback.out.wdata <> decode.wb.wdata
   writeback.out.wen <> decode.wb.wen
-
-  io.iCache.sram_wen   := 0.U
-  io.iCache.sram_wdata := 0.U
 }

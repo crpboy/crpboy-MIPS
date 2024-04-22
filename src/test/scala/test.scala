@@ -4,7 +4,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import chiseltest._
 import cpu.core.pipeline.CoreTop
 import cpu.core.pipeline.components.decode.RegFile
-import cpu.utils._
 import cpu.mycpu_top
 
 class SimpleTest extends AnyFlatSpec with ChiselScalatestTester {
@@ -69,6 +68,22 @@ class SimpleTest extends AnyFlatSpec with ChiselScalatestTester {
       .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
         c.inst.sram_rdata.poke(0x100000e0.U)
         c.clock.step() // BEQ $zero $zero 0x00E0
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+        c.clock.step()
+      }
+  }
+  "top_mem" should "pass" in {
+    test(new mycpu_top)
+      .withAnnotations(Seq(WriteVcdAnnotation)) { c =>
+        c.inst.sram_rdata.poke(0xaca566a8.U) // SW $a1 0x66A8 $a1
+        c.inst.sram_rdata.poke(0x8d0266a8.U) // LW $v0 0x66A8 $t0
+        c.clock.step() 
         c.clock.step()
         c.clock.step()
         c.clock.step()

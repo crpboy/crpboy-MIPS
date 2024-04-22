@@ -2,21 +2,30 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
-import cpu.utils._
+import cpu.common._
 import cpu.common.Const._
 
 class JumpCtrl extends Module {
   val io = IO(new Bundle {
-    val inst = Input(new InstInfoExt)
-    val out  = Output(new JmpInfo)
+    val inst    = Input(new InstInfoExt)
+    val regData = Input(UInt(DATA_WIDTH.W))
+    val pc      = Input(UInt(PC_WIDTH.W))
+    val out     = Output(new JmpInfo)
+    // val wreg    = Output(new JWBInfo)
   })
-  io.out.jwen := io.inst.fu === fu_jmp
-  val target = (io.inst.imm << 2)
+  val valid  = io.inst.fu === fu_jmp
+  val target = Cat(io.pc(31, 28), (io.inst.imm << 2)(27, 0))
+  val isrReg = io.inst.fuop(2)
+  val iswReg = io.inst.fuop(3)
+  io.out.jwen := valid
   io.out.jwaddr := MuxLookup(
-    io.inst.fuop,
+    isrReg,
     0.U,
     Seq(
-      jmp_j -> target,
+      0.U -> target,
+      1.U -> io.regData,
     ),
   )
+  // io.wreg.wen   := valid && iswReg
+  // io.wreg.wdata := io.pc + 8.U
 }

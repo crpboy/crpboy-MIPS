@@ -2,9 +2,9 @@ package cpu.core.pipeline.components.fetch
 
 import chisel3._
 import chisel3.util._
-import cpu.utils._
 import cpu.common.Const._
 import cpu.core.pipeline.components.fetch._
+import cpu.common._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
@@ -23,22 +23,23 @@ class FetchUnit extends Module {
   val output     = io.out.bits
 
   val pcReg = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
-  // val pcDebug = RegNext(pcReg)
-  val brReg = RegInit(false.B) // is in jump / branch
 
   io.iCache.inst_sram_rdata <> preDecoder.inst
   preDecoder.done := io.binfo.en
 
-  when(preDecoder.done) {
-    brReg := false.B
-  }.elsewhen(preDecoder.isbr) {
-    brReg := true.B
-  }
+  // val brReg = RegInit(false.B)
+  // when(preDecoder.done) {
+  //   brReg := false.B
+  // }.elsewhen(preDecoder.isbr) {
+  //   brReg := true.B
+  // }
+  // val brReg = RegInit(false.B)
+  // val isjmp     = preDecoder.isbr && brReg
+  // val pcSelfInc = Mux(isjmp, pcReg, pcReg + 4.U)
 
-  val isjmp = preDecoder.isbr && brReg
-  val pcSelfInc = Mux(isjmp, pcReg, pcReg + 4.U)
+  val pcNextTmp = pcReg + 4.U
   val pcNext = MuxCase(
-    pcSelfInc,
+    pcNextTmp,
     Seq(
       io.jinfo.jwen -> io.jinfo.jwaddr,
       io.binfo.bwen -> io.binfo.bwaddr,
@@ -46,10 +47,11 @@ class FetchUnit extends Module {
   )
   io.iCache.pcNext         := pcNext
   io.iCache.inst_sram_addr := io.iCache.pcNext
-  io.iCache.inst_sram_en   := io.out.valid & !this.reset.asBool
+  io.iCache.inst_sram_en   := !(reset.asBool)
 
-  output.inst        := io.iCache.inst_sram_rdata
-  output.debug_wb_pc := pcReg
+  output.inst     := io.iCache.inst_sram_rdata
+  output.pc       := pcNext
+  output.debug_pc := pcReg
 
-  io.out.valid := !brReg || preDecoder.done
+  io.out.valid := !io.binfo.bwen
 }

@@ -1,4 +1,4 @@
-package cpu.utils
+package cpu.common
 
 import chisel3._
 import chisel3.util._
@@ -7,8 +7,8 @@ import cpu.common.Const._
 // inst info
 class InstInfo extends Bundle {
   val wb   = Bool()
-  val fu   = UInt(FUOP_LEN.W)
-  val fuop = UInt(FU_LEN.W)
+  val fu   = UInt(FU_LEN.W)
+  val fuop = UInt(FUOP_LEN.W)
   val rd   = UInt(REG_WIDTH.W)
 }
 class InstInfoExt extends InstInfo {
@@ -18,7 +18,7 @@ class InstInfoExt extends InstInfo {
 }
 
 // top IO
-// inst IO
+// inst
 class ICacheIO extends Bundle {
   val sram_rdata = Input(UInt(INST_WIDTH.W))
   val sram_en    = Output(Bool())
@@ -26,7 +26,7 @@ class ICacheIO extends Bundle {
   val sram_addr  = Output(UInt(ADDR_WIDTH.W))
   val sram_wdata = Output(UInt(DATA_WIDTH.W))
 }
-// data IO
+// data
 class DCacheIO extends Bundle {
   val sram_rdata = Input(UInt(DATA_WIDTH.W))
   val sram_en    = Output(Bool())
@@ -44,7 +44,8 @@ class DebugIO extends Bundle {
 
 // pipeline stage bundle
 class PipelineStage extends Bundle {
-  val debug_wb_pc = Output(UInt(PC_WIDTH.W))
+  val debug_pc = Output(UInt(PC_WIDTH.W))
+  val pc       = Output(UInt(PC_WIDTH.W))
 }
 class StageFetchDecode extends PipelineStage {
   val inst = Output(UInt(INST_WIDTH.W))
@@ -64,15 +65,18 @@ class StageMemoryWriteback extends PipelineStage {
 }
 
 // write back info
+class JWBInfo extends Bundle {
+  val wen   = Bool()
+  val wdata = UInt(DATA_WIDTH.W)
+}
 class WBInfo extends Bundle {
-  val wen   = Input(Bool())
-  val wdata = Input(UInt(DATA_WIDTH.W))
-  val waddr = Input(UInt(REG_WIDTH.W))
+  val wen   = Bool()
+  val wdata = UInt(DATA_WIDTH.W)
+  val waddr = UInt(REG_WIDTH.W)
 }
 
 // jump info
 class JmpInfo extends Bundle {
-  // val en     = Bool()
   val jwen   = Bool()
   val jwaddr = UInt(PC_WIDTH.W)
 }

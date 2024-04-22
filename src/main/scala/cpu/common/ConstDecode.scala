@@ -26,7 +26,8 @@ trait ConstDecode {
   val instIZ = 3.U(INST_TYPE_LEN.W) // imm zero extend
   val instIL = 4.U(INST_TYPE_LEN.W) // imm lui
   val instJP = 5.U(INST_TYPE_LEN.W) // jump
-  val instSP = 6.U(INST_TYPE_LEN.W) // special inst
+  val instBA = 6.U(INST_TYPE_LEN.W) // Branch AL
+  val instSP = 7.U(INST_TYPE_LEN.W) // special inst
 
   // operand type
   val op_x   = 0.U(OPR_LEN.W)
@@ -69,19 +70,20 @@ trait ConstDecode {
   val alu_srl  = 12.U(FUOP_LEN.W)
   val alu_sra  = 13.U(FUOP_LEN.W)
   // bra operator
-  val bra_beq    = 1.U(FUOP_LEN.W)
-  val bra_bne    = 2.U(FUOP_LEN.W)
-  val bra_bgez   = 3.U(FUOP_LEN.W)
-  val bra_bgtz   = 4.U(FUOP_LEN.W)
-  val bra_blez   = 5.U(FUOP_LEN.W)
-  val bra_bltz   = 6.U(FUOP_LEN.W)
-  val bra_bltzal = 7.U(FUOP_LEN.W)
-  val bra_bgezal = 8.U(FUOP_LEN.W)
-  // jump operator (begin with 9)
-  val jmp_j    = 9.U(FUOP_LEN.W)
-  val jmp_jal  = 10.U(FUOP_LEN.W)
-  val jmp_jr   = 11.U(FUOP_LEN.W)
-  val jmp_jalr = 12.U(FUOP_LEN.W)
+  // op(3)=1 is ..al inst
+  val bra_beq    = "b0001".U
+  val bra_bne    = "b0010".U
+  val bra_bgez   = "b0011".U
+  val bra_bgtz   = "b0100".U
+  val bra_blez   = "b0101".U
+  val bra_bltz   = "b0110".U
+  val bra_bltzal = "b1110".U
+  val bra_bgezal = "b1011".U
+  // jump operator
+  val jmp_j    = "b0001".U
+  val jmp_jal  = "b1001".U
+  val jmp_jr   = "b0101".U
+  val jmp_jalr = "b1101".U
   // move operator
   val mov_mfhi = 1.U(FUOP_LEN.W)
   val mov_mflo = 2.U(FUOP_LEN.W)

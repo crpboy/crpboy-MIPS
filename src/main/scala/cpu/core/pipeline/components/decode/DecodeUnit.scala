@@ -2,9 +2,9 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
-import cpu.utils._
 import cpu.common.Const._
 import cpu.core.pipeline.components.decode._
+import cpu.common._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
@@ -22,18 +22,26 @@ class DecodeUnit extends Module {
   val output = io.out.bits
 
   input.inst <> decoder.rawInst
+  input.pc <> jmp.pc
+
   decoder.rsaddr <> reg.rsaddr
   decoder.rtaddr <> reg.rtaddr
   io.wb <> reg.wb
 
+  reg.rsdata <> jmp.regData
   decoder.instInfo <> jmp.inst
   io.jinfo.jwen   := jmp.out.jwen && io.out.valid
   io.jinfo.jwaddr := jmp.out.jwaddr
+  // jmp.wreg <> reg.jwb
 
-  output.inst        := decoder.instInfo
-  output.rs          := reg.rsdata
-  output.rt          := reg.rtdata
-  output.debug_wb_pc := input.debug_wb_pc
+  // reg.bwb.wen   := bwren
+  // reg.bwb.wdata := bwdata
+
+  output.inst     := decoder.instInfo
+  output.rs       := reg.rsdata
+  output.rt       := reg.rtdata
+  output.pc       := input.pc
+  output.debug_pc := input.debug_pc
 
   io.in.ready  := true.B
   io.out.valid := io.in.valid

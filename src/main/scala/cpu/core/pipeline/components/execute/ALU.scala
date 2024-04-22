@@ -2,15 +2,15 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
+import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.utils._
 
 class ALU extends Module {
   val io = IO(new Bundle {
     val inst = Input(new InstInfoExt)
-    val rs = Input(UInt(DATA_WIDTH.W))
-    val rt = Input(UInt(DATA_WIDTH.W))
+    val rs   = Input(UInt(DATA_WIDTH.W))
+    val rt   = Input(UInt(DATA_WIDTH.W))
     val out  = Output(UInt(DATA_WIDTH.W))
   })
   val en = io.inst.fu === fu_alu
@@ -44,7 +44,9 @@ class ALU extends Module {
         alu_srl  -> (op2 >> op1(4, 0)),
         alu_sra  -> (op2.asSInt() >> op1(4, 0)).asUInt,
         alu_add  -> (op1 + op2),
+        alu_addu -> (op1 + op2),
         alu_sub  -> (op1 - op2),
+        alu_subu -> (op1 - op2),
         alu_slt  -> (op1.asSInt() < op2.asSInt()),
         alu_sltu -> (op1 < op2),
       ),

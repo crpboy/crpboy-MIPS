@@ -9,6 +9,7 @@ object StageConnect {
     val fire = left.valid && right.ready
     right.bits <> RegEnable(left.bits, 0.U.asTypeOf(left.bits), fire)
     right.valid <> RegEnable(left.valid, true.B, fire)
-    left.ready <> RegEnable(right.ready, true.B, fire)
+    left.ready <> right.ready
+    // left.ready <> RegEnable(right.ready, true.B, fire)
   }
 }

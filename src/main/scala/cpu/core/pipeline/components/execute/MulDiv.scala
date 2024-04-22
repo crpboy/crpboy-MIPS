@@ -2,9 +2,9 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
+import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.utils._
 
 class MulDiv extends Module {
   val io = IO(new Bundle {
