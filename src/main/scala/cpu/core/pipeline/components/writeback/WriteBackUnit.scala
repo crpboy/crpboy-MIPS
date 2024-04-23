@@ -8,21 +8,27 @@ import cpu.core.pipeline.components.writeback._
 
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
-    val in  = Flipped(Decoupled(new StageMemoryWriteback))
-    val out = Output(new WBInfo)
-
-    val debug = new DebugIO
+    val dHazard = Output(new DataHazard)
+    val in      = new KeepFlushIO(new StageMemoryWriteback)
+    val out     = Output(new WBInfo)
+    val ctrlreq = Output(new CtrlRequest)
+    val debug   = new DebugIO
   })
-  val input = io.in.bits
+
+  val input   = io.in.bits
+  val ctrlreq = WireInit(0.U.asTypeOf(new CtrlRequest))
+  ctrlreq <> io.ctrlreq
 
   io.out.wen   := input.inst.wb
   io.out.wdata := input.data
   io.out.waddr := input.inst.rd
 
+  io.dHazard.wen   := input.inst.wb
+  io.dHazard.waddr := input.inst.rd
+  io.dHazard.wdata := input.data
+
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := input.data
   io.debug.wb_rf_wen   := Mux(input.inst.wb, WB_EN, WB_NO)
   io.debug.wb_rf_wnum  := input.inst.rd
-
-  io.in.ready := true.B
 }

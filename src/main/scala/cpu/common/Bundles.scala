@@ -17,6 +17,16 @@ class InstInfoExt extends InstInfo {
   val imm = UInt(DATA_WIDTH.W)
 }
 
+// ctrl info
+class CtrlInfo extends Bundle {
+  val keep  = Bool()
+  val flush = Bool()
+}
+class CtrlRequest extends Bundle {
+  val keep  = UInt(KFC_WIDTH.W)
+  val flush = UInt(KFC_WIDTH.W)
+}
+
 // top IO
 // inst
 class ICacheIO extends Bundle {
@@ -43,6 +53,10 @@ class DebugIO extends Bundle {
 }
 
 // pipeline stage bundle
+class KeepFlushIO[+T <: Data](gen: T) extends Bundle {
+  val ctrl = Input(new CtrlInfo)
+  val bits = Input(gen)
+}
 class PipelineStage extends Bundle {
   val debug_pc = Output(UInt(PC_WIDTH.W))
   val pc       = Output(UInt(PC_WIDTH.W))
@@ -51,9 +65,11 @@ class StageFetchDecode extends PipelineStage {
   val inst = Output(UInt(INST_WIDTH.W))
 }
 class StageDecodeExecute extends PipelineStage {
-  val inst = Output(new InstInfoExt)
-  val rs   = Output(UInt(DATA_WIDTH.W))
-  val rt   = Output(UInt(DATA_WIDTH.W))
+  val inst   = Output(new InstInfoExt)
+  val rs     = Output(UInt(DATA_WIDTH.W))
+  val rt     = Output(UInt(DATA_WIDTH.W))
+  val rsaddr = Output(UInt(REG_WIDTH.W))
+  val rtaddr = Output(UInt(REG_WIDTH.W))
 }
 class StageExecuteMemory extends PipelineStage {
   val inst = Output(new InstInfo)
@@ -83,7 +99,17 @@ class JmpInfo extends Bundle {
 
 // branch info
 class BraInfo extends Bundle {
-  val en     = Bool()
+  // val en     = Bool()
   val bwen   = Bool()
   val bwaddr = UInt(PC_WIDTH.W)
+}
+
+// hazard
+class DataHazard extends Bundle {
+  val wen   = Bool()
+  val waddr = UInt(REG_WIDTH.W)
+  val wdata = UInt(DATA_WIDTH.W)
+}
+class DataHazardExe extends DataHazard {
+  val isload = Output(Bool())
 }

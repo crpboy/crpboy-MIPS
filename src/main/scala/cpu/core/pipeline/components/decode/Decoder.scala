@@ -142,11 +142,11 @@ class Decoder extends Module {
     t,
     0.U,
     Seq(
-      instRS -> zeroExtend(inst(10, 6)),    // shift
-      instIS -> signExtend(inst(15, 0)),    // signed extend
-      instIZ -> zeroExtend(inst(15, 0)),    // zero extend
-      instJP -> signExtend(inst(25, 0)),    // jump
-      instIL -> zeroExtendHigh(inst(15, 0)),// lui
+      instRS -> zeroExtend(inst(10, 6)), // shift
+      instIS -> signExtend(inst(15, 0)), // signed extend
+      instIZ -> zeroExtend(inst(15, 0)), // zero extend
+      instJP -> signExtend(inst(25, 0)), // jump
+      instIL -> zeroExtendHigh(inst(15, 0)), // lui
     ),
   )
 }

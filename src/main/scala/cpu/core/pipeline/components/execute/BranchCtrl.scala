@@ -13,9 +13,7 @@ class BranchCtrl extends Module {
     val rt        = Input(UInt(DATA_WIDTH.W))
     val binfo     = Output(new BraInfo)
   })
-  val valid = io.inst.fu === fu_bra
-  io.binfo.en := valid
-  io.binfo.bwen := valid && MuxLookup(
+  io.binfo.bwen := (io.inst.fu === fu_bra) && MuxLookup(
     io.inst.fuop,
     false.B,
     Seq(

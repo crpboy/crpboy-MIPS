@@ -7,7 +7,7 @@ import cpu.common.Const._
 
 class RegFile extends Module {
   val io = IO(new Bundle {
-    val wb     = Input(new WBInfo)
+    val wb = Input(new WBInfo)
     // val jwb    = Input(new JWBInfo)
     // val bwb    = Input(new JWBInfo)
     val rsaddr = Input(UInt(REG_WIDTH.W))

@@ -16,41 +16,42 @@ class ExecuteUnit extends Module {
       val sram_addr  = Output(UInt(ADDR_WIDTH.W))
       val sram_wdata = Output(UInt(DATA_WIDTH.W))
     }
-    val in    = Flipped(Decoupled(new StageDecodeExecute))
-    val out   = Decoupled(new StageExecuteMemory)
-    val binfo = Output(new BraInfo)
+    val binfo   = Output(new BraInfo)
+    val dHazard = Output(new DataHazardExe)
+    val in      = new KeepFlushIO(new StageDecodeExecute)
+    val out     = new StageExecuteMemory
+    val ctrlreq = Output(new CtrlRequest)
   })
 
-  val alu    = Module(new ALU).io
-  val hilo   = Module(new Hilo).io
-  val mul    = Module(new MulDiv).io
-  val bra    = Module(new BranchCtrl).io
-  val input  = io.in.bits
-  val output = io.out.bits
+  val alu  = Module(new ALU).io
+  val hilo = Module(new Hilo).io
+  val mul  = Module(new MulDiv).io
+  val bra  = Module(new BranchCtrl).io
 
-  input.rs <> alu.rs
-  input.rt <> alu.rt
+  val input  = io.in.bits
+  val output = io.out
+
+  input.rs   <> alu.rs
+  input.rt   <> alu.rt
   input.inst <> alu.inst
 
-  input.rs <> mul.rs
-  input.rt <> mul.rt
+  input.rs   <> mul.rs
+  input.rt   <> mul.rt
   input.inst <> mul.inst
 
-  input.rs <> bra.rs
-  input.rt <> bra.rt
+  input.rs   <> bra.rs
+  input.rt   <> bra.rt
   input.inst <> bra.inst
+  input.pc   <> bra.pc
 
-  input.pc <> bra.pc
-
-  hilo.wen <> mul.wen
+  hilo.wen   <> mul.wen
   hilo.wdata <> mul.wdata
 
-  bra.binfo.en <> io.binfo.en
-  bra.binfo.bwen <> io.binfo.bwen
+  bra.binfo.bwen   <> io.binfo.bwen
   bra.binfo.bwaddr <> io.binfo.bwaddr
 
   // data select
-  output.data := MuxLookup(
+  val data = MuxLookup(
     input.inst.fu,
     input.inst.imm,
     Seq(
@@ -68,6 +69,7 @@ class ExecuteUnit extends Module {
       fu_mem -> input.rt,
     ),
   )
+  output.data := data
 
   // TODO: 信号处理未完成
   // mem request
@@ -84,13 +86,27 @@ class ExecuteUnit extends Module {
     ),
   )
 
+  io.dHazard.wen   := input.inst.wb
+  io.dHazard.waddr := input.inst.rd
+  io.dHazard.wdata := data
+  io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
+
+  io.ctrlreq.keep := MuxCase(
+    "b00000".U,
+    Seq(
+    ),
+  )
+  io.ctrlreq.flush := MuxCase(
+    "b00000".U,
+    Seq(
+      bra.binfo.bwen -> "b01000".U,
+    ),
+  )
+
   output.inst.fu   := input.inst.fu
   output.inst.fuop := input.inst.fuop
   output.inst.rd   := input.inst.rd
   output.inst.wb   := input.inst.wb
   output.pc        := input.pc
   output.debug_pc  := input.debug_pc
-
-  io.in.ready  := true.B
-  io.out.valid := io.in.valid
 }

@@ -7,7 +7,6 @@ import cpu.common.Const._
 class PreDecoder extends Module {
   val io = IO(new Bundle {
     val inst = Input(UInt(INST_WIDTH.W))
-    val done = Input(Bool())
     val isbr = Output(Bool())
   })
   val res: List[UInt] = ListLookup(

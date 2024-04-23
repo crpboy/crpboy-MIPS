@@ -14,44 +14,35 @@ class FetchUnit extends Module {
       val inst_sram_addr  = Output(UInt(ADDR_WIDTH.W))
       val pcNext          = Output(UInt(PC_WIDTH.W))
     }
-    val jinfo = Input(new JmpInfo)
-    val binfo = Input(new BraInfo)
-    val out   = Decoupled(new StageFetchDecode)
+    val ctrl    = Input(new CtrlInfo)
+    val jinfo   = Input(new JmpInfo)
+    val binfo   = Input(new BraInfo)
+    val out     = new StageFetchDecode
+    val ctrlreq = Output(new CtrlRequest)
   })
 
   val preDecoder = Module(new PreDecoder).io
-  val output     = io.out.bits
 
-  val pcReg = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
+  val output  = io.out
+  val ctrlreq = WireInit(0.U.asTypeOf(new CtrlRequest))
+  ctrlreq <> io.ctrlreq
 
-  io.iCache.inst_sram_rdata <> preDecoder.inst
-  preDecoder.done := io.binfo.en
-
-  // val brReg = RegInit(false.B)
-  // when(preDecoder.done) {
-  //   brReg := false.B
-  // }.elsewhen(preDecoder.isbr) {
-  //   brReg := true.B
-  // }
-  // val brReg = RegInit(false.B)
-  // val isjmp     = preDecoder.isbr && brReg
-  // val pcSelfInc = Mux(isjmp, pcReg, pcReg + 4.U)
-
+  val pcReg     = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
   val pcNextTmp = pcReg + 4.U
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
+      io.ctrl.keep  -> pcReg,
       io.jinfo.jwen -> io.jinfo.jwaddr,
       io.binfo.bwen -> io.binfo.bwaddr,
     ),
   )
-  io.iCache.pcNext         := pcNext
-  io.iCache.inst_sram_addr := io.iCache.pcNext
-  io.iCache.inst_sram_en   := !(reset.asBool)
+  io.iCache.inst_sram_rdata <> preDecoder.inst
+  io.iCache.pcNext          := pcNext
+  io.iCache.inst_sram_addr  := io.iCache.pcNext
+  io.iCache.inst_sram_en    := !(reset.asBool)
 
   output.inst     := io.iCache.inst_sram_rdata
   output.pc       := pcNextTmp
   output.debug_pc := pcReg
-
-  io.out.valid := !io.binfo.bwen
 }

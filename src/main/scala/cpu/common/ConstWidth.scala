@@ -19,4 +19,5 @@ trait ConstWidth {
   val PC_WIDTH          = 32
   val REG_NUM           = 32
   val REG_WIDTH         = log2Ceil(REG_NUM).toInt
+  val KFC_WIDTH         = 5
 }

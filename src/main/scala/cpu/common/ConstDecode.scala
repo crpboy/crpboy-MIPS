@@ -90,18 +90,18 @@ trait ConstDecode {
   val mov_mthi = 3.U(FUOP_LEN.W)
   val mov_mtlo = 4.U(FUOP_LEN.W)
   // load & store
-  val mem_lb  = 1.U(FUOP_LEN.W)
-  val mem_lbu = 2.U(FUOP_LEN.W)
-  val mem_lh  = 3.U(FUOP_LEN.W)
-  val mem_lhu = 4.U(FUOP_LEN.W)
-  val mem_lw  = 5.U(FUOP_LEN.W)
-  val mem_lwl = 6.U(FUOP_LEN.W)
-  val mem_lwr = 7.U(FUOP_LEN.W)
-  val mem_sb  = 8.U(FUOP_LEN.W)
-  val mem_sh  = 9.U(FUOP_LEN.W)
-  val mem_sw  = 10.U(FUOP_LEN.W)
-  val mem_swl = 11.U(FUOP_LEN.W)
-  val mem_swr = 12.U(FUOP_LEN.W)
+  val mem_lb  = "b0001".U
+  val mem_lbu = "b0010".U
+  val mem_lh  = "b0011".U
+  val mem_lhu = "b0100".U
+  val mem_lw  = "b0101".U
+  val mem_lwl = "b0110".U
+  val mem_lwr = "b0111".U
+  val mem_sb  = "b1000".U
+  val mem_sh  = "b1001".U
+  val mem_sw  = "b1010".U
+  val mem_swl = "b1011".U
+  val mem_swr = "b1100".U
   // other functions
   val oth_lui     = 1.U(FUOP_LEN.W)
   val oth_break   = 2.U(FUOP_LEN.W)
