@@ -13,6 +13,12 @@ trait KeepFlushCtrlConst {
   val wb_home  = 0.U
 }
 
+/*
+  TODO: 可能导致bug的控制问题
+  如果两个不同阶段同时对一个部件发出keep请求
+  会导致keep请求只被执行一次，导致时序问题
+ */
+
 class KeepFlushCtrl extends Module with KeepFlushCtrlConst {
   val io = IO(new Bundle {
     val ifreq  = Input(new CtrlRequest)

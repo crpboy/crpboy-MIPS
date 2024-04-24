@@ -11,7 +11,6 @@ class JumpCtrl extends Module {
     val regData = Input(UInt(DATA_WIDTH.W))
     val pc      = Input(UInt(PC_WIDTH.W))
     val out     = Output(new JmpInfo)
-    // val wreg    = Output(new JWBInfo)
   })
   val valid  = io.inst.fu === fu_jmp
   val target = Cat(io.pc(31, 28), (io.inst.imm << 2)(27, 0))
@@ -26,6 +25,4 @@ class JumpCtrl extends Module {
       1.U -> io.regData,
     ),
   )
-  // io.wreg.wen   := valid && iswReg
-  // io.wreg.wdata := io.pc + 8.U
 }

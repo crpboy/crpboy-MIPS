@@ -3,6 +3,7 @@ package cpu.core.pipeline.components.execute
 import chisel3._
 import chisel3.util._
 import cpu.common._
+import cpu.common.Config._
 import cpu.common.Const._
 import cpu.utils.Functions._
 
@@ -11,22 +12,29 @@ class MulDiv extends Module {
     val inst  = Input(new InstInfoExt)
     val rs    = Input(UInt(DATA_WIDTH.W))
     val rt    = Input(UInt(DATA_WIDTH.W))
+    val block = Output(Bool())
     val wen   = Output(Bool())
     val wdata = Output(UInt(HILO_WIDTH.W))
   })
-  // TODO: 需要添加乘除法模块
-  val en = io.inst.fu === fu_mul
-  io.wen := en
-  io.wdata := Mux(
-    en,
-    MuxLookup(
-      io.inst.fuop,
-      0.U,
-      Seq(
-        md_mult  -> (io.rs.asSInt * io.rt.asSInt).asUInt,
-        md_multu -> io.rs * io.rt,
-      ),
-    ),
-    0.U,
-  )
+  val mul = Module(new Mul).io
+  val div = Module(new Div).io
+
+  val en       = io.inst.fu === fu_mul
+  val isSigned = io.inst.fuop(3).asBool
+  val ismul    = io.inst.fuop(0).asBool
+  mul.en       := (en && ismul)
+  div.en       := (en && !ismul)
+  mul.isSigned := isSigned
+  div.isSigned := isSigned
+
+  mul.rs <> io.rs
+  mul.rt <> io.rt
+  div.rs <> io.rs
+  div.rt <> io.rt
+
+  val ready = Mux(ismul, mul.ready, div.ready)
+  val data  = Mux(ismul, mul.wdata, div.wdata)
+  io.block := en && !ready
+  io.wen   := en && ready
+  io.wdata := data
 }

@@ -26,7 +26,7 @@ trait ConstDecode {
   val instIZ = 3.U(INST_TYPE_LEN.W) // imm zero extend
   val instIL = 4.U(INST_TYPE_LEN.W) // imm lui
   val instJP = 5.U(INST_TYPE_LEN.W) // jump
-  val instBA = 6.U(INST_TYPE_LEN.W) // Branch AL
+  val instBA = 6.U(INST_TYPE_LEN.W) // Branch XAL
   val instSP = 7.U(INST_TYPE_LEN.W) // special inst
 
   // operand type
@@ -49,26 +49,28 @@ trait ConstDecode {
   val fu_oth = 7.U(FU_LEN.W)
 
   // function operator
-  val fuop_nop = 0.U(FUOP_LEN.W)
+  val fuop_nop = "b0000".U
   // mul / div operator
-  val md_mult  = 1.U(FUOP_LEN.W)
-  val md_multu = 2.U(FUOP_LEN.W)
-  val md_div   = 3.U(FUOP_LEN.W)
-  val md_divu  = 4.U(FUOP_LEN.W)
+  // (3) = 1 -> signed; (1) = 1 -> div; (0) = 1 -> mul
+  val md_mult  = "b1001".U
+  val md_multu = "b0001".U
+  val md_div   = "b1010".U
+  val md_divu  = "b0010".U
   // alu operator
-  val alu_add  = 1.U(FUOP_LEN.W)
-  val alu_addu = 2.U(FUOP_LEN.W)
-  val alu_sub  = 3.U(FUOP_LEN.W)
-  val alu_subu = 4.U(FUOP_LEN.W)
-  val alu_slt  = 5.U(FUOP_LEN.W)
-  val alu_sltu = 6.U(FUOP_LEN.W)
-  val alu_and  = 7.U(FUOP_LEN.W)
-  val alu_nor  = 8.U(FUOP_LEN.W)
-  val alu_or   = 9.U(FUOP_LEN.W)
-  val alu_xor  = 10.U(FUOP_LEN.W)
-  val alu_sll  = 11.U(FUOP_LEN.W)
-  val alu_srl  = 12.U(FUOP_LEN.W)
-  val alu_sra  = 13.U(FUOP_LEN.W)
+  // (3)&(2)&(1) = 1 -> have exception
+  val alu_add  = "b1110".U
+  val alu_addu = "b0001".U
+  val alu_sub  = "b1111".U
+  val alu_subu = "b0010".U
+  val alu_slt  = "b0011".U
+  val alu_sltu = "b0100".U
+  val alu_and  = "b0101".U
+  val alu_nor  = "b0110".U
+  val alu_or   = "b0111".U
+  val alu_xor  = "b1000".U
+  val alu_sll  = "b1001".U
+  val alu_srl  = "b1010".U
+  val alu_sra  = "b1011".U
   // bra operator
   // op(3)=1 is ..al inst
   val bra_beq    = "b0001".U
@@ -85,11 +87,13 @@ trait ConstDecode {
   val jmp_jr   = "b0101".U
   val jmp_jalr = "b1101".U
   // move operator
-  val mov_mfhi = 1.U(FUOP_LEN.W)
-  val mov_mflo = 2.U(FUOP_LEN.W)
-  val mov_mthi = 3.U(FUOP_LEN.W)
-  val mov_mtlo = 4.U(FUOP_LEN.W)
+  // (1) = 1 -> hi; (0) = 1 -> move to
+  val mov_mfhi = "b1010".U
+  val mov_mflo = "b1000".U
+  val mov_mthi = "b1011".U
+  val mov_mtlo = "b1001".U
   // load & store
+  // (3) = 1 -> store
   val mem_lb  = "b0001".U
   val mem_lbu = "b0010".U
   val mem_lh  = "b0011".U
@@ -103,9 +107,9 @@ trait ConstDecode {
   val mem_swl = "b1011".U
   val mem_swr = "b1100".U
   // other functions
-  val oth_lui     = 1.U(FUOP_LEN.W)
-  val oth_break   = 2.U(FUOP_LEN.W)
-  val oth_syscall = 3.U(FUOP_LEN.W)
+  val oth_lui     = "b1000".U
+  val oth_break   = "b0001".U
+  val oth_syscall = "b0010".U
 
   // [[discard]]
   // decode only

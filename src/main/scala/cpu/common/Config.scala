@@ -7,5 +7,6 @@ object Config extends ConfigList
 
 trait ConfigList {
   val isBuild = false
-  val isPipeline = true
+  val mulClockNum = 2
+  val divClockNum = 8
 }

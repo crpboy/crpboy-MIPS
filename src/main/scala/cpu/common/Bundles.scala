@@ -99,7 +99,6 @@ class JmpInfo extends Bundle {
 
 // branch info
 class BraInfo extends Bundle {
-  // val en     = Bool()
   val bwen   = Bool()
   val bwaddr = UInt(PC_WIDTH.W)
 }

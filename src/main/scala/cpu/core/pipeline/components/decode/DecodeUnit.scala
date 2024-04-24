@@ -27,18 +27,6 @@ class DecodeUnit extends Module {
   val input  = io.in.bits
   val output = io.out
 
-  input.inst <> decoder.rawInst
-  input.pc   <> jmp.pc
-
-  decoder.rsaddr <> reg.rsaddr
-  decoder.rtaddr <> reg.rtaddr
-  io.wb          <> reg.wb
-
-  reg.rsdata       <> jmp.regData
-  decoder.instInfo <> jmp.inst
-  io.jinfo.jwen    := jmp.out.jwen
-  io.jinfo.jwaddr  := jmp.out.jwaddr
-
   val rsdata = MuxCase(
     reg.rsdata,
     Seq(
@@ -55,6 +43,18 @@ class DecodeUnit extends Module {
       (io.wbDHazard.wen && io.wbDHazard.waddr === reg.rtaddr)   -> io.wbDHazard.wdata,
     ),
   )
+
+  input.inst <> decoder.rawInst
+  input.pc   <> jmp.pc
+
+  decoder.rsaddr <> reg.rsaddr
+  decoder.rtaddr <> reg.rtaddr
+  io.wb          <> reg.wb
+
+  rsdata           <> jmp.regData
+  decoder.instInfo <> jmp.inst
+  io.jinfo.jwen    := jmp.out.jwen
+  io.jinfo.jwaddr  := jmp.out.jwaddr
 
   io.ctrlreq.keep := MuxCase(
     "b00000".U,

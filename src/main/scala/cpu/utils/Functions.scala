@@ -5,7 +5,7 @@ import chisel3.util._
 import cpu.common.Const._
 
 object Functions {
-  def signExtend(data: UInt, width: Int = DATA_WIDTH): UInt = {
+  def signedExtend(data: UInt, width: Int = DATA_WIDTH): UInt = {
     val len = data.getWidth
     return Cat(Fill(width - len, data(len - 1)), data)
   }

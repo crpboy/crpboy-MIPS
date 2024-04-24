@@ -23,10 +23,10 @@ class ExecuteUnit extends Module {
     val ctrlreq = Output(new CtrlRequest)
   })
 
-  val alu  = Module(new ALU).io
-  val hilo = Module(new Hilo).io
-  val mul  = Module(new MulDiv).io
-  val bra  = Module(new BranchCtrl).io
+  val alu    = Module(new ALU).io
+  val muldiv = Module(new MulDiv).io
+  val hilo   = Module(new Hilo).io
+  val bra    = Module(new BranchCtrl).io
 
   val input  = io.in.bits
   val output = io.out
@@ -35,17 +35,23 @@ class ExecuteUnit extends Module {
   input.rt   <> alu.rt
   input.inst <> alu.inst
 
-  input.rs   <> mul.rs
-  input.rt   <> mul.rt
-  input.inst <> mul.inst
+  input.rs   <> muldiv.rs
+  input.rt   <> muldiv.rt
+  input.inst <> muldiv.inst
 
   input.rs   <> bra.rs
   input.rt   <> bra.rt
   input.inst <> bra.inst
   input.pc   <> bra.pc
 
-  hilo.wen   <> mul.wen
-  hilo.wdata <> mul.wdata
+  input.rs   <> muldiv.rs
+  input.rt   <> muldiv.rt
+  input.inst <> muldiv.inst
+
+  input.rs     <> hilo.movdata
+  input.inst   <> hilo.inst
+  muldiv.wen   <> hilo.wen
+  muldiv.wdata <> hilo.wdata
 
   bra.binfo.bwen   <> io.binfo.bwen
   bra.binfo.bwaddr <> io.binfo.bwaddr
@@ -60,8 +66,8 @@ class ExecuteUnit extends Module {
         input.inst.fuop,
         0.U,
         Seq(
-          mov_mfhi -> hilo.out(63, 32),
-          mov_mflo -> hilo.out(31, 0),
+          mov_mfhi -> hilo.hi,
+          mov_mflo -> hilo.lo,
         ),
       ),
       fu_jmp -> (input.pc + 4.U),
@@ -86,19 +92,24 @@ class ExecuteUnit extends Module {
     ),
   )
 
-  io.dHazard.wen   := input.inst.wb
-  io.dHazard.waddr := input.inst.rd
-  io.dHazard.wdata := data
+  io.dHazard.wen    := input.inst.wb
+  io.dHazard.waddr  := input.inst.rd
+  io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
+  // TODO: 创建使能信号对应的临时变量，然后全部或起来
+  // 通过这种方式避免选择器嵌套，实现并行控制信号选择
   io.ctrlreq.keep := MuxCase(
     "b00000".U,
     Seq(
+      muldiv.block   -> "b11100".U,
+      bra.binfo.bwen -> "b00000".U,
     ),
   )
   io.ctrlreq.flush := MuxCase(
     "b00000".U,
     Seq(
+      muldiv.block   -> "b00010".U,
       bra.binfo.bwen -> "b01000".U,
     ),
   )
