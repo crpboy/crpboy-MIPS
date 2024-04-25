@@ -146,6 +146,7 @@ class Decoder extends Module {
       instIS -> signedExtend(inst(15, 0)), // signed extend
       instIZ -> zeroExtend(inst(15, 0)), // zero extend
       instJP -> signedExtend(inst(25, 0)), // jump
+      instBA -> signedExtend(inst(15, 0)), // branch xal
       instIL -> zeroExtendHigh(inst(15, 0)), // lui
     ),
   )

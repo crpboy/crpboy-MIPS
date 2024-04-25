@@ -3,9 +3,9 @@ package cpu.core.pipeline.components.execute
 import chisel3._
 import chisel3.util._
 
-import cpu.utils.Functions._
 import cpu.common._
 import cpu.common.Const._
+import cpu.utils.Functions._
 import cpu.core.pipeline.components.execute._
 
 class ExecuteUnit extends Module {
@@ -62,6 +62,7 @@ class ExecuteUnit extends Module {
     input.inst.imm,
     Seq(
       fu_alu -> alu.out,
+      fu_mem -> input.rt,
       fu_mov -> MuxLookup(
         input.inst.fuop,
         0.U,
@@ -72,23 +73,89 @@ class ExecuteUnit extends Module {
       ),
       fu_jmp -> (input.pc + 4.U),
       fu_bra -> (input.pc + 4.U),
-      fu_mem -> input.rt,
     ),
   )
   output.data := data
 
   // TODO: 信号处理未完成
   // mem request
+  val vaddr   = input.rs + input.inst.imm
+  val memByte = vaddr(1, 0)
+  output.memByte      := memByte
   io.dCache.sram_en   := input.inst.fu === fu_mem
-  io.dCache.sram_addr := input.rs + input.inst.imm
-  io.dCache.sram_wen  := Mux(!input.inst.wb, WD_EN, WD_NO)
+  io.dCache.sram_addr := vaddr
+  io.dCache.sram_wen := Mux(
+    input.inst.wb,
+    "b0000".U,
+    MuxLookup(
+      input.inst.fuop,
+      0.U,
+      Seq(
+        mem_sb -> MuxLookup(
+          memByte,
+          0.U,
+          Seq(
+            "b11".U -> "b1000".U,
+            "b10".U -> "b0100".U,
+            "b01".U -> "b0010".U,
+            "b00".U -> "b0001".U,
+          ),
+        ),
+        mem_sh -> Mux(
+          memByte(1).asBool,
+          "b1100".U,
+          "b0011".U,
+        ),
+        mem_sw -> "b1111".U,
+        mem_swl -> MuxLookup(
+          memByte,
+          0.U,
+          Seq(
+            "b00".U -> "b0001".U,
+            "b01".U -> "b0011".U,
+            "b10".U -> "b0111".U,
+            "b11".U -> "b1111".U,
+          ),
+        ),
+        mem_swr -> MuxLookup(
+          memByte,
+          0.U,
+          Seq(
+            "b00".U -> "b1111".U,
+            "b01".U -> "b1110".U,
+            "b10".U -> "b1100".U,
+            "b11".U -> "b1000".U,
+          ),
+        ),
+      ),
+    ),
+  )
   io.dCache.sram_wdata := MuxLookup(
     input.inst.fuop,
-    0.U,
+    input.rt,
     Seq(
-      mem_sb -> zeroExtend(output.data(7, 0)),
-      mem_sh -> zeroExtend(output.data(15, 0)),
-      mem_sw -> output.data,
+      mem_sb -> Fill(4, input.rt(7, 0)),
+      mem_sh -> Fill(2, input.rt(15, 0)),
+      mem_swl -> MuxLookup(
+        memByte,
+        0.U,
+        Seq(
+          "b00".U -> Cat(0.U(24.W), input.rt(31, 24)),
+          "b01".U -> Cat(0.U(16.W), input.rt(31, 16)),
+          "b10".U -> Cat(0.U(8.W), input.rt(31, 8)),
+          "b11".U -> input.rt,
+        ),
+      ),
+      mem_swr -> MuxLookup(
+        memByte,
+        0.U,
+        Seq(
+          "b00".U -> input.rt,
+          "b01".U -> Cat(input.rt(23, 0), 0.U(8.W)),
+          "b10".U -> Cat(input.rt(15, 0), 0.U(16.W)),
+          "b11".U -> Cat(input.rt(7, 0), 0.U(24.W)),
+        ),
+      ),
     ),
   )
 

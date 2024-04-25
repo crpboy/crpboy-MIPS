@@ -91,8 +91,8 @@ class Div extends Module {
     uDivisorSent := false.B
   }
 
-  sDiv.s_axis_dividend_tvalid := io.en && !uDividendSent
-  sDiv.s_axis_divisor_tvalid  := io.en && !uDivisorSent
+  sDiv.s_axis_dividend_tvalid := io.en && !sDividendSent
+  sDiv.s_axis_divisor_tvalid  := io.en && !sDivisorSent
   uDiv.s_axis_dividend_tvalid := io.en && !uDividendSent
   uDiv.s_axis_divisor_tvalid  := io.en && !uDivisorSent
 

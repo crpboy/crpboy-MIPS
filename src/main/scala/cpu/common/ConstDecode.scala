@@ -94,13 +94,15 @@ trait ConstDecode {
   val mov_mtlo = "b1001".U
   // load & store
   // (3) = 1 -> store
-  val mem_lb  = "b0001".U
-  val mem_lbu = "b0010".U
-  val mem_lh  = "b0011".U
-  val mem_lhu = "b0100".U
-  val mem_lw  = "b0101".U
-  val mem_lwl = "b0110".U
-  val mem_lwr = "b0111".U
+  // Load.(2) = 1 -> not lw
+  // Load.(1) = 1 -> is lh
+  val mem_lb  = "b0100".U
+  val mem_lbu = "b0101".U
+  val mem_lh  = "b0110".U
+  val mem_lhu = "b0111".U
+  val mem_lw  = "b0011".U
+  val mem_lwl = "b0001".U
+  val mem_lwr = "b0010".U
   val mem_sb  = "b1000".U
   val mem_sh  = "b1001".U
   val mem_sw  = "b1010".U
