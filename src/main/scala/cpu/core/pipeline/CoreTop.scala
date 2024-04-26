@@ -3,12 +3,12 @@ package cpu.core.pipeline
 import chisel3._
 import chisel3.util._
 
-import cpu.core.pipeline._
-import cpu.utils.StageConnect._
 import cpu.common._
 import cpu.common.Const._
+import cpu.utils.StageConnect._
 
 import cpu.core.pipeline.components._
+import cpu.core.pipeline.components.ctrl._
 import cpu.core.pipeline.components.fetch._
 import cpu.core.pipeline.components.decode._
 import cpu.core.pipeline.components.execute._
