@@ -27,6 +27,7 @@ class ExecuteUnit extends Module {
   val muldiv = Module(new MulDiv).io
   val hilo   = Module(new Hilo).io
   val bra    = Module(new BranchCtrl).io
+  val memReq = Module(new MemReq).io
 
   val input  = io.in.bits
   val output = io.out
@@ -39,10 +40,12 @@ class ExecuteUnit extends Module {
   input.rt   <> muldiv.rt
   input.inst <> muldiv.inst
 
-  input.rs   <> bra.rs
-  input.rt   <> bra.rt
-  input.inst <> bra.inst
-  input.pc   <> bra.pc
+  input.rs         <> bra.rs
+  input.rt         <> bra.rt
+  input.inst       <> bra.inst
+  input.pc         <> bra.pc
+  bra.binfo.bwen   <> io.binfo.bwen
+  bra.binfo.bwaddr <> io.binfo.bwaddr
 
   input.rs   <> muldiv.rs
   input.rt   <> muldiv.rt
@@ -53,8 +56,10 @@ class ExecuteUnit extends Module {
   muldiv.wen   <> hilo.wen
   muldiv.wdata <> hilo.wdata
 
-  bra.binfo.bwen   <> io.binfo.bwen
-  bra.binfo.bwaddr <> io.binfo.bwaddr
+  input.rs   <> memReq.rs
+  input.rt   <> memReq.rt
+  input.inst <> memReq.inst
+  io.dCache  <> memReq.dCache
 
   // data select
   val data = MuxLookup(
@@ -75,97 +80,12 @@ class ExecuteUnit extends Module {
       fu_bra -> (input.pc + 4.U),
     ),
   )
-  output.data := data
-
-  // TODO: 信号处理未完成
-  // mem request
-  val vaddr   = input.rs + input.inst.imm
-  val memByte = vaddr(1, 0)
-  output.memByte      := memByte
-  io.dCache.sram_en   := input.inst.fu === fu_mem
-  io.dCache.sram_addr := vaddr
-  io.dCache.sram_wen := Mux(
-    input.inst.wb,
-    "b0000".U,
-    MuxLookup(
-      input.inst.fuop,
-      0.U,
-      Seq(
-        mem_sb -> MuxLookup(
-          memByte,
-          0.U,
-          Seq(
-            "b11".U -> "b1000".U,
-            "b10".U -> "b0100".U,
-            "b01".U -> "b0010".U,
-            "b00".U -> "b0001".U,
-          ),
-        ),
-        mem_sh -> Mux(
-          memByte(1).asBool,
-          "b1100".U,
-          "b0011".U,
-        ),
-        mem_sw -> "b1111".U,
-        mem_swl -> MuxLookup(
-          memByte,
-          0.U,
-          Seq(
-            "b00".U -> "b0001".U,
-            "b01".U -> "b0011".U,
-            "b10".U -> "b0111".U,
-            "b11".U -> "b1111".U,
-          ),
-        ),
-        mem_swr -> MuxLookup(
-          memByte,
-          0.U,
-          Seq(
-            "b00".U -> "b1111".U,
-            "b01".U -> "b1110".U,
-            "b10".U -> "b1100".U,
-            "b11".U -> "b1000".U,
-          ),
-        ),
-      ),
-    ),
-  )
-  io.dCache.sram_wdata := MuxLookup(
-    input.inst.fuop,
-    input.rt,
-    Seq(
-      mem_sb -> Fill(4, input.rt(7, 0)),
-      mem_sh -> Fill(2, input.rt(15, 0)),
-      mem_swl -> MuxLookup(
-        memByte,
-        0.U,
-        Seq(
-          "b00".U -> Cat(0.U(24.W), input.rt(31, 24)),
-          "b01".U -> Cat(0.U(16.W), input.rt(31, 16)),
-          "b10".U -> Cat(0.U(8.W), input.rt(31, 8)),
-          "b11".U -> input.rt,
-        ),
-      ),
-      mem_swr -> MuxLookup(
-        memByte,
-        0.U,
-        Seq(
-          "b00".U -> input.rt,
-          "b01".U -> Cat(input.rt(23, 0), 0.U(8.W)),
-          "b10".U -> Cat(input.rt(15, 0), 0.U(16.W)),
-          "b11".U -> Cat(input.rt(7, 0), 0.U(24.W)),
-        ),
-      ),
-    ),
-  )
 
   io.dHazard.wen    := input.inst.wb
   io.dHazard.waddr  := input.inst.rd
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  // TODO: 创建使能信号对应的临时变量，然后全部或起来
-  // 通过这种方式避免选择器嵌套，实现并行控制信号选择
   io.ctrlreq.keep := MuxCase(
     "b00000".U,
     Seq(
@@ -181,6 +101,8 @@ class ExecuteUnit extends Module {
     ),
   )
 
+  output.data      := data
+  output.memByte   := memReq.memByte
   output.inst.fu   := input.inst.fu
   output.inst.fuop := input.inst.fuop
   output.inst.rd   := input.inst.rd

@@ -78,8 +78,8 @@ class Decoder extends Module {
       LH  -> List(iy, instIS, wb_y, fu_mem, mem_lh),
       LHU -> List(iy, instIS, wb_y, fu_mem, mem_lhu),
       LW  -> List(iy, instIS, wb_y, fu_mem, mem_lw),
-      LWL -> List(iy, instIS, wb_y, fu_mem, mem_lwl), // word << (3-offset).Byte + rt(offset.Byte,0)
-      LWR -> List(iy, instIS, wb_y, fu_mem, mem_lwr), // rt << (3-offset).Byte + word(offset.Byte,0)
+      LWL -> List(iy, instIS, wb_y, fu_mem, mem_lwl),
+      LWR -> List(iy, instIS, wb_y, fu_mem, mem_lwr),
       // store
       SB  -> List(iy, instIS, wb_n, fu_mem, mem_sb),
       SH  -> List(iy, instIS, wb_n, fu_mem, mem_sh),
@@ -142,12 +142,12 @@ class Decoder extends Module {
     t,
     0.U,
     Seq(
-      instRS -> zeroExtend(inst(10, 6)), // shift
-      instIS -> signedExtend(inst(15, 0)), // signed extend
-      instIZ -> zeroExtend(inst(15, 0)), // zero extend
-      instJP -> signedExtend(inst(25, 0)), // jump
-      instBA -> signedExtend(inst(15, 0)), // branch xal
-      instIL -> zeroExtendHigh(inst(15, 0)), // lui
+      instRS -> zeroExtend(inst(10, 6)),
+      instIS -> signedExtend(inst(15, 0)),
+      instIZ -> zeroExtend(inst(15, 0)),
+      instJP -> signedExtend(inst(25, 0)),
+      instBA -> signedExtend(inst(15, 0)),
+      instIL -> zeroExtendHigh(inst(15, 0)),
     ),
   )
 }

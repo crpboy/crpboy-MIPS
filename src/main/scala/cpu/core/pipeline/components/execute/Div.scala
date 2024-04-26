@@ -102,9 +102,4 @@ class Div extends Module {
   val uRes   = Cat(uDiv.m_axis_dout_tdata(DATA_WIDTH - 1, 0), uDiv.m_axis_dout_tdata(HILO_WIDTH - 1, DATA_WIDTH))
   io.ready := Mux(io.isSigned, sReady, uReady)
   io.wdata := Mux(io.isSigned, sRes, uRes)
-
-  // sDiv.s_axis_dividend_tvalid <> io.en
-  // sDiv.s_axis_divisor_tvalid  <> io.en
-  // uDiv.s_axis_dividend_tvalid <> io.en
-  // uDiv.s_axis_divisor_tvalid  <> io.en
 }

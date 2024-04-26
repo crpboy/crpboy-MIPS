@@ -8,8 +8,6 @@ import cpu.common.Const._
 class RegFile extends Module {
   val io = IO(new Bundle {
     val wb = Input(new WBInfo)
-    // val jwb    = Input(new JWBInfo)
-    // val bwb    = Input(new JWBInfo)
     val rsaddr = Input(UInt(REG_WIDTH.W))
     val rtaddr = Input(UInt(REG_WIDTH.W))
     val rsdata = Output(UInt(DATA_WIDTH.W))
@@ -21,9 +19,4 @@ class RegFile extends Module {
   when(io.wb.wen) {
     reg(io.wb.waddr) := io.wb.wdata
   }
-  // when(io.jwb.wen) {
-  //   reg(31.U) := io.jwb.wdata
-  // }.elsewhen(io.bwb.wen) {
-  //   reg(31.U) := io.bwb.wdata
-  // }
 }
