@@ -19,8 +19,6 @@ class MemoryUnit extends Module {
 
   val input   = io.in.bits
   val output  = io.out
-  val ctrlreq = WireInit(0.U.asTypeOf(new CtrlRequest))
-  ctrlreq <> io.ctrlreq
 
   val rdata = io.dCache.sram_rdata
   val lbres = MuxLookup(
@@ -99,6 +97,9 @@ class MemoryUnit extends Module {
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := data
+
+  io.ctrlreq.block := false.B
+  io.ctrlreq.clear := false.B
 
   output.data     := data
   output.inst     := input.inst

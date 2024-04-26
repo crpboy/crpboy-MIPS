@@ -56,18 +56,8 @@ class DecodeUnit extends Module {
   io.jinfo.jwen    := jmp.out.jwen
   io.jinfo.jwaddr  := jmp.out.jwaddr
 
-  io.ctrlreq.keep := MuxCase(
-    "b00000".U,
-    Seq(
-      io.exeDHazard.isload -> "b11000".U,
-    ),
-  )
-  io.ctrlreq.flush := MuxCase(
-    "b00000".U,
-    Seq(
-      io.exeDHazard.isload -> "b00100".U,
-    ),
-  )
+  io.ctrlreq.block := io.exeDHazard.isload && (io.exeDHazard.waddr === reg.rsaddr || io.exeDHazard.waddr === reg.rtaddr)
+  io.ctrlreq.clear := false.B
 
   output.inst     := decoder.instInfo
   output.rs       := rsdata

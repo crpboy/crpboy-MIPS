@@ -20,7 +20,7 @@ class ExecuteUnit extends Module {
     val dHazard = Output(new DataHazardExe)
     val in      = new KeepFlushIO(new StageDecodeExecute)
     val out     = new StageExecuteMemory
-    val ctrlreq = Output(new CtrlRequest)
+    val ctrlreq = Output(new CtrlRequestExecute)
   })
 
   val alu    = Module(new ALU).io
@@ -86,20 +86,9 @@ class ExecuteUnit extends Module {
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  io.ctrlreq.keep := MuxCase(
-    "b00000".U,
-    Seq(
-      muldiv.block   -> "b11100".U,
-      bra.binfo.bwen -> "b00000".U,
-    ),
-  )
-  io.ctrlreq.flush := MuxCase(
-    "b00000".U,
-    Seq(
-      muldiv.block   -> "b00010".U,
-      bra.binfo.bwen -> "b01000".U,
-    ),
-  )
+  io.ctrlreq.clear       := false.B
+  io.ctrlreq.block       := muldiv.block
+  io.ctrlreq.branchPause := bra.binfo.bwen
 
   output.data      := data
   output.memByte   := memReq.memByte

@@ -23,8 +23,11 @@ class CtrlInfo extends Bundle {
   val flush = Bool()
 }
 class CtrlRequest extends Bundle {
-  val keep  = UInt(KFC_WIDTH.W)
-  val flush = UInt(KFC_WIDTH.W)
+  val block = Bool()
+  val clear = Bool()
+}
+class CtrlRequestExecute extends CtrlRequest {
+  val branchPause = Bool()
 }
 
 // top IO

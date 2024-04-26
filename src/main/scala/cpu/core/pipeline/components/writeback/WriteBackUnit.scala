@@ -14,10 +14,7 @@ class WriteBackUnit extends Module {
     val ctrlreq = Output(new CtrlRequest)
     val debug   = new DebugIO
   })
-
   val input   = io.in.bits
-  val ctrlreq = WireInit(0.U.asTypeOf(new CtrlRequest))
-  ctrlreq <> io.ctrlreq
 
   io.out.wen   := input.inst.wb
   io.out.wdata := input.data
@@ -26,6 +23,9 @@ class WriteBackUnit extends Module {
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := input.data
+
+  io.ctrlreq.block := false.B
+  io.ctrlreq.clear := false.B
 
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := input.data

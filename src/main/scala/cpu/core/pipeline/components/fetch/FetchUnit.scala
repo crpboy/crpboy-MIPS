@@ -24,8 +24,6 @@ class FetchUnit extends Module {
   val preDecoder = Module(new PreDecoder).io
 
   val output  = io.out
-  val ctrlreq = WireInit(0.U.asTypeOf(new CtrlRequest))
-  ctrlreq <> io.ctrlreq
 
   val pcReg     = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
   val pcNextTmp = pcReg + 4.U
@@ -41,6 +39,9 @@ class FetchUnit extends Module {
   io.iCache.pcNext          := pcNext
   io.iCache.inst_sram_addr  := io.iCache.pcNext
   io.iCache.inst_sram_en    := !(reset.asBool)
+
+  io.ctrlreq.block := false.B
+  io.ctrlreq.clear := false.B
 
   output.inst     := io.iCache.inst_sram_rdata
   output.pc       := pcNextTmp

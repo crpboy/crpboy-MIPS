@@ -5,24 +5,14 @@ import chisel3.util._
 import cpu.common._
 import cpu.common.Const._
 
-trait KeepFlushCtrlConst {
-  val if_home  = 4.U
-  val id_home  = 3.U
-  val exe_home = 2.U
-  val mem_home = 1.U
-  val wb_home  = 0.U
-}
-
 /*
   TODO: 可能导致bug的控制问题
   如果两个不同阶段同时对一个部件发出keep请求
   会导致keep请求只被执行一次，导致时序问题
- */
 
-/*
   TODO: 创建使能信号对应的临时变量，然后全部或起来
   通过这种方式避免选择器嵌套，实现并行控制信号选择
-  
+
   还有一种方案
   我们来分析一下流水线的运行状态
   无非是三种：
@@ -47,16 +37,46 @@ trait KeepFlushCtrlConst {
     flush[i+1]   |= clear[i]
  */
 
-class KeepFlushCtrl extends Module with KeepFlushCtrlConst {
+class KeepFlushCtrl extends Module {
   val io = IO(new Bundle {
     val ifreq  = Input(new CtrlRequest)
     val idreq  = Input(new CtrlRequest)
-    val exereq = Input(new CtrlRequest)
+    val exereq = Input(new CtrlRequestExecute)
     val memreq = Input(new CtrlRequest)
     val wbreq  = Input(new CtrlRequest)
-    val keep   = Output(UInt(KFC_WIDTH.W))
-    val flush  = Output(UInt(KFC_WIDTH.W))
+    val keep   = Output(UInt(5.W))
+    val flush  = Output(UInt(5.W))
   })
-  io.keep  := io.ifreq.keep  | io.idreq.keep  | io.exereq.keep  | io.memreq.keep  | io.wbreq.keep
-  io.flush := io.ifreq.flush | io.idreq.flush | io.exereq.flush | io.memreq.flush | io.wbreq.flush
+  val block: UInt = Cat(
+    io.ifreq.block,
+    io.idreq.block,
+    io.exereq.block,
+    io.memreq.block,
+    io.wbreq.block,
+  )
+  val clear: UInt = Cat(
+    (io.ifreq.clear | io.exereq.branchPause),
+    io.idreq.clear,
+    io.exereq.clear,
+    io.memreq.clear,
+    io.wbreq.clear,
+  )
+
+  val ifkeep  = block(4) | block(3) | block(2) | block(1) | block(0)
+  val ifflush = false.B
+
+  val idkeep  = block(3) | block(2) | block(1) | block(0)
+  val idflush = block(4) | clear(4)
+
+  val exekeep  = block(2) | block(1) | block(0)
+  val exeflush = block(3) | clear(3)
+
+  val memkeep  = block(1) | block(0)
+  val memflush = block(2) | clear(2)
+
+  val wbkeep  = block(0)
+  val wbflush = block(1) | clear(1)
+
+  io.keep  := Cat(ifkeep, idkeep, exekeep, memkeep, wbkeep)
+  io.flush := Cat(ifflush, idflush, exeflush, memflush, wbflush)
 }
