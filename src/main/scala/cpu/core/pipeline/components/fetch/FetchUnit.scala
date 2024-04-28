@@ -35,13 +35,14 @@ class FetchUnit extends Module {
       io.binfo.bwen -> io.binfo.bwaddr,
     ),
   )
+  val rst = RegNext(reset)
   io.iCache.inst_sram_rdata <> preDecoder.inst
   io.iCache.pcNext          := pcNext
   io.iCache.inst_sram_addr  := io.iCache.pcNext
   io.iCache.inst_sram_en    := !(reset.asBool)
 
-  io.ctrlreq.block := false.B
-  io.ctrlreq.clear := false.B
+  io.ctrlreq.block := rst
+  io.ctrlreq.clear := rst
 
   output.inst     := io.iCache.inst_sram_rdata
   output.pc       := pcNextTmp

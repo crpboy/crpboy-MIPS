@@ -10,13 +10,11 @@ CLEAR_INPUT += ./test_run_dir
 clean:
 	rm -rf $(CLEAR_INPUT)
 
-CPY_HOME1 = /mnt/e/crpboy/file/NSCSCC/CO-lab-material-CQU-2022/mycpu/mycpu_top.v
-CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab3/CPU_CDE/mycpu_verify/rtl/myCPU/mycpu_top.v
+CPY_HOME1 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab3/CPU_CDE/mycpu_verify/rtl/myCPU/mycpu_top.v
 
 define REPLACE_COMMAND
 sed -i 's/\bclock\b/clk/g' ./generated/mycpu_top.v
 sed -i 's/\breset\b/resetn/g' ./generated/mycpu_top.v
-# sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' ./generated/mycpu_top.v
 sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' ./generated/mycpu_top.v
 endef
 
@@ -25,13 +23,12 @@ replace:
 
 define COPYFILE_COMMAND
 cp ./generated/mycpu_top.v $(CPY_HOME1)
-cp ./generated/mycpu_top.v $(CPY_HOME2)
 endef
 
 copyfile:
 	$(COPYFILE_COMMAND)
 
-run:
+vivado:
 	rm -rf $(CLEAR_INPUT)
 	sbt run
 	$(REPLACE_COMMAND)
@@ -44,3 +41,22 @@ submit:
 test:
 	clean
 	sbt test
+
+define SOC_SIM_COMMAND
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make clean
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make run
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make sim
+endef
+
+define SOC_SIM_WAVE_COMMAND
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make sim
+endef
+
+run:
+	$(REPLACE_COMMAND)
+	$(COPYFILE_COMMAND)
+	$(SOC_SIM_COMMAND)
+
+wave:
+	$(SOC_SIM_WAVE_COMMAND)

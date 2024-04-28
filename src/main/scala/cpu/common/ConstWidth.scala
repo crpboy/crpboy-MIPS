@@ -3,7 +3,6 @@ package cpu.common
 import chisel3._
 import chisel3.util._
 import math._
-import cpu.common.Config._
 
 trait ConstWidth {
   val ADDR_WIDTH        = 32

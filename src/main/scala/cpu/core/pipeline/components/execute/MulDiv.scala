@@ -3,7 +3,6 @@ package cpu.core.pipeline.components.execute
 import chisel3._
 import chisel3.util._
 import cpu.common._
-import cpu.common.Config._
 import cpu.common.Const._
 import cpu.utils.Functions._
 
