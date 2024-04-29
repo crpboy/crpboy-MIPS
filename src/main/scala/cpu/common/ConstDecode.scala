@@ -43,19 +43,25 @@ trait ConstDecode {
   val fu_alu = 1.U(FU_LEN.W)
   val fu_bra = 2.U(FU_LEN.W)
   val fu_jmp = 3.U(FU_LEN.W)
-  val fu_mul = 4.U(FU_LEN.W)
+  val fu_md  = 4.U(FU_LEN.W)
   val fu_mov = 5.U(FU_LEN.W)
   val fu_mem = 6.U(FU_LEN.W)
   val fu_oth = 7.U(FU_LEN.W)
 
   // function operator
   val fuop_nop = "b0000".U
+
   // mul / div operator
   // (3) = 1 -> signed; (1) = 1 -> div; (0) = 1 -> mul
   val md_mult  = "b1001".U
   val md_multu = "b0001".U
   val md_div   = "b1010".U
   val md_divu  = "b0010".U
+
+  val _md_signed = BitPat("b1???")
+  val _md_div    = BitPat("b??1?")
+  val _md_mul    = BitPat("b???1")
+
   // alu operator
   // (3)&(2)&(1) = 1 -> have exception
   val alu_add  = "b1110".U
@@ -71,6 +77,7 @@ trait ConstDecode {
   val alu_sll  = "b1001".U
   val alu_srl  = "b1010".U
   val alu_sra  = "b1011".U
+
   // bra operator
   // op(3)=1 is ..al inst
   val bra_beq    = "b0001".U
@@ -81,21 +88,31 @@ trait ConstDecode {
   val bra_bltz   = "b0110".U
   val bra_bltzal = "b1110".U
   val bra_bgezal = "b1011".U
+
   // jump operator
+  // (2) = 1 -> read reg
+  // (3) = 1 -> write reg
   val jmp_j    = "b0001".U
   val jmp_jal  = "b1001".U
   val jmp_jr   = "b0101".U
   val jmp_jalr = "b1101".U
+
+  val _jmp_rreg = BitPat("b?1??")
+  val _jmp_wreg = BitPat("b1???")
+
   // move operator
   // (1) = 1 -> hi; (0) = 1 -> move to
   val mov_mfhi = "b1010".U
   val mov_mflo = "b1000".U
   val mov_mthi = "b1011".U
   val mov_mtlo = "b1001".U
+
+  val _mov_usehi = BitPat("b??1?")
+  val _mov_ismt  = BitPat("b???1")
+
   // load & store
   // (3) = 1 -> store
-  // Load.(2) = 1 -> not lw
-  // Load.(1) = 1 -> is lh
+  // Load.(2) = 0 -> lw
   val mem_lb  = "b0100".U
   val mem_lbu = "b0101".U
   val mem_lh  = "b0110".U
@@ -108,6 +125,10 @@ trait ConstDecode {
   val mem_sw  = "b1010".U
   val mem_swl = "b1011".U
   val mem_swr = "b1100".U
+
+  val _mem_store = BitPat("b1???")
+  val _mem_lw    = BitPat("b?0??")
+
   // other functions
   val oth_lui     = "b1000".U
   val oth_break   = "b0001".U

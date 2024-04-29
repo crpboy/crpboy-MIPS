@@ -17,7 +17,7 @@ class LoadAccess extends Module {
   })
   val rdata = io.dCache.sram_rdata
   val word = Mux(
-    !io.inst.fuop(2).asBool,
+    io.inst.fuop === _mem_lw,
     rdata,
     MuxLookup(
       io.inst.fuop,

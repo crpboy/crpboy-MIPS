@@ -25,7 +25,7 @@ class FetchUnit extends Module {
 
   val output = io.out
 
-  val pcReg     = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
+  val pcReg     = RegNext(io.iCache.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
   val pcNextTmp = pcReg + 4.U
   val pcNext = MuxCase(
     pcNextTmp,

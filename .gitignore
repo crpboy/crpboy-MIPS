@@ -11,3 +11,4 @@ project/
 target/
 obj_dir/
 test_run_dir/
+uml-graph/

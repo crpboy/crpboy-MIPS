@@ -15,9 +15,9 @@ class Hilo extends Module {
     val lo      = Output(UInt(DATA_WIDTH.W))
   })
   val reg = RegEnable(io.wdata, 0.U, io.wen)
-  when(io.inst.fu === fu_mov && io.inst.fuop(0).asBool) {
+  when(io.inst.fu === fu_mov && io.inst.fuop === _mov_ismt) {
     reg := Mux(
-      io.inst.fuop(1).asBool,
+      io.inst.fuop === _mov_usehi,
       Cat(io.movdata, reg(DATA_WIDTH - 1, 0)),
       Cat(reg(HILO_WIDTH - 1, DATA_WIDTH), io.movdata),
     )

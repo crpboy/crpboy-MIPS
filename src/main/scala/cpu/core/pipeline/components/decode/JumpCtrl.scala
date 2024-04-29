@@ -14,8 +14,8 @@ class JumpCtrl extends Module {
   })
   val valid  = io.inst.fu === fu_jmp
   val target = Cat(io.pc(31, 28), (io.inst.imm << 2)(27, 0))
-  val isrReg = io.inst.fuop(2)
-  val iswReg = io.inst.fuop(3)
+  val isrReg = io.inst.fuop === _jmp_rreg
+  val iswReg = io.inst.fuop === _jmp_wreg
   io.out.jwen := valid
   io.out.jwaddr := MuxLookup(
     isrReg,

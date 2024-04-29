@@ -18,9 +18,9 @@ class MulDiv extends Module {
   val mul = Module(new Mul).io
   val div = Module(new Div).io
 
-  val en       = io.inst.fu === fu_mul
-  val isSigned = io.inst.fuop(3).asBool
-  val ismul    = io.inst.fuop(0).asBool
+  val en       = io.inst.fu === fu_md
+  val isSigned = io.inst.fuop === _md_signed
+  val ismul    = io.inst.fuop === _md_mul
   mul.en       := (en && ismul)
   div.en       := (en && !ismul)
   mul.isSigned := isSigned

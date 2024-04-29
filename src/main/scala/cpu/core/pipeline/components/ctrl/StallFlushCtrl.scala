@@ -64,7 +64,7 @@ class StallFlushCtrl extends Module {
   )
 
   val ifstall = block(4) | block(3) | block(2) | block(1) | block(0)
-  val ifflush = false.B
+  val ifflush = clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
 
   val idstall = block(3) | block(2) | block(1) | block(0)
   val idflush = block(4) | clear(4) | clear(3) | clear(2) | clear(1)

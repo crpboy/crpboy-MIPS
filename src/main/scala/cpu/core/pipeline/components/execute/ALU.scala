@@ -30,6 +30,9 @@ class ALU extends Module {
       op_imm -> io.inst.imm,
     ),
   )
+  // TODO: 这里会综合出大规模电路，需要进一步修改
+  val addresult = op1 + op2
+  val subresult = op1 - op2
   io.out := Mux(
     en,
     MuxLookup(
@@ -43,10 +46,10 @@ class ALU extends Module {
         alu_sll  -> (op2 << op1(4, 0)),
         alu_srl  -> (op2 >> op1(4, 0)),
         alu_sra  -> (op2.asSInt() >> op1(4, 0)).asUInt,
-        alu_add  -> (op1 + op2),
-        alu_addu -> (op1 + op2),
-        alu_sub  -> (op1 - op2),
-        alu_subu -> (op1 - op2),
+        alu_add  -> addresult,
+        alu_addu -> addresult,
+        alu_sub  -> subresult,
+        alu_subu -> subresult,
         alu_slt  -> (op1.asSInt() < op2.asSInt()),
         alu_sltu -> (op1 < op2),
       ),
