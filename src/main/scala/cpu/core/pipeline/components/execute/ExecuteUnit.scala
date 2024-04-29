@@ -18,7 +18,7 @@ class ExecuteUnit extends Module {
     }
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
-    val in      = new KeepFlushIO(new StageDecodeExecute)
+    val in      = new StallFlushIO(new StageDecodeExecute)
     val out     = new StageExecuteMemory
     val ctrlreq = Output(new CtrlRequestExecute)
   })

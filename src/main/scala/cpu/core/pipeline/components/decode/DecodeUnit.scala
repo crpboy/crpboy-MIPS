@@ -15,7 +15,7 @@ class DecodeUnit extends Module {
     val memDHazard = Input(new DataHazard)
     val wbDHazard  = Input(new DataHazard)
 
-    val in      = new KeepFlushIO(new StageFetchDecode)
+    val in      = new StallFlushIO(new StageFetchDecode)
     val out     = new StageDecodeExecute
     val ctrlreq = Output(new CtrlRequest)
   })

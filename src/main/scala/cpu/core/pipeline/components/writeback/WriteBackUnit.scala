@@ -9,7 +9,7 @@ import cpu.core.pipeline.components.writeback._
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
     val dHazard = Output(new DataHazard)
-    val in      = new KeepFlushIO(new StageMemoryWriteback)
+    val in      = new StallFlushIO(new StageMemoryWriteback)
     val out     = Output(new WBInfo)
     val ctrlreq = Output(new CtrlRequest)
     val debug   = new DebugIO

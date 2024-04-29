@@ -19,7 +19,7 @@ class InstInfoExt extends InstInfo {
 
 // ctrl info
 class CtrlInfo extends Bundle {
-  val keep  = Bool()
+  val stall = Bool()
   val flush = Bool()
 }
 class CtrlRequest extends Bundle {
@@ -56,7 +56,7 @@ class DebugIO extends Bundle {
 }
 
 // pipeline stage bundle
-class KeepFlushIO[+T <: Data](gen: T) extends Bundle {
+class StallFlushIO[+T <: Data](gen: T) extends Bundle {
   val ctrl = Input(new CtrlInfo)
   val bits = Input(gen)
 }

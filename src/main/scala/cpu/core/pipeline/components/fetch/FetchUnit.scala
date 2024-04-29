@@ -23,14 +23,14 @@ class FetchUnit extends Module {
 
   val preDecoder = Module(new PreDecoder).io
 
-  val output  = io.out
+  val output = io.out
 
   val pcReg     = RegNext(io.iCache.pcNext, ("hbfbffffc".U)(PC_WIDTH.W))
   val pcNextTmp = pcReg + 4.U
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
-      io.ctrl.keep  -> pcReg,
+      io.ctrl.stall -> pcReg,
       io.jinfo.jwen -> io.jinfo.jwaddr,
       io.binfo.bwen -> io.binfo.bwaddr,
     ),

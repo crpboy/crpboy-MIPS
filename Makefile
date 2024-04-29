@@ -42,15 +42,24 @@ test:
 	clean
 	sbt test
 
+define SOC_SIM_WAVE_COMMAND
+cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && gtkwave trace.vcd config.gtkw
+endef
+
+define SOC_SIM_ASK_TO_WAVE_COMMAND
+@read -p "simulation is over, ok to open vcd file? [y/n] " answer; \
+    if [ "$$answer" = "y" ]; then \
+				$(SOC_SIM_WAVE_COMMAND); \
+    else \
+        echo "open cancelled"; \
+    fi
+endef
+
 define SOC_SIM_COMMAND
 cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make clean
 cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make
 cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make run
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make sim
-endef
-
-define SOC_SIM_WAVE_COMMAND
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make sim
+$(SOC_SIM_ASK_TO_WAVE_COMMAND)
 endef
 
 run:

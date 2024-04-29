@@ -30,15 +30,15 @@ class CoreTop extends Module {
   val writebackUnit = Module(new WriteBackUnit)
 
   // control unit
-  val keepFlushCtrlUnit = Module(new KeepFlushCtrl)
+  val stallFlushCtrlUnit = Module(new StallFlushCtrl)
 
   // unit io
-  val fetch         = fetchUnit.io
-  val decode        = decodeUnit.io
-  val execute       = executeUnit.io
-  val memory        = memoryUnit.io
-  val writeback     = writebackUnit.io
-  val keepFlushCtrl = keepFlushCtrlUnit.io
+  val fetch          = fetchUnit.io
+  val decode         = decodeUnit.io
+  val execute        = executeUnit.io
+  val memory         = memoryUnit.io
+  val writeback      = writebackUnit.io
+  val stallFlushCtrl = stallFlushCtrlUnit.io
 
   // pipeline stage reg connect
   stageConnect(fetch.out,   decode.in)
@@ -61,24 +61,24 @@ class CoreTop extends Module {
 
   io.debug <> writeback.debug
 
-  // keep and flush control
-  keepFlushCtrl.ifreq  <> fetch.ctrlreq
-  keepFlushCtrl.idreq  <> decode.ctrlreq
-  keepFlushCtrl.exereq <> execute.ctrlreq
-  keepFlushCtrl.memreq <> memory.ctrlreq
-  keepFlushCtrl.wbreq  <> writeback.ctrlreq
+  // stall and flush control
+  stallFlushCtrl.ifreq  <> fetch.ctrlreq
+  stallFlushCtrl.idreq  <> decode.ctrlreq
+  stallFlushCtrl.exereq <> execute.ctrlreq
+  stallFlushCtrl.memreq <> memory.ctrlreq
+  stallFlushCtrl.wbreq  <> writeback.ctrlreq
 
-  keepFlushCtrl.keep(4) <> fetch.ctrl.keep
-  keepFlushCtrl.keep(3) <> decode.in.ctrl.keep
-  keepFlushCtrl.keep(2) <> execute.in.ctrl.keep
-  keepFlushCtrl.keep(1) <> memory.in.ctrl.keep
-  keepFlushCtrl.keep(0) <> writeback.in.ctrl.keep
+  stallFlushCtrl.stall(4) <> fetch.ctrl.stall
+  stallFlushCtrl.stall(3) <> decode.in.ctrl.stall
+  stallFlushCtrl.stall(2) <> execute.in.ctrl.stall
+  stallFlushCtrl.stall(1) <> memory.in.ctrl.stall
+  stallFlushCtrl.stall(0) <> writeback.in.ctrl.stall
 
-  keepFlushCtrl.flush(4) <> fetch.ctrl.flush
-  keepFlushCtrl.flush(3) <> decode.in.ctrl.flush
-  keepFlushCtrl.flush(2) <> execute.in.ctrl.flush
-  keepFlushCtrl.flush(1) <> memory.in.ctrl.flush
-  keepFlushCtrl.flush(0) <> writeback.in.ctrl.flush
+  stallFlushCtrl.flush(4) <> fetch.ctrl.flush
+  stallFlushCtrl.flush(3) <> decode.in.ctrl.flush
+  stallFlushCtrl.flush(2) <> execute.in.ctrl.flush
+  stallFlushCtrl.flush(1) <> memory.in.ctrl.flush
+  stallFlushCtrl.flush(0) <> writeback.in.ctrl.flush
 
   // jump and branch info
   fetch.jinfo <> decode.jinfo

@@ -12,7 +12,7 @@ class MemoryUnit extends Module {
   val io = IO(new Bundle {
     val dCache  = new Bundle { val sram_rdata = Input(UInt(DATA_WIDTH.W)) }
     val dHazard = Output(new DataHazard)
-    val in      = new KeepFlushIO(new StageExecuteMemory)
+    val in      = new StallFlushIO(new StageExecuteMemory)
     val out     = new StageMemoryWriteback
     val ctrlreq = Output(new CtrlRequest)
   })
