@@ -37,7 +37,7 @@ class Decoder extends Module {
       // logical
       AND  -> List(iy, instRN, wb_y, fu_alu, alu_and),
       ANDI -> List(iy, instIZ, wb_y, fu_alu, alu_and),
-      LUI  -> List(iy, instIL, wb_y, fu_oth, oth_lui),
+      LUI  -> List(iy, instIL, wb_y, fu_alu, alu_or),
       NOR  -> List(iy, instRN, wb_y, fu_alu, alu_nor),
       OR   -> List(iy, instRN, wb_y, fu_alu, alu_or),
       ORI  -> List(iy, instIZ, wb_y, fu_alu, alu_or),
@@ -69,9 +69,10 @@ class Decoder extends Module {
       MFLO -> List(iy, instRN, wb_y, fu_mov, mov_mflo),
       MTHI -> List(iy, instRN, wb_n, fu_mov, mov_mthi),
       MTLO -> List(iy, instRN, wb_n, fu_mov, mov_mtlo),
-      // trap
-      BREAK   -> List(iy, instSP, wb_n, fu_oth, oth_break),
-      SYSCALL -> List(iy, instSP, wb_n, fu_oth, oth_syscall),
+      // exception
+      BREAK   -> List(iy, instSP, wb_n, fu_ex, ex_break),
+      SYSCALL -> List(iy, instSP, wb_n, fu_ex, ex_syscall),
+      ERET    -> List(iy, instSP, wb_n, fu_ex, ex_eret),
       // load
       LB  -> List(iy, instIS, wb_y, fu_mem, mem_lb),
       LBU -> List(iy, instIS, wb_y, fu_mem, mem_lbu),
@@ -86,6 +87,9 @@ class Decoder extends Module {
       SW  -> List(iy, instIS, wb_n, fu_mem, mem_sw),
       SWL -> List(iy, instIS, wb_n, fu_mem, mem_swl),
       SWR -> List(iy, instIS, wb_n, fu_mem, mem_swr),
+      // c0
+      MFC0 -> List(iy, instIZ, wb_y, fu_pri, pri_mfc0),
+      MTC0 -> List(iy, instIZ, wb_n, fu_pri, pri_mtc0),
     ),
   )
   val valid :: t :: wb :: fu :: fuop :: Nil = res
@@ -93,23 +97,25 @@ class Decoder extends Module {
   // get operand info
   val op1 = MuxLookup(
     t,
-    op_x,
+    op_reg,
     Seq(
       instRN -> op_reg,
       instRS -> op_imm,
       instIS -> op_reg,
       instIZ -> op_reg,
       instBA -> op_reg,
+      instIL -> op_reg,
     ),
   )
   val op2 = MuxLookup(
     t,
-    op_x,
+    op_reg,
     Seq(
       instRN -> op_reg,
       instRS -> op_reg,
       instIS -> op_imm,
       instIZ -> op_imm,
+      instIL -> op_imm,
     ),
   )
 
@@ -142,6 +148,7 @@ class Decoder extends Module {
     t,
     0.U,
     Seq(
+      instRN -> zeroExtend(inst(10, 0)),
       instRS -> zeroExtend(inst(10, 6)),
       instIS -> signedExtend(inst(15, 0)),
       instIZ -> zeroExtend(inst(15, 0)),

@@ -8,16 +8,17 @@ import cpu.common._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
-    val wb    = Input(new WBInfo)
-    val jinfo = Output(new JmpInfo)
+    val wb      = Input(new WBInfo)
+    val jinfo   = Output(new JmpInfo)
+    val exinfo  = Output(new ExInfoDecode)
+    val ctrlreq = Output(new CtrlRequest)
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
     val wbDHazard  = Input(new DataHazard)
 
-    val in      = new StallFlushIO(new StageFetchDecode)
-    val out     = new StageDecodeExecute
-    val ctrlreq = Output(new CtrlRequest)
+    val in  = new StallFlushIO(new StageFetchDecode)
+    val out = new StageDecodeExecute
   })
 
   val decoder = Module(new Decoder).io
@@ -56,8 +57,9 @@ class DecodeUnit extends Module {
   io.jinfo.jwen    := jmp.out.jwen
   io.jinfo.jwaddr  := jmp.out.jwaddr
 
+  io.exinfo.en     := decoder.instInfo.fu === fu_ex
   io.ctrlreq.block := io.exeDHazard.isload && (io.exeDHazard.waddr === reg.rsaddr || io.exeDHazard.waddr === reg.rtaddr)
-  io.ctrlreq.clear := false.B
+  io.ctrlreq.clear := io.exinfo.en
 
   output.inst     := decoder.instInfo
   output.rs       := rsdata

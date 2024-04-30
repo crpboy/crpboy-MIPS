@@ -84,6 +84,9 @@ class CoreTop extends Module {
   fetch.jinfo <> decode.jinfo
   fetch.binfo <> execute.binfo
 
+  // exception info
+  fetch.exinfo.id <> decode.exinfo
+
   // data hazard
   execute.dHazard   <> decode.exeDHazard
   memory.dHazard    <> decode.memDHazard

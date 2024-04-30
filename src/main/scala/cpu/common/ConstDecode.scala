@@ -8,7 +8,7 @@ trait ConstDecode {
   // ---------- Decode -------------
   // overall length config
   val OPR_LEN       = 1
-  val FU_LEN        = 3
+  val FU_LEN        = 4
   val FUOP_LEN      = 4
   val WRA_LEN       = 2
   val IMM_LEN       = 3
@@ -46,7 +46,8 @@ trait ConstDecode {
   val fu_md  = 4.U(FU_LEN.W)
   val fu_mov = 5.U(FU_LEN.W)
   val fu_mem = 6.U(FU_LEN.W)
-  val fu_oth = 7.U(FU_LEN.W)
+  val fu_ex  = 7.U(FU_LEN.W)
+  val fu_pri = 8.U(FU_LEN.W)
 
   // function operator
   val fuop_nop = "b0000".U
@@ -65,18 +66,21 @@ trait ConstDecode {
   // alu operator
   // (3)&(2)&(1) = 1 -> have exception
   val alu_add  = "b1110".U
-  val alu_addu = "b0001".U
+  val alu_addu = "b0010".U
   val alu_sub  = "b1111".U
-  val alu_subu = "b0010".U
-  val alu_slt  = "b0011".U
-  val alu_sltu = "b0100".U
-  val alu_and  = "b0101".U
+  val alu_subu = "b0011".U
+  val alu_slt  = "b0001".U
+  val alu_sltu = "b0101".U
+  val alu_and  = "b0100".U
   val alu_nor  = "b0110".U
   val alu_or   = "b0111".U
   val alu_xor  = "b1000".U
   val alu_sll  = "b1001".U
   val alu_srl  = "b1010".U
   val alu_sra  = "b1011".U
+
+  val _alu_ex  = BitPat("b111?")
+  val _alu_sub = BitPat("b???1")
 
   // bra operator
   // op(3)=1 is ..al inst
@@ -129,10 +133,14 @@ trait ConstDecode {
   val _mem_store = BitPat("b1???")
   val _mem_lw    = BitPat("b?0??")
 
-  // other functions
-  val oth_lui     = "b1000".U
-  val oth_break   = "b0001".U
-  val oth_syscall = "b0010".U
+  // exception
+  val ex_break   = "b0001".U
+  val ex_syscall = "b0010".U
+  val ex_eret    = "b0011".U
+
+  // privilege
+  val pri_mfc0 = "b0001".U
+  val pri_mtc0 = "b0010".U
 
   // [[discard]]
   // decode only

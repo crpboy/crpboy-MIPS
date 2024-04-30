@@ -18,9 +18,10 @@ class ExecuteUnit extends Module {
     }
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
-    val in      = new StallFlushIO(new StageDecodeExecute)
-    val out     = new StageExecuteMemory
     val ctrlreq = Output(new CtrlRequestExecute)
+
+    val in  = new StallFlushIO(new StageDecodeExecute)
+    val out = new StageExecuteMemory
   })
 
   val alu    = Module(new ALU).io
@@ -28,6 +29,7 @@ class ExecuteUnit extends Module {
   val hilo   = Module(new Hilo).io
   val bra    = Module(new BranchCtrl).io
   val memReq = Module(new MemReq).io
+  val cp0    = Module(new CP0).io
 
   val input  = io.in.bits
   val output = io.out
@@ -62,9 +64,10 @@ class ExecuteUnit extends Module {
   io.dCache  <> memReq.dCache
 
   // data select
+  val pcNext = input.pc + 4.U
   val data = MuxLookup(
     input.inst.fu,
-    input.inst.imm,
+    0.U,
     Seq(
       fu_alu -> alu.out,
       fu_mem -> input.rt,
@@ -76,17 +79,20 @@ class ExecuteUnit extends Module {
           mov_mflo -> hilo.lo,
         ),
       ),
-      fu_jmp -> (input.pc + 4.U),
-      fu_bra -> (input.pc + 4.U),
+      fu_jmp -> pcNext,
+      fu_bra -> pcNext,
     ),
   )
+
+  input.inst <> cp0.inst
+  input.rt   <> cp0.data
 
   io.dHazard.wen    := input.inst.wb
   io.dHazard.waddr  := input.inst.rd
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  io.ctrlreq.clear       := false.B
+  io.ctrlreq.clear       := alu.ex
   io.ctrlreq.block       := muldiv.block
   io.ctrlreq.branchPause := bra.binfo.bwen
 

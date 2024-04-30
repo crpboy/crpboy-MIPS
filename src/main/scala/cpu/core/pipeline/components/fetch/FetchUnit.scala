@@ -14,11 +14,14 @@ class FetchUnit extends Module {
       val inst_sram_addr  = Output(UInt(ADDR_WIDTH.W))
       val pcNext          = Output(UInt(PC_WIDTH.W))
     }
-    val ctrl    = Input(new CtrlInfo)
-    val jinfo   = Input(new JmpInfo)
-    val binfo   = Input(new BraInfo)
-    val out     = new StageFetchDecode
+    val ctrl  = Input(new CtrlInfo)
+    val jinfo = Input(new JmpInfo)
+    val binfo = Input(new BraInfo)
+    val exinfo = new Bundle {
+      val id = Input(new ExInfoDecode)
+    }
     val ctrlreq = Output(new CtrlRequest)
+    val out     = new StageFetchDecode
   })
 
   val preDecoder = Module(new PreDecoder).io
@@ -30,9 +33,10 @@ class FetchUnit extends Module {
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
-      io.ctrl.stall -> pcReg,
-      io.jinfo.jwen -> io.jinfo.jwaddr,
-      io.binfo.bwen -> io.binfo.bwaddr,
+      io.ctrl.stall   -> pcReg,
+      io.jinfo.jwen   -> io.jinfo.jwaddr,
+      io.binfo.bwen   -> io.binfo.bwaddr,
+      io.exinfo.id.en -> EX_INIT_ADDR.U,
     ),
   )
   val rst = RegNext(reset)
@@ -42,7 +46,7 @@ class FetchUnit extends Module {
   io.iCache.inst_sram_en    := !(reset.asBool)
 
   io.ctrlreq.block := rst
-  io.ctrlreq.clear := rst
+  io.ctrlreq.clear := false.B
 
   output.inst     := io.iCache.inst_sram_rdata
   output.pc       := pcNextTmp

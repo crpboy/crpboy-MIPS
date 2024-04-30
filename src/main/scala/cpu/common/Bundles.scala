@@ -95,6 +95,14 @@ class WBInfo extends Bundle {
   val waddr = UInt(REG_WIDTH.W)
 }
 
+// ex info
+class ExInfo extends Bundle {
+  val en = Bool()
+}
+class ExInfoDecode extends ExInfo {
+  // val op = UInt(FUOP_LEN.W)
+}
+
 // jump info
 class JmpInfo extends Bundle {
   val jwen   = Bool()

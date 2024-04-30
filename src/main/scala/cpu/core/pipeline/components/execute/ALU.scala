@@ -11,6 +11,7 @@ class ALU extends Module {
     val inst = Input(new InstInfoExt)
     val rs   = Input(UInt(DATA_WIDTH.W))
     val rt   = Input(UInt(DATA_WIDTH.W))
+    val ex   = Output(Bool())
     val out  = Output(UInt(DATA_WIDTH.W))
   })
   val en = io.inst.fu === fu_alu
@@ -30,30 +31,46 @@ class ALU extends Module {
       op_imm -> io.inst.imm,
     ),
   )
-  // TODO: 这里会综合出大规模电路，需要进一步修改
-  val addresult = op1 + op2
-  val subresult = op1 - op2
+
+  val WIDTH     = DATA_WIDTH + 2
+  val extop1    = signedExtend(op1, WIDTH)
+  val extop2    = signedExtend(op2, WIDTH)
+  val extop2Sub = signedExtend(-op2, WIDTH)
+  val calcRes   = extop1 + Mux(io.inst.fuop === _alu_sub, extop2Sub, extop2)
+  val addRes    = calcRes(DATA_WIDTH - 1, 0)
+  val overflow  = calcRes(WIDTH - 1) ^ calcRes(WIDTH - 2)
+
+  val orRes   = op1 | op2
+  val andRes  = op1 & op2
+  val xorRes  = op1 ^ op2
+  val lshift  = op2 << op1(4, 0)
+  val rshift  = op2 >> op1(4, 0)
+  val rashift = (op2.asSInt() >> op1(4, 0)).asUInt
+  val sltRes  = zeroExtend((calcRes.asSInt < 0.S).asBool)
+  val sltuRes = zeroExtend(op1 < op2) // TODO: 改成使用减法结果
+
   io.out := Mux(
     en,
     MuxLookup(
       io.inst.fuop,
       0.U,
       Seq(
-        alu_or   -> (op1 | op2),
-        alu_and  -> (op1 & op2),
-        alu_xor  -> (op1 ^ op2),
-        alu_nor  -> ~(op1 | op2),
-        alu_sll  -> (op2 << op1(4, 0)),
-        alu_srl  -> (op2 >> op1(4, 0)),
-        alu_sra  -> (op2.asSInt() >> op1(4, 0)).asUInt,
-        alu_add  -> addresult,
-        alu_addu -> addresult,
-        alu_sub  -> subresult,
-        alu_subu -> subresult,
-        alu_slt  -> (op1.asSInt() < op2.asSInt()),
-        alu_sltu -> (op1 < op2),
+        alu_or   -> orRes,
+        alu_and  -> andRes,
+        alu_xor  -> xorRes,
+        alu_nor  -> ~orRes,
+        alu_sll  -> lshift,
+        alu_srl  -> rshift,
+        alu_sra  -> rashift,
+        alu_add  -> addRes,
+        alu_addu -> addRes,
+        alu_sub  -> addRes,
+        alu_subu -> addRes,
+        alu_slt  -> sltRes,
+        alu_sltu -> sltuRes,
       ),
     ),
     0.U,
   )
+  io.ex := en && io.inst.fuop === _alu_ex && overflow
 }

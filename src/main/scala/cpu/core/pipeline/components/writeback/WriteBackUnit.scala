@@ -9,12 +9,13 @@ import cpu.core.pipeline.components.writeback._
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
     val dHazard = Output(new DataHazard)
-    val in      = new StallFlushIO(new StageMemoryWriteback)
-    val out     = Output(new WBInfo)
     val ctrlreq = Output(new CtrlRequest)
-    val debug   = new DebugIO
+
+    val debug = new DebugIO
+    val in    = new StallFlushIO(new StageMemoryWriteback)
+    val out   = Output(new WBInfo)
   })
-  val input   = io.in.bits
+  val input = io.in.bits
 
   io.out.wen   := input.inst.wb
   io.out.wdata := input.data
