@@ -2,7 +2,7 @@ package cpu.common
 
 import chisel3._
 
-object Const extends ConstDecode with ConstWidth with Instructions {
+object Const extends ConstDecode with ConstWidth with ConstEx with Instructions {
   val PC_INIT_ADDR     = "hbfc00000"
   val PC_INIT_ADDR_SUB = "hbfbffffc"
   val EX_INIT_ADDR     = "hbfc00380"

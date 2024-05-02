@@ -1,0 +1,15 @@
+package cpu.common
+
+import chisel3._
+import chisel3.util._
+
+trait ConstEx {
+  val EX_LEN  = 5
+  val ex_Int  = "h00".U
+  val ex_AdEL = "h04".U
+  val ex_AdES = "h05".U
+  val ex_Sys  = "h08".U
+  val ex_Bp   = "h09".U
+  val ex_RI   = "h0a".U
+  val ex_Ov   = "h0c".U
+}

@@ -15,5 +15,4 @@ trait ConstWidth {
   val REG_NUM         = 32
   val REG_WIDTH       = 5
   val CTRL_WIDTH      = 5
-  val CP0_WIDTH       = 32
 }

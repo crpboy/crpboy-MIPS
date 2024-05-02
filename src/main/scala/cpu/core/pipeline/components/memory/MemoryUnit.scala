@@ -14,11 +14,12 @@ class MemoryUnit extends Module {
     val dHazard = Output(new DataHazard)
     val ctrlreq = Output(new CtrlRequest)
 
-    val in  = new StallFlushIO(new StageExecuteMemory)
-    val out = new StageMemoryWriteback
+    val ctrl = Input(new CtrlInfo)
+    val in   = Input(new StageExecuteMemory)
+    val out  = Output(new StageMemoryWriteback)
   })
 
-  val input  = io.in.bits
+  val input  = io.in
   val output = io.out
 
   val load = Module(new LoadAccess).io

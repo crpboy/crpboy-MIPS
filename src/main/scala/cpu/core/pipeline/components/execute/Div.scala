@@ -107,24 +107,24 @@ class Div extends Module with Config {
     val cnt = RegInit(0.U(log2Ceil(divClockNum + 1).W))
     cnt := Mux(io.en && !io.ready, cnt + 1.U, 0.U)
 
-    val dividend_signed = io.rs(31) & io.isSigned
-    val divisor_signed  = io.rt(31) & io.isSigned
+    val dividendSigned = io.rs(31) & io.isSigned
+    val divisorSgned   = io.rt(31) & io.isSigned
 
-    val dividend_abs = Mux(dividend_signed, (-io.rs).asUInt, io.rs.asUInt)
-    val divisor_abs  = Mux(divisor_signed, (-io.rt).asUInt, io.rt.asUInt)
+    val dividendAbs = Mux(dividendSigned, (-io.rs).asUInt, io.rs.asUInt)
+    val divisorAbs  = Mux(divisorSgned, (-io.rt).asUInt, io.rt.asUInt)
 
-    val quotient_signed  = (io.rs(31) ^ io.rt(31)) & io.isSigned
-    val remainder_signed = io.rs(31) & io.isSigned
+    val quotientSigned  = (io.rs(31) ^ io.rt(31)) & io.isSigned
+    val remainderSigned = io.rs(31) & io.isSigned
 
-    val quotient_abs  = dividend_abs / divisor_abs
-    val remainder_abs = dividend_abs - quotient_abs * divisor_abs
+    val quotientAbs  = dividendAbs / divisorAbs
+    val remainderAbs = dividendAbs - quotientAbs * divisorAbs
 
     val quotient  = RegInit(0.S(DATA_WIDTH.W))
     val remainder = RegInit(0.S(DATA_WIDTH.W))
 
     when(io.en) {
-      quotient  := Mux(quotient_signed, (-quotient_abs).asSInt, quotient_abs.asSInt)
-      remainder := Mux(remainder_signed, (-remainder_abs).asSInt, remainder_abs.asSInt)
+      quotient  := Mux(quotientSigned, (-quotientAbs).asSInt, quotientAbs.asSInt)
+      remainder := Mux(remainderSigned, (-remainderAbs).asSInt, remainderAbs.asSInt)
     }
 
     io.ready := cnt >= divClockNum.U

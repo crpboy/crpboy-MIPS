@@ -55,35 +55,6 @@ class DebugIO extends Bundle {
   val wb_rf_wdata = Output(UInt(DATA_WIDTH.W))
 }
 
-// pipeline stage bundle
-class StallFlushIO[+T <: Data](gen: T) extends Bundle {
-  val ctrl = Input(new CtrlInfo)
-  val bits = Input(gen)
-}
-class PipelineStage extends Bundle {
-  val debug_pc = Output(UInt(PC_WIDTH.W))
-  val pc       = Output(UInt(PC_WIDTH.W))
-}
-class StageFetchDecode extends PipelineStage {
-  val inst = Output(UInt(INST_WIDTH.W))
-}
-class StageDecodeExecute extends PipelineStage {
-  val inst   = Output(new InstInfoExt)
-  val rs     = Output(UInt(DATA_WIDTH.W))
-  val rt     = Output(UInt(DATA_WIDTH.W))
-  val rsaddr = Output(UInt(REG_WIDTH.W))
-  val rtaddr = Output(UInt(REG_WIDTH.W))
-}
-class StageExecuteMemory extends PipelineStage {
-  val inst    = Output(new InstInfo)
-  val memByte = Output(UInt(2.W))
-  val data    = Output(UInt(DATA_WIDTH.W))
-}
-class StageMemoryWriteback extends PipelineStage {
-  val inst = Output(new InstInfo)
-  val data = Output(UInt(DATA_WIDTH.W))
-}
-
 // write back info
 class JWBInfo extends Bundle {
   val wen   = Bool()
@@ -93,14 +64,6 @@ class WBInfo extends Bundle {
   val wen   = Bool()
   val wdata = UInt(DATA_WIDTH.W)
   val waddr = UInt(REG_WIDTH.W)
-}
-
-// ex info
-class ExInfo extends Bundle {
-  val en = Bool()
-}
-class ExInfoDecode extends ExInfo {
-  // val op = UInt(FUOP_LEN.W)
 }
 
 // jump info

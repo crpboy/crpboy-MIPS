@@ -31,6 +31,7 @@ class CoreTop extends Module {
 
   // control unit
   val stallFlushCtrlUnit = Module(new StallFlushCtrl)
+  // val exCtrlUnit         = Module(new ExCtrl)
 
   // unit io
   val fetch          = fetchUnit.io
@@ -39,12 +40,7 @@ class CoreTop extends Module {
   val memory         = memoryUnit.io
   val writeback      = writebackUnit.io
   val stallFlushCtrl = stallFlushCtrlUnit.io
-
-  // pipeline stage reg connect
-  stageConnect(fetch.out,   decode.in)
-  stageConnect(decode.out,  execute.in)
-  stageConnect(execute.out, memory.in)
-  stageConnect(memory.out,  writeback.in)
+  // val exCtrl         = exCtrlUnit.io
 
   // top io
   io.iCache.sram_rdata <> fetch.iCache.inst_sram_rdata
@@ -69,23 +65,27 @@ class CoreTop extends Module {
   stallFlushCtrl.wbreq  <> writeback.ctrlreq
 
   stallFlushCtrl.stall(4) <> fetch.ctrl.stall
-  stallFlushCtrl.stall(3) <> decode.in.ctrl.stall
-  stallFlushCtrl.stall(2) <> execute.in.ctrl.stall
-  stallFlushCtrl.stall(1) <> memory.in.ctrl.stall
-  stallFlushCtrl.stall(0) <> writeback.in.ctrl.stall
+  stallFlushCtrl.stall(3) <> decode.ctrl.stall
+  stallFlushCtrl.stall(2) <> execute.ctrl.stall
+  stallFlushCtrl.stall(1) <> memory.ctrl.stall
+  stallFlushCtrl.stall(0) <> writeback.ctrl.stall
 
   stallFlushCtrl.flush(4) <> fetch.ctrl.flush
-  stallFlushCtrl.flush(3) <> decode.in.ctrl.flush
-  stallFlushCtrl.flush(2) <> execute.in.ctrl.flush
-  stallFlushCtrl.flush(1) <> memory.in.ctrl.flush
-  stallFlushCtrl.flush(0) <> writeback.in.ctrl.flush
+  stallFlushCtrl.flush(3) <> decode.ctrl.flush
+  stallFlushCtrl.flush(2) <> execute.ctrl.flush
+  stallFlushCtrl.flush(1) <> memory.ctrl.flush
+  stallFlushCtrl.flush(0) <> writeback.ctrl.flush
+
+  // pipeline stage reg connect
+  stageConnect(fetch.out,   decode.in,    decode.ctrl)
+  stageConnect(decode.out,  execute.in,   execute.ctrl)
+  stageConnect(execute.out, memory.in,    memory.ctrl)
+  stageConnect(memory.out,  writeback.in, writeback.ctrl)
 
   // jump and branch info
-  fetch.jinfo <> decode.jinfo
-  fetch.binfo <> execute.binfo
-
-  // exception info
-  fetch.exinfo.id <> decode.exinfo
+  fetch.jinfo  <> decode.jinfo
+  fetch.binfo  <> execute.binfo
+  fetch.exinfo := DontCare
 
   // data hazard
   execute.dHazard   <> decode.exeDHazard

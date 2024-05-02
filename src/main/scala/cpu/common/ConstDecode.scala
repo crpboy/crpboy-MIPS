@@ -46,8 +46,7 @@ trait ConstDecode {
   val fu_md  = 4.U(FU_LEN.W)
   val fu_mov = 5.U(FU_LEN.W)
   val fu_mem = 6.U(FU_LEN.W)
-  val fu_ex  = 7.U(FU_LEN.W)
-  val fu_pri = 8.U(FU_LEN.W)
+  val fu_cp0 = 7.U(FU_LEN.W)
 
   // function operator
   val fuop_nop = "b0000".U
@@ -133,30 +132,10 @@ trait ConstDecode {
   val _mem_store = BitPat("b1???")
   val _mem_lw    = BitPat("b?0??")
 
-  // exception
-  val ex_break   = "b0001".U
-  val ex_syscall = "b0010".U
-  val ex_eret    = "b0011".U
-
-  // privilege
-  val pri_mfc0 = "b0001".U
-  val pri_mtc0 = "b0010".U
-
-  // [[discard]]
-  // decode only
-  // how to fetch write reg address
-  // val wra_x   = 0.U(WRA_LEN.W) // none
-  // val wra_i15 = 1.U(WRA_LEN.W) // rd = inst(15, 11)
-  // val wra_i20 = 2.U(WRA_LEN.W) // rd = inst(20, 16)
-  // val wra_r31 = 3.U(WRA_LEN.W) // use $Reg(31)
-
-  // [[discard]]
-  // decode only
-  // how to fetch imm num
-  // val imm_x   = 0.U(IMM_LEN.W) // default: use shift status
-  // val imm_sh  = 0.U(IMM_LEN.W) // use inst(10,6), no extend, for SLL, SRL, SRA
-  // val imm_se  = 1.U(IMM_LEN.W) // use inst(15,0), signed extend
-  // val imm_ze  = 2.U(IMM_LEN.W) // use inst(15,0), zero extend
-  // val imm_j   = 3.U(IMM_LEN.W) // use inst(25,0), zero extend << 2
-  // val imm_lui = 4.U(IMM_LEN.W) // lui, high zero extend
+  // cp0
+  val cp0_break   = "b0001".U
+  val cp0_syscall = "b0010".U
+  val cp0_eret    = "b0011".U
+  val cp0_mfc0    = "b0100".U
+  val cp0_mtc0    = "b0101".U
 }

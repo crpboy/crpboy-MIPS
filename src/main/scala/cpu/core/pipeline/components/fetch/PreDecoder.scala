@@ -28,7 +28,7 @@ class PreDecoder extends Module {
     ),
   )
   val fuop :: isjInfo :: Nil = res
-  // TODO: fuop maight be added into pipeline signal
+  // TODO: fuop might be added into pipeline signal
 
   io.isbr := isjInfo
 }

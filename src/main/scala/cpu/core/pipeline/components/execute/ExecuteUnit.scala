@@ -20,8 +20,9 @@ class ExecuteUnit extends Module {
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
 
-    val in  = new StallFlushIO(new StageDecodeExecute)
-    val out = new StageExecuteMemory
+    val ctrl = Input(new CtrlInfo)
+    val in   = Input(new StageDecodeExecute)
+    val out  = Output(new StageExecuteMemory)
   })
 
   val alu    = Module(new ALU).io
@@ -31,7 +32,7 @@ class ExecuteUnit extends Module {
   val memReq = Module(new MemReq).io
   val cp0    = Module(new CP0).io
 
-  val input  = io.in.bits
+  val input  = io.in
   val output = io.out
 
   input.rs   <> alu.rs
@@ -84,9 +85,6 @@ class ExecuteUnit extends Module {
     ),
   )
 
-  input.inst <> cp0.inst
-  input.rt   <> cp0.data
-
   io.dHazard.wen    := input.inst.wb
   io.dHazard.waddr  := input.inst.rd
   io.dHazard.wdata  := data
@@ -95,6 +93,8 @@ class ExecuteUnit extends Module {
   io.ctrlreq.clear       := alu.ex
   io.ctrlreq.block       := muldiv.block
   io.ctrlreq.branchPause := bra.binfo.bwen
+
+  cp0 := DontCare
 
   output.data      := data
   output.memByte   := memReq.memByte

@@ -10,22 +10,22 @@ class DecodeUnit extends Module {
   val io = IO(new Bundle {
     val wb      = Input(new WBInfo)
     val jinfo   = Output(new JmpInfo)
-    val exinfo  = Output(new ExInfoDecode)
     val ctrlreq = Output(new CtrlRequest)
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
     val wbDHazard  = Input(new DataHazard)
 
-    val in  = new StallFlushIO(new StageFetchDecode)
-    val out = new StageDecodeExecute
+    val ctrl = Input(new CtrlInfo)
+    val in   = Input(new StageFetchDecode)
+    val out  = Output(new StageDecodeExecute)
   })
 
   val decoder = Module(new Decoder).io
   val reg     = Module(new RegFile).io
   val jmp     = Module(new JumpCtrl).io
 
-  val input  = io.in.bits
+  val input  = io.in
   val output = io.out
 
   val rsdata = MuxCase(
@@ -57,9 +57,10 @@ class DecodeUnit extends Module {
   io.jinfo.jwen    := jmp.out.jwen
   io.jinfo.jwaddr  := jmp.out.jwaddr
 
-  io.exinfo.en     := decoder.instInfo.fu === fu_ex
-  io.ctrlreq.block := io.exeDHazard.isload && (io.exeDHazard.waddr === reg.rsaddr || io.exeDHazard.waddr === reg.rtaddr)
-  io.ctrlreq.clear := io.exinfo.en
+  io.ctrlreq.block := io.exeDHazard.isload &&
+    (io.exeDHazard.waddr === reg.rsaddr ||
+      io.exeDHazard.waddr === reg.rtaddr)
+  io.ctrlreq.clear := false.B
 
   output.inst     := decoder.instInfo
   output.rs       := rsdata

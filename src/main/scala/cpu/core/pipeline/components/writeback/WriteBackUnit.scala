@@ -12,10 +12,11 @@ class WriteBackUnit extends Module {
     val ctrlreq = Output(new CtrlRequest)
 
     val debug = new DebugIO
-    val in    = new StallFlushIO(new StageMemoryWriteback)
+    val ctrl  = Input(new CtrlInfo)
+    val in    = Input(new StageMemoryWriteback)
     val out   = Output(new WBInfo)
   })
-  val input = io.in.bits
+  val input = io.in
 
   io.out.wen   := input.inst.wb
   io.out.wdata := input.data

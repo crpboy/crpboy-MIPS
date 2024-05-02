@@ -2,9 +2,10 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
+
+import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.common._
 
 class Decoder extends Module {
   val io = IO(new Bundle {
@@ -70,9 +71,8 @@ class Decoder extends Module {
       MTHI -> List(iy, instRN, wb_n, fu_mov, mov_mthi),
       MTLO -> List(iy, instRN, wb_n, fu_mov, mov_mtlo),
       // exception
-      BREAK   -> List(iy, instSP, wb_n, fu_ex, ex_break),
-      SYSCALL -> List(iy, instSP, wb_n, fu_ex, ex_syscall),
-      ERET    -> List(iy, instSP, wb_n, fu_ex, ex_eret),
+      BREAK   -> List(iy, instSP, wb_n, fu_cp0, cp0_break),
+      SYSCALL -> List(iy, instSP, wb_n, fu_cp0, cp0_syscall),
       // load
       LB  -> List(iy, instIS, wb_y, fu_mem, mem_lb),
       LBU -> List(iy, instIS, wb_y, fu_mem, mem_lbu),
@@ -87,9 +87,10 @@ class Decoder extends Module {
       SW  -> List(iy, instIS, wb_n, fu_mem, mem_sw),
       SWL -> List(iy, instIS, wb_n, fu_mem, mem_swl),
       SWR -> List(iy, instIS, wb_n, fu_mem, mem_swr),
-      // c0
-      MFC0 -> List(iy, instIZ, wb_y, fu_pri, pri_mfc0),
-      MTC0 -> List(iy, instIZ, wb_n, fu_pri, pri_mtc0),
+      // cp0
+      ERET -> List(iy, instIZ, wb_n, fu_cp0, cp0_eret),
+      MFC0 -> List(iy, instIZ, wb_y, fu_cp0, cp0_mfc0),
+      MTC0 -> List(iy, instIZ, wb_n, fu_cp0, cp0_mtc0),
     ),
   )
   val valid :: t :: wb :: fu :: fuop :: Nil = res
