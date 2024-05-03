@@ -38,9 +38,12 @@ class ExInfo extends Bundle {
   val badvaddr = UInt(ADDR_WIDTH.W)
   val excode   = UInt(EX_LEN.W)
 }
-class ExInfoWB extends ExInfo {
-  val eret = Bool()
-  val pc   = UInt(PC_WIDTH.W)
+class ExInfoToCp0 extends Bundle {
+  val en       = Bool()
+  val bd       = Bool()
+  val excode   = UInt(EX_LEN.W)
+  val badvaddr = UInt(ADDR_WIDTH.W)
+  val pc       = UInt(PC_WIDTH.W)
 }
 
 // cp0 <> exe unit

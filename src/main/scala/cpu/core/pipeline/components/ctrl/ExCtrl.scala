@@ -14,7 +14,7 @@ class ExCtrl extends Module {
   })
   val in  = Cat(io.exID, io.exEXE, io.exMEM, io.exWB).asUInt
   val out = Wire(Vec(5, Bool()))
-  out(4) := in(3) | in(2) | in(1) | in(0)
+  out(4) := false.B
   out(3) := in(2) | in(1) | in(0)
   out(2) := in(1) | in(0)
   out(1) := in(0)

@@ -13,9 +13,13 @@ class FetchUnit extends Module {
       val inst_sram_addr  = Output(UInt(ADDR_WIDTH.W))
       val pcNext          = Output(UInt(PC_WIDTH.W))
     }
-    val jinfo  = Input(new JmpInfo)
-    val binfo  = Input(new BraInfo)
-    val exInfo = Input(new ExInfoWB)
+    val jinfo = Input(new JmpInfo)
+    val binfo = Input(new BraInfo)
+    val exInfo = Input(new Bundle {
+      val isex   = Input(Bool())
+      val eret   = Input(Bool())
+      val eretpc = Input(UInt(PC_WIDTH.W))
+    })
     val ctrl   = Input(new CtrlInfo)
     val isSlot = Input(Bool())
 
@@ -30,14 +34,14 @@ class FetchUnit extends Module {
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
+      io.exInfo.isex -> EX_INIT_ADDR.U,
+      io.exInfo.eret -> io.exInfo.eretpc,
       ctrlSignal     -> pcReg,
       io.jinfo.jwen  -> io.jinfo.jwaddr,
       io.binfo.bwen  -> io.binfo.bwaddr,
-      io.exInfo.eret -> io.exInfo.pc,
-      io.exInfo.en   -> EX_INIT_ADDR.U,
     ),
   )
-  val rst = RegNext(reset)
+  val resetTmp = RegNext(reset)
   io.iCache.pcNext         := pcNext
   io.iCache.inst_sram_addr := io.iCache.pcNext
   io.iCache.inst_sram_en   := !(reset.asBool)
@@ -45,7 +49,7 @@ class FetchUnit extends Module {
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
   except.slot := io.isSlot
 
-  io.ctrlreq.block := rst
+  io.ctrlreq.block := resetTmp
   io.ctrlreq.clear := false.B
 
   output.exInfo   := except

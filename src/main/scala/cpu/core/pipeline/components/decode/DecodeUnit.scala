@@ -11,6 +11,7 @@ class DecodeUnit extends Module {
     val jinfo       = Output(new JmpInfo)
     val ctrlreq     = Output(new CtrlRequest)
     val slotForward = Output(Bool())
+    val eretInfo    = Output(new Bundle { val en = Bool() })
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
@@ -27,7 +28,6 @@ class DecodeUnit extends Module {
 
   val input  = io.in
   val output = io.out
-  val except = WireDefault(input.exInfo)
 
   // data forward
   val rsdata = MuxCase(
@@ -64,9 +64,11 @@ class DecodeUnit extends Module {
   io.jinfo.jwaddr  := jmp.out.jwaddr
 
   // except
+  val except   = WireDefault(input.exInfo)
   val instInfo = decoder.instInfo
+  val cp0en    = instInfo.fu === fu_cp0
   io.slotForward := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
-  when(instInfo.fu === fu_cp0) {
+  when(cp0en) {
     when(instInfo.fuop === cp0_syscall) {
       except.en     := true.B
       except.excode := ex_Sys
@@ -76,6 +78,7 @@ class DecodeUnit extends Module {
       except.excode := ex_Bp
     }
   }
+  io.eretInfo.en := cp0en && instInfo.fuop === cp0_eret
 
   // control request
   io.ctrlreq.block := io.exeDHazard.isload &&

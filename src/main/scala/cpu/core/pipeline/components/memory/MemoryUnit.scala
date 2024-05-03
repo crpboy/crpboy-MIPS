@@ -37,7 +37,10 @@ class MemoryUnit extends Module {
 
   val except = WireDefault(input.exInfo)
   output.exInfo   := except
+  output.exSel    := input.exSel
   output.data     := load.out
+  output.rsaddr   := input.rsaddr
+  output.rtaddr   := input.rtaddr
   output.inst     := input.inst
   output.pc       := input.pc
   output.debug_pc := input.debug_pc

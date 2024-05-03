@@ -19,9 +19,7 @@ class ExecuteUnit extends Module {
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
     val ctrl    = Input(new CtrlInfo)
-
-    val wCp0 = Flipped(new WriteCp0Info)
-    val rCp0 = Flipped(new ReadCp0Info)
+    val rCp0    = Flipped(new ReadCp0Info)
 
     val in  = Input(new StageDecodeExecute)
     val out = Output(new StageExecuteMemory)
@@ -68,13 +66,8 @@ class ExecuteUnit extends Module {
   input.inst <> memReq.inst
   io.dCache  <> memReq.dCache
 
-  val cp0en  = input.inst.fu === fu_cp0
-  val cp0sel = input.inst.imm(2, 0)
-  io.wCp0.en   := !io.ctrl.ex && cp0en && input.inst.fuop === cp0_mtc0
-  io.wCp0.data := input.rt
-  io.wCp0.addr := input.inst.rd
-  io.wCp0.sel  := cp0sel
-
+  val cp0ismfc0 = input.inst.fuop === cp0_mfc0
+  val cp0sel    = input.inst.imm(2, 0)
   io.rCp0.addr := input.inst.rd
   io.rCp0.sel  := cp0sel
 
@@ -82,14 +75,15 @@ class ExecuteUnit extends Module {
   val pcNext = input.pc + 4.U
   val data = MuxLookup(
     input.inst.fu,
-    Mux(
-      cp0en && input.inst.fuop === cp0_mfc0,
-      io.rCp0.data,
-      0.U,
-    ),
+    0.U,
     Seq(
       fu_alu -> alu.out,
       fu_mem -> input.rt,
+      fu_cp0 -> Mux(
+        cp0ismfc0,
+        io.rCp0.data,
+        input.rt,
+      ),
       fu_mov -> MuxLookup(
         input.inst.fuop,
         0.U,
@@ -102,9 +96,14 @@ class ExecuteUnit extends Module {
       fu_bra -> pcNext,
     ),
   )
+  val rd = Mux(
+    input.inst.fu === fu_cp0 && cp0ismfc0,
+    input.rtaddr,
+    input.inst.rd,
+  )
 
   io.dHazard.wen    := input.inst.wb
-  io.dHazard.waddr  := input.inst.rd
+  io.dHazard.waddr  := rd
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
@@ -118,11 +117,14 @@ class ExecuteUnit extends Module {
   }
 
   output.exInfo    := except
+  output.exSel     := cp0sel
   output.data      := data
+  output.rsaddr    := input.rsaddr
+  output.rtaddr    := input.rtaddr
   output.memByte   := memReq.memByte
   output.inst.fu   := input.inst.fu
   output.inst.fuop := input.inst.fuop
-  output.inst.rd   := input.inst.rd
+  output.inst.rd   := rd
   output.inst.wb   := input.inst.wb
   output.pc        := input.pc
   output.debug_pc  := input.debug_pc

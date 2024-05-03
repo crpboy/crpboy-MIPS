@@ -88,9 +88,9 @@ class Decoder extends Module {
       SWL -> List(iy, instIS, wb_n, fu_mem, mem_swl),
       SWR -> List(iy, instIS, wb_n, fu_mem, mem_swr),
       // cp0
-      ERET -> List(iy, instIZ, wb_n, fu_cp0, cp0_eret),
-      MFC0 -> List(iy, instIZ, wb_y, fu_cp0, cp0_mfc0),
-      MTC0 -> List(iy, instIZ, wb_n, fu_cp0, cp0_mtc0),
+      ERET -> List(iy, instRN, wb_n, fu_cp0, cp0_eret),
+      MFC0 -> List(iy, instRN, wb_y, fu_cp0, cp0_mfc0),
+      MTC0 -> List(iy, instRN, wb_n, fu_cp0, cp0_mtc0),
     ),
   )
   val valid :: t :: wb :: fu :: fuop :: Nil = res

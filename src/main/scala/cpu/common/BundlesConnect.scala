@@ -23,9 +23,15 @@ class StageDecodeExecute extends PipelineStage {
 class StageExecuteMemory extends PipelineStage {
   val inst    = new InstInfo
   val memByte = UInt(2.W)
+  val exSel   = UInt(3.W)
+  val rsaddr  = UInt(REG_WIDTH.W)
+  val rtaddr  = UInt(REG_WIDTH.W)
   val data    = UInt(DATA_WIDTH.W)
 }
 class StageMemoryWriteback extends PipelineStage {
-  val inst = new InstInfo
-  val data = UInt(DATA_WIDTH.W)
+  val inst   = new InstInfo
+  val exSel  = UInt(3.W)
+  val rsaddr = UInt(REG_WIDTH.W)
+  val rtaddr = UInt(REG_WIDTH.W)
+  val data   = UInt(DATA_WIDTH.W)
 }

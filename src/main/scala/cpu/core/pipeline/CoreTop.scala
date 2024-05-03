@@ -83,7 +83,7 @@ class CoreTop extends Module {
   exCtrl.exID  <> decode.out.exInfo.en
   exCtrl.exEXE <> execute.out.exInfo.en
   exCtrl.exMEM <> memory.out.exInfo.en
-  exCtrl.exWB  <> writeback.exInfo.en
+  exCtrl.exWB  <> writeback.cp0.exInfo.en
 
   exCtrl.out(4) <> fetch.ctrl.ex
   exCtrl.out(3) <> decode.ctrl.ex
@@ -113,8 +113,13 @@ class CoreTop extends Module {
   writeback.out.wen   <> decode.wb.wen
 
   // exception connect (cp0, exe, wb)
-  writeback.exInfo <> fetch.exInfo
-  writeback.exInfo <> cp0.except
-  execute.wCp0     <> cp0.write
-  execute.rCp0     <> cp0.read
+  writeback.exfetch.isex <> fetch.exInfo.isex
+  writeback.cp0.exInfo   <> cp0.wb
+  writeback.cp0.wCp0     <> cp0.write
+  execute.rCp0           <> cp0.read
+
+  // eret
+  decode.eretInfo.en <> cp0.eret.en
+  decode.eretInfo.en <> fetch.exInfo.eret
+  cp0.eret.pc <> fetch.exInfo.eretpc
 }
