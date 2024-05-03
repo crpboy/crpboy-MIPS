@@ -4,17 +4,6 @@ import chisel3._
 import chisel3.util._
 import cpu.common.Const._
 
-class ExInfoBase extends Bundle {
-  val isEx     = Bool()
-  val isSlot   = Bool()
-  val badvaddr = UInt(ADDR_WIDTH.W)
-  val excode   = UInt(EX_LEN.W)
-}
-class ExInfoExt extends ExInfoBase {
-  val eret = Bool()
-  val pc   = UInt(PC_WIDTH.W)
-}
-
 trait Cp0Base {
   val id: Int
   val sel: Int = 0

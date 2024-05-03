@@ -21,6 +21,7 @@ class InstInfoExt extends InstInfo {
 class CtrlInfo extends Bundle {
   val stall = Bool()
   val flush = Bool()
+  val ex    = Bool()
 }
 class CtrlRequest extends Bundle {
   val block = Bool()
@@ -30,8 +31,32 @@ class CtrlRequestExecute extends CtrlRequest {
   val branchPause = Bool()
 }
 
+// ex info
+class ExInfo extends Bundle {
+  val en       = Bool()
+  val slot     = Bool()
+  val badvaddr = UInt(ADDR_WIDTH.W)
+  val excode   = UInt(EX_LEN.W)
+}
+class ExInfoWB extends ExInfo {
+  val eret = Bool()
+  val pc   = UInt(PC_WIDTH.W)
+}
+
+// cp0 <> exe unit
+class WriteCp0Info extends Bundle {
+  val en   = Input(Bool())
+  val data = Input(UInt(DATA_WIDTH.W))
+  val addr = Input(UInt(REG_WIDTH.W))
+  val sel  = Input(UInt(3.W))
+}
+class ReadCp0Info extends Bundle {
+  val addr = Input(UInt(REG_WIDTH.W))
+  val sel  = Input(UInt(3.W))
+  val data = Output(UInt(DATA_WIDTH.W))
+}
+
 // top IO
-// inst
 class ICacheIO extends Bundle {
   val sram_rdata = Input(UInt(INST_WIDTH.W))
   val sram_en    = Output(Bool())
@@ -39,7 +64,6 @@ class ICacheIO extends Bundle {
   val sram_addr  = Output(UInt(ADDR_WIDTH.W))
   val sram_wdata = Output(UInt(DATA_WIDTH.W))
 }
-// data
 class DCacheIO extends Bundle {
   val sram_rdata = Input(UInt(DATA_WIDTH.W))
   val sram_en    = Output(Bool())
@@ -47,7 +71,6 @@ class DCacheIO extends Bundle {
   val sram_addr  = Output(UInt(ADDR_WIDTH.W))
   val sram_wdata = Output(UInt(DATA_WIDTH.W))
 }
-// debug info
 class DebugIO extends Bundle {
   val wb_pc       = Output(UInt(PC_WIDTH.W))
   val wb_rf_wen   = Output(UInt(WEN_WIDTH.W))

@@ -23,8 +23,9 @@ class Mul extends Module with Config {
     val rs       = Input(UInt(DATA_WIDTH.W))
     val rt       = Input(UInt(DATA_WIDTH.W))
     val isSigned = Input(Bool())
-    val ready    = Output(Bool())
-    val wdata    = Output(UInt(HILO_WIDTH.W))
+
+    val ready = Output(Bool())
+    val wdata = Output(UInt(HILO_WIDTH.W))
   })
   if (isBuild) {
     val mul = Module(new SignedMul).io

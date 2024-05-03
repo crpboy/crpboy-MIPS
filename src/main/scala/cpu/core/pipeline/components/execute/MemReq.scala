@@ -6,7 +6,6 @@ import chisel3.util._
 import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.core.pipeline.components.execute._
 
 class MemReq extends Module {
   val io = IO(new Bundle {

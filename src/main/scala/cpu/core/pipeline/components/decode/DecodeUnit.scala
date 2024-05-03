@@ -2,15 +2,15 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
-import cpu.common.Const._
-import cpu.core.pipeline.components.decode._
 import cpu.common._
+import cpu.common.Const._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
-    val wb      = Input(new WBInfo)
-    val jinfo   = Output(new JmpInfo)
-    val ctrlreq = Output(new CtrlRequest)
+    val wb          = Input(new WBInfo)
+    val jinfo       = Output(new JmpInfo)
+    val ctrlreq     = Output(new CtrlRequest)
+    val slotForward = Output(Bool())
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
@@ -27,7 +27,9 @@ class DecodeUnit extends Module {
 
   val input  = io.in
   val output = io.out
+  val except = WireDefault(input.exInfo)
 
+  // data forward
   val rsdata = MuxCase(
     reg.rsdata,
     Seq(
@@ -45,23 +47,43 @@ class DecodeUnit extends Module {
     ),
   )
 
+  // decoder input
   input.inst <> decoder.rawInst
   input.pc   <> jmp.pc
 
+  // reg
   decoder.rsaddr <> reg.rsaddr
   decoder.rtaddr <> reg.rtaddr
   io.wb          <> reg.wb
 
+  // jump
   rsdata           <> jmp.regData
   decoder.instInfo <> jmp.inst
+  io.ctrl          <> jmp.ctrl
   io.jinfo.jwen    := jmp.out.jwen
   io.jinfo.jwaddr  := jmp.out.jwaddr
 
+  // except
+  val instInfo = decoder.instInfo
+  io.slotForward := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
+  when(instInfo.fu === fu_cp0) {
+    when(instInfo.fuop === cp0_syscall) {
+      except.en     := true.B
+      except.excode := ex_Sys
+    }
+    when(instInfo.fuop === cp0_break) {
+      except.en     := true.B
+      except.excode := ex_Bp
+    }
+  }
+
+  // control request
   io.ctrlreq.block := io.exeDHazard.isload &&
     (io.exeDHazard.waddr === reg.rsaddr ||
       io.exeDHazard.waddr === reg.rtaddr)
-  io.ctrlreq.clear := false.B
+  io.ctrlreq.clear := except.en
 
+  output.exInfo   := except
   output.inst     := decoder.instInfo
   output.rs       := rsdata
   output.rt       := rtdata

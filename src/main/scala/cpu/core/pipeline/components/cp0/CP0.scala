@@ -1,4 +1,4 @@
-package cpu.core.pipeline.components.execute
+package cpu.core.pipeline.components.cp0
 
 import chisel3._
 import chisel3.util._
@@ -6,22 +6,15 @@ import chisel3.util._
 import cpu.common._
 import cpu.common.Const._
 
+// TODO 完善CP0数据通路
 class CP0 extends Module {
   val io = IO(new Bundle {
-    val en = Input(Bool())
-    val write = new Bundle {
-      val en   = Input(Bool())
-      val data = Input(UInt(DATA_WIDTH.W))
-      val addr = Input(UInt(REG_WIDTH.W))
-      val sel  = Input(UInt(3.W))
-    }
-    val read = new Bundle {
-      val addr = Input(UInt(REG_WIDTH.W))
-      val sel  = Input(UInt(3.W))
-      val data = Output(UInt(DATA_WIDTH.W))
-    }
+    val except = Input(new ExInfoWB)
+    val write  = new WriteCp0Info
+    val read   = new ReadCp0Info
   })
 
+  // reg init
   val badvaddr = new Cp0BadVAddr
   val count    = new Cp0Count
   val compare  = new Cp0Compare
@@ -56,8 +49,4 @@ class CP0 extends Module {
   val tick = RegInit(false.B)
   tick := !tick
   when(tick) { count.data := count.data + 1.U }
-
-  // status
-
-  val timestop = count.data === compare.data
 }

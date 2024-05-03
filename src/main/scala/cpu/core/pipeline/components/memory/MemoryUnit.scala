@@ -6,7 +6,6 @@ import chisel3.util._
 import cpu.utils.Functions._
 import cpu.common._
 import cpu.common.Const._
-import cpu.core.pipeline.components.memory._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
@@ -36,6 +35,8 @@ class MemoryUnit extends Module {
   io.ctrlreq.block := false.B
   io.ctrlreq.clear := false.B
 
+  val except = WireDefault(input.exInfo)
+  output.exInfo   := except
   output.data     := load.out
   output.inst     := input.inst
   output.pc       := input.pc

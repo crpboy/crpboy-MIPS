@@ -6,14 +6,18 @@ import cpu.common.Const._
 
 class ExCtrl extends Module {
   val io = IO(new Bundle {
-    val exreq   = Input(UInt(CTRL_WIDTH.W))
-    val invalid = Output(UInt(CTRL_WIDTH.W))
+    val exID  = Input(Bool())
+    val exEXE = Input(Bool())
+    val exMEM = Input(Bool())
+    val exWB  = Input(Bool())
+    val out   = Output(UInt(CTRL_WIDTH.W))
   })
-  val res = WireDefault(0.U.asTypeOf(Vec(5, Bool())))
-  for (i <- 0 until CTRL_WIDTH) {
-    for (j <- i + 1 until CTRL_WIDTH) {
-      res(i) := res(i) | io.exreq(j)
-    }
-  }
-  io.invalid := res.asUInt
+  val in  = Cat(io.exID, io.exEXE, io.exMEM, io.exWB).asUInt
+  val out = Wire(Vec(5, Bool()))
+  out(4) := in(3) | in(2) | in(1) | in(0)
+  out(3) := in(2) | in(1) | in(0)
+  out(2) := in(1) | in(0)
+  out(1) := in(0)
+  out(0) := false.B
+  io.out := out.asUInt
 }

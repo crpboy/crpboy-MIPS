@@ -6,7 +6,6 @@ import chisel3.util._
 import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
-import cpu.core.pipeline.components.execute._
 
 class ExecuteUnit extends Module {
   val io = IO(new Bundle {
@@ -19,10 +18,13 @@ class ExecuteUnit extends Module {
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
+    val ctrl    = Input(new CtrlInfo)
 
-    val ctrl = Input(new CtrlInfo)
-    val in   = Input(new StageDecodeExecute)
-    val out  = Output(new StageExecuteMemory)
+    val wCp0 = Flipped(new WriteCp0Info)
+    val rCp0 = Flipped(new ReadCp0Info)
+
+    val in  = Input(new StageDecodeExecute)
+    val out = Output(new StageExecuteMemory)
   })
 
   val alu    = Module(new ALU).io
@@ -30,10 +32,10 @@ class ExecuteUnit extends Module {
   val hilo   = Module(new Hilo).io
   val bra    = Module(new BranchCtrl).io
   val memReq = Module(new MemReq).io
-  val cp0    = Module(new CP0).io
 
   val input  = io.in
   val output = io.out
+  val except = WireDefault(input.exInfo)
 
   input.rs   <> alu.rs
   input.rt   <> alu.rt
@@ -47,12 +49,14 @@ class ExecuteUnit extends Module {
   input.rt         <> bra.rt
   input.inst       <> bra.inst
   input.pc         <> bra.pc
+  io.ctrl          <> bra.ctrl
   bra.binfo.bwen   <> io.binfo.bwen
   bra.binfo.bwaddr <> io.binfo.bwaddr
 
   input.rs   <> muldiv.rs
   input.rt   <> muldiv.rt
   input.inst <> muldiv.inst
+  io.ctrl    <> muldiv.ctrl
 
   input.rs     <> hilo.movdata
   input.inst   <> hilo.inst
@@ -64,11 +68,25 @@ class ExecuteUnit extends Module {
   input.inst <> memReq.inst
   io.dCache  <> memReq.dCache
 
+  val cp0en  = input.inst.fu === fu_cp0
+  val cp0sel = input.inst.imm(2, 0)
+  io.wCp0.en   := !io.ctrl.ex && cp0en && input.inst.fuop === cp0_mtc0
+  io.wCp0.data := input.rt
+  io.wCp0.addr := input.inst.rd
+  io.wCp0.sel  := cp0sel
+
+  io.rCp0.addr := input.inst.rd
+  io.rCp0.sel  := cp0sel
+
   // data select
   val pcNext = input.pc + 4.U
   val data = MuxLookup(
     input.inst.fu,
-    0.U,
+    Mux(
+      cp0en && input.inst.fuop === cp0_mfc0,
+      io.rCp0.data,
+      0.U,
+    ),
     Seq(
       fu_alu -> alu.out,
       fu_mem -> input.rt,
@@ -90,12 +108,16 @@ class ExecuteUnit extends Module {
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  io.ctrlreq.clear       := alu.ex
+  io.ctrlreq.clear       := except.en
   io.ctrlreq.block       := muldiv.block
   io.ctrlreq.branchPause := bra.binfo.bwen
 
-  cp0 := DontCare
+  when(alu.ex) {
+    except.en     := true.B
+    except.excode := ex_Ov
+  }
 
+  output.exInfo    := except
   output.data      := data
   output.memByte   := memReq.memByte
   output.inst.fu   := input.inst.fu

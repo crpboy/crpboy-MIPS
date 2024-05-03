@@ -9,6 +9,7 @@ import cpu.utils.Functions._
 class MulDiv extends Module {
   val io = IO(new Bundle {
     val inst  = Input(new InstInfoExt)
+    val ctrl  = Input(new CtrlInfo)
     val rs    = Input(UInt(DATA_WIDTH.W))
     val rt    = Input(UInt(DATA_WIDTH.W))
     val block = Output(Bool())
@@ -34,6 +35,6 @@ class MulDiv extends Module {
   val ready = Mux(ismul, mul.ready, div.ready)
   val data  = Mux(ismul, mul.wdata, div.wdata)
   io.block := en && !ready
-  io.wen   := en && ready
+  io.wen   := en && ready && !io.ctrl.ex
   io.wdata := data
 }

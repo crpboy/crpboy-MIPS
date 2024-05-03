@@ -7,13 +7,14 @@ import cpu.common._
 import cpu.common.Const._
 import cpu.utils.StageConnect._
 
-import cpu.core.pipeline.components._
-import cpu.core.pipeline.components.ctrl._
-import cpu.core.pipeline.components.fetch._
-import cpu.core.pipeline.components.decode._
-import cpu.core.pipeline.components.execute._
-import cpu.core.pipeline.components.memory._
-import cpu.core.pipeline.components.writeback._
+import components._
+import components.cp0._
+import components.ctrl._
+import components.fetch._
+import components.decode._
+import components.execute._
+import components.memory._
+import components.writeback._
 
 class CoreTop extends Module {
   val io = IO(new Bundle {
@@ -29,18 +30,20 @@ class CoreTop extends Module {
   val memoryUnit    = Module(new MemoryUnit)
   val writebackUnit = Module(new WriteBackUnit)
 
-  // control unit
-  val stallFlushCtrlUnit = Module(new StallFlushCtrl)
-  // val exCtrlUnit         = Module(new ExCtrl)
+  // functional unit (control, cp0)
+  val sfCtrlUnit = Module(new StallFlushCtrl)
+  val exCtrlUnit = Module(new ExCtrl)
+  val cp0Unit    = Module(new CP0)
 
   // unit io
-  val fetch          = fetchUnit.io
-  val decode         = decodeUnit.io
-  val execute        = executeUnit.io
-  val memory         = memoryUnit.io
-  val writeback      = writebackUnit.io
-  val stallFlushCtrl = stallFlushCtrlUnit.io
-  // val exCtrl         = exCtrlUnit.io
+  val fetch     = fetchUnit.io
+  val decode    = decodeUnit.io
+  val execute   = executeUnit.io
+  val memory    = memoryUnit.io
+  val writeback = writebackUnit.io
+  val sfCtrl    = sfCtrlUnit.io
+  val exCtrl    = exCtrlUnit.io
+  val cp0       = cp0Unit.io
 
   // top io
   io.iCache.sram_rdata <> fetch.iCache.inst_sram_rdata
@@ -58,23 +61,35 @@ class CoreTop extends Module {
   io.debug <> writeback.debug
 
   // stall and flush control
-  stallFlushCtrl.ifreq  <> fetch.ctrlreq
-  stallFlushCtrl.idreq  <> decode.ctrlreq
-  stallFlushCtrl.exereq <> execute.ctrlreq
-  stallFlushCtrl.memreq <> memory.ctrlreq
-  stallFlushCtrl.wbreq  <> writeback.ctrlreq
+  sfCtrl.ifreq  <> fetch.ctrlreq
+  sfCtrl.idreq  <> decode.ctrlreq
+  sfCtrl.exereq <> execute.ctrlreq
+  sfCtrl.memreq <> memory.ctrlreq
+  sfCtrl.wbreq  <> writeback.ctrlreq
 
-  stallFlushCtrl.stall(4) <> fetch.ctrl.stall
-  stallFlushCtrl.stall(3) <> decode.ctrl.stall
-  stallFlushCtrl.stall(2) <> execute.ctrl.stall
-  stallFlushCtrl.stall(1) <> memory.ctrl.stall
-  stallFlushCtrl.stall(0) <> writeback.ctrl.stall
+  sfCtrl.stall(4) <> fetch.ctrl.stall
+  sfCtrl.stall(3) <> decode.ctrl.stall
+  sfCtrl.stall(2) <> execute.ctrl.stall
+  sfCtrl.stall(1) <> memory.ctrl.stall
+  sfCtrl.stall(0) <> writeback.ctrl.stall
 
-  stallFlushCtrl.flush(4) <> fetch.ctrl.flush
-  stallFlushCtrl.flush(3) <> decode.ctrl.flush
-  stallFlushCtrl.flush(2) <> execute.ctrl.flush
-  stallFlushCtrl.flush(1) <> memory.ctrl.flush
-  stallFlushCtrl.flush(0) <> writeback.ctrl.flush
+  sfCtrl.flush(4) <> fetch.ctrl.flush
+  sfCtrl.flush(3) <> decode.ctrl.flush
+  sfCtrl.flush(2) <> execute.ctrl.flush
+  sfCtrl.flush(1) <> memory.ctrl.flush
+  sfCtrl.flush(0) <> writeback.ctrl.flush
+
+  // exception ctrl
+  exCtrl.exID  <> decode.out.exInfo.en
+  exCtrl.exEXE <> execute.out.exInfo.en
+  exCtrl.exMEM <> memory.out.exInfo.en
+  exCtrl.exWB  <> writeback.exInfo.en
+
+  exCtrl.out(4) <> fetch.ctrl.ex
+  exCtrl.out(3) <> decode.ctrl.ex
+  exCtrl.out(2) <> execute.ctrl.ex
+  exCtrl.out(1) <> memory.ctrl.ex
+  exCtrl.out(0) <> writeback.ctrl.ex
 
   // pipeline stage reg connect
   stageConnect(fetch.out,   decode.in,    decode.ctrl)
@@ -82,18 +97,24 @@ class CoreTop extends Module {
   stageConnect(execute.out, memory.in,    memory.ctrl)
   stageConnect(memory.out,  writeback.in, writeback.ctrl)
 
-  // jump and branch info
+  // forward to fetch
   fetch.jinfo  <> decode.jinfo
   fetch.binfo  <> execute.binfo
-  fetch.exinfo := DontCare
+  fetch.isSlot <> decode.slotForward
 
   // data hazard
   execute.dHazard   <> decode.exeDHazard
   memory.dHazard    <> decode.memDHazard
   writeback.dHazard <> decode.wbDHazard
 
-  // writeback
+  // writeback: write regfile
   writeback.out.waddr <> decode.wb.waddr
   writeback.out.wdata <> decode.wb.wdata
   writeback.out.wen   <> decode.wb.wen
+
+  // exception connect (cp0, exe, wb)
+  writeback.exInfo <> fetch.exInfo
+  writeback.exInfo <> cp0.except
+  execute.wCp0     <> cp0.write
+  execute.rCp0     <> cp0.read
 }

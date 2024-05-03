@@ -7,16 +7,17 @@ import cpu.common.Const._
 
 class JumpCtrl extends Module {
   val io = IO(new Bundle {
+    val ctrl    = Input(new CtrlInfo)
     val inst    = Input(new InstInfoExt)
     val regData = Input(UInt(DATA_WIDTH.W))
     val pc      = Input(UInt(PC_WIDTH.W))
     val out     = Output(new JmpInfo)
   })
   val valid  = io.inst.fu === fu_jmp
-  val target = Cat(io.pc(31, 28), (io.inst.imm << 2)(27, 0))
+  val target = Cat(io.pc.asUInt(31, 28), (io.inst.imm << 2)(27, 0))
   val isrReg = io.inst.fuop === _jmp_rreg
   val iswReg = io.inst.fuop === _jmp_wreg
-  io.out.jwen := valid
+  io.out.jwen := valid && !io.ctrl.ex
   io.out.jwaddr := MuxLookup(
     isrReg,
     0.U,
