@@ -20,6 +20,7 @@ class ExecuteUnit extends Module {
     val ctrlreq = Output(new CtrlRequestExecute)
     val ctrl    = Input(new CtrlInfo)
     val rCp0    = Flipped(new ReadCp0Info)
+    val isSlot  = Output(Bool())
 
     val in  = Input(new StageDecodeExecute)
     val out = Output(new StageExecuteMemory)
@@ -60,11 +61,13 @@ class ExecuteUnit extends Module {
   input.inst   <> hilo.inst
   muldiv.wen   <> hilo.wen
   muldiv.wdata <> hilo.wdata
+  io.ctrl      <> hilo.ctrl
 
   input.rs   <> memReq.rs
   input.rt   <> memReq.rt
   input.inst <> memReq.inst
   io.dCache  <> memReq.dCache
+  io.ctrl    <> memReq.ctrl
 
   val cp0ismfc0 = input.inst.fuop === cp0_mfc0
   val cp0sel    = input.inst.imm(2, 0)
@@ -107,16 +110,28 @@ class ExecuteUnit extends Module {
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  io.ctrlreq.clear       := except.en
+  // io.ctrlreq.clear       := except.en
+  io.ctrlreq.clear       := false.B
   io.ctrlreq.block       := muldiv.block
   io.ctrlreq.branchPause := bra.binfo.bwen
 
   when(alu.ex) {
     except.en     := true.B
     except.excode := ex_Ov
+  }.elsewhen(memReq.exLoad) {
+    except.en       := true.B
+    except.excode   := ex_AdEL
+    except.badvaddr := memReq.badvaddr
+  }.elsewhen(memReq.exStore) {
+    except.en       := true.B
+    except.excode   := ex_AdES
+    except.badvaddr := memReq.badvaddr
   }
 
+  io.isSlot := input.inst.fu === fu_bra && io.binfo.bwen
+
   output.exInfo    := except
+  output.slot      := input.slot
   output.exSel     := cp0sel
   output.data      := data
   output.rsaddr    := input.rsaddr

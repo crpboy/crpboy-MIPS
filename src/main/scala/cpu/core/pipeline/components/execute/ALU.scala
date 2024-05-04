@@ -32,13 +32,16 @@ class ALU extends Module {
     ),
   )
 
-  val WIDTH     = DATA_WIDTH + 2
-  val extop1    = signedExtend(op1, WIDTH)
-  val extop2    = signedExtend(op2, WIDTH)
-  val extop2Sub = signedExtend(-op2, WIDTH)
-  val calcRes   = extop1 + Mux(io.inst.fuop === _alu_sub, extop2Sub, extop2)
-  val addRes    = calcRes(DATA_WIDTH - 1, 0)
-  val overflow  = calcRes(WIDTH - 1) ^ calcRes(WIDTH - 2)
+  val WIDTH  = DATA_WIDTH + 1
+  val issub  = io.inst.fuop === _alu_sub
+  val op2sub = -op2
+
+  val signop1 = signedExtend(op1, WIDTH)
+  val signop2 = signedExtend(Mux(issub, op2sub, op2), WIDTH)
+  val calcRes = signop1 + signop2
+  val addRes  = calcRes(DATA_WIDTH - 1, 0)
+  val overflow = io.inst.fuop === _alu_ex &&
+    (calcRes(WIDTH - 1) ^ calcRes(WIDTH - 2))
 
   val orRes   = op1 | op2
   val andRes  = op1 & op2
@@ -47,7 +50,7 @@ class ALU extends Module {
   val rshift  = op2 >> op1(4, 0)
   val rashift = (op2.asSInt() >> op1(4, 0)).asUInt
   val sltRes  = zeroExtend((calcRes.asSInt < 0.S).asBool)
-  val sltuRes = zeroExtend(op1 < op2) // TODO: 改成使用减法结果
+  val sltuRes = zeroExtend(op1 < op2)
 
   io.out := Mux(
     en,
@@ -72,5 +75,5 @@ class ALU extends Module {
     ),
     0.U,
   )
-  io.ex := en && io.inst.fuop === _alu_ex && overflow
+  io.ex := en && overflow
 }

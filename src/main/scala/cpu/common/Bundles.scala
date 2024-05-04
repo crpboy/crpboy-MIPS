@@ -35,12 +35,7 @@ class CtrlRequestExecute extends CtrlRequest {
 class ExInfo extends Bundle {
   val en       = Bool()
   val slot     = Bool()
-  val badvaddr = UInt(ADDR_WIDTH.W)
-  val excode   = UInt(EX_LEN.W)
-}
-class ExInfoToCp0 extends Bundle {
-  val en       = Bool()
-  val bd       = Bool()
+  val eret     = Bool()
   val excode   = UInt(EX_LEN.W)
   val badvaddr = UInt(ADDR_WIDTH.W)
   val pc       = UInt(PC_WIDTH.W)

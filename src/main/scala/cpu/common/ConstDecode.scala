@@ -68,7 +68,7 @@ trait ConstDecode {
   val alu_addu = "b0010".U
   val alu_sub  = "b1111".U
   val alu_subu = "b0011".U
-  val alu_slt  = "b0001".U
+  val alu_slt  = "b1101".U
   val alu_sltu = "b0101".U
   val alu_and  = "b0100".U
   val alu_nor  = "b0110".U
@@ -78,8 +78,9 @@ trait ConstDecode {
   val alu_srl  = "b1010".U
   val alu_sra  = "b1011".U
 
-  val _alu_ex  = BitPat("b111?")
-  val _alu_sub = BitPat("b???1")
+  val _alu_ex   = BitPat("b111?")
+  val _alu_sub  = BitPat("b???1")
+  val _alu_zero = BitPat("b0???")
 
   // bra operator
   // op(3)=1 is ..al inst

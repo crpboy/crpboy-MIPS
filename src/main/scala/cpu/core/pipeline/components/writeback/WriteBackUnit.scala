@@ -11,11 +11,18 @@ class WriteBackUnit extends Module {
     val ctrlreq = Output(new CtrlRequest)
     val ctrl    = Input(new CtrlInfo)
     val cp0 = new Bundle {
-      val exInfo = Output(new ExInfoToCp0)
-      val wCp0   = Flipped(new WriteCp0Info)
+      val exout = Output(new ExInfo)
+      val wCp0  = Flipped(new WriteCp0Info)
+      val exres = Input(new ExInfo)
     }
-    val exfetch = new Bundle { val isex = Output(Bool()) }
-
+    val exe = new Bundle {
+      val slot = Input(Bool())
+      val ex   = Input(Bool())
+    }
+    val mem = new Bundle {
+      val slot = Input(Bool())
+      val ex   = Input(Bool())
+    }
     val in    = Input(new StageMemoryWriteback)
     val out   = Output(new WBInfo)
     val debug = Output(new DebugIO)
@@ -28,35 +35,32 @@ class WriteBackUnit extends Module {
   io.dHazard.wdata := input.data
 
   // <> regfile
-  io.out.wen   := input.inst.wb
+  io.out.wen   := !io.cp0.exres.en && input.inst.wb
   io.out.wdata := input.data
   io.out.waddr := input.inst.rd
 
-  // <> cp0
-  val iseret = cp0en && input.inst.fuop === cp0_eret
-  val isex   = input.exInfo.en && !iseret
-  val except = Wire(new ExInfoToCp0)
+  // <> cp0 (except)
+  val except = WireDefault(input.exInfo)
+  except.slot := input.slot
+  when(input.exInfo.pc === 0.U) {
+    except.pc := input.debug_pc
+  }
+  when((io.exe.slot && io.exe.ex) || (io.mem.slot && io.mem.ex)) {
+    except.en := false.B
+  }
 
-  except.en       := isex
-  except.bd       := input.exInfo.slot
-  except.badvaddr := input.exInfo.badvaddr
-  except.excode   := input.exInfo.excode
-  except.pc       := input.debug_pc
-
-  io.cp0.wCp0.en   := !io.ctrl.ex && cp0en && input.inst.fuop === cp0_mtc0
+  // <> cp0 (mtc0)
+  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel
-  io.cp0.exInfo    := except
-
-  // <> fetch (except)
-  io.exfetch.isex := isex
+  io.cp0.exout     := except
 
   io.ctrlreq.block := false.B
-  io.ctrlreq.clear := false.B
+  io.ctrlreq.clear := io.cp0.exres.en || io.cp0.exres.eret
 
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := io.out.wdata
-  io.debug.wb_rf_wen   := Mux(input.inst.wb, WB_EN, WB_NO)
+  io.debug.wb_rf_wen   := Mux(io.out.wen, WB_EN, WB_NO)
   io.debug.wb_rf_wnum  := io.out.waddr
 }

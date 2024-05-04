@@ -32,11 +32,14 @@ class MemoryUnit extends Module {
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := load.out
 
+  val except = WireDefault(input.exInfo)
+
   io.ctrlreq.block := false.B
+  // io.ctrlreq.clear := except.en
   io.ctrlreq.clear := false.B
 
-  val except = WireDefault(input.exInfo)
   output.exInfo   := except
+  output.slot     := input.slot
   output.exSel    := input.exSel
   output.data     := load.out
   output.rsaddr   := input.rsaddr

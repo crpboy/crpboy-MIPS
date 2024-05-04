@@ -15,18 +15,25 @@ class MemReq extends Module {
       val sram_addr  = Output(UInt(ADDR_WIDTH.W))
       val sram_wdata = Output(UInt(DATA_WIDTH.W))
     }
-    val rs      = Input(UInt(DATA_WIDTH.W))
-    val rt      = Input(UInt(DATA_WIDTH.W))
-    val inst    = Input(new InstInfoExt)
-    val memByte = Output(UInt(2.W))
+    val rs       = Input(UInt(DATA_WIDTH.W))
+    val rt       = Input(UInt(DATA_WIDTH.W))
+    val inst     = Input(new InstInfoExt)
+    val ctrl     = Input(new CtrlInfo)
+    val exLoad   = Output(Bool())
+    val exStore  = Output(Bool())
+    val badvaddr = Output(UInt(ADDR_WIDTH.W))
+    val memByte  = Output(UInt(2.W))
   })
+
+  val en      = io.inst.fu === fu_mem
   val vaddr   = io.rs + io.inst.imm
   val memByte = vaddr(1, 0)
+
   io.memByte          := memByte
-  io.dCache.sram_en   := io.inst.fu === fu_mem
+  io.dCache.sram_en   := en && !io.exLoad && !io.exStore && !io.ctrl.ex
   io.dCache.sram_addr := vaddr
   io.dCache.sram_wen := Mux(
-    io.inst.wb,
+    io.inst.wb || !io.dCache.sram_en,
     "b0000".U,
     MuxLookup(
       io.inst.fuop,
@@ -99,4 +106,22 @@ class MemReq extends Module {
       ),
     ),
   )
+  io.exLoad := en && MuxLookup(
+    io.inst.fuop,
+    false.B,
+    Seq(
+      mem_lw  -> (memByte(1, 0) =/= "b00".U),
+      mem_lh  -> (memByte(0) =/= "b0".U),
+      mem_lhu -> (memByte(0) =/= "b0".U),
+    ),
+  )
+  io.exStore := en && MuxLookup(
+    io.inst.fuop,
+    false.B,
+    Seq(
+      mem_sw -> (memByte(1, 0) =/= "b00".U),
+      mem_sh -> (memByte(0) =/= "b0".U),
+    ),
+  )
+  io.badvaddr := vaddr
 }

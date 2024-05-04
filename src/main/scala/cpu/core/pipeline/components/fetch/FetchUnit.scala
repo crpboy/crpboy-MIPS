@@ -15,13 +15,16 @@ class FetchUnit extends Module {
     }
     val jinfo = Input(new JmpInfo)
     val binfo = Input(new BraInfo)
-    val exInfo = Input(new Bundle {
+    val cp0 = Input(new Bundle {
       val isex   = Input(Bool())
       val eret   = Input(Bool())
       val eretpc = Input(UInt(PC_WIDTH.W))
     })
+    val slotSignal = Input(new Bundle {
+      val decode  = Input(Bool())
+      val execute = Input(Bool())
+    })
     val ctrl   = Input(new CtrlInfo)
-    val isSlot = Input(Bool())
 
     val ctrlreq = Output(new CtrlRequest)
     val out     = Output(new StageFetchDecode)
@@ -30,30 +33,31 @@ class FetchUnit extends Module {
 
   val pcReg      = RegNext(io.iCache.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
   val pcNextTmp  = pcReg + 4.U
-  val ctrlSignal = io.ctrl.stall || io.ctrl.flush || io.ctrl.ex
+  val ctrlSignal = io.ctrl.stall || io.ctrl.ex
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
-      io.exInfo.isex -> EX_INIT_ADDR.U,
-      io.exInfo.eret -> io.exInfo.eretpc,
-      ctrlSignal     -> pcReg,
-      io.jinfo.jwen  -> io.jinfo.jwaddr,
-      io.binfo.bwen  -> io.binfo.bwaddr,
+      io.cp0.isex   -> EX_INIT_ADDR.U,
+      io.cp0.eret   -> io.cp0.eretpc,
+      ctrlSignal    -> pcReg,
+      io.jinfo.jwen -> io.jinfo.jwaddr,
+      io.binfo.bwen -> io.binfo.bwaddr,
     ),
   )
   val resetTmp = RegNext(reset)
   io.iCache.pcNext         := pcNext
   io.iCache.inst_sram_addr := io.iCache.pcNext
   io.iCache.inst_sram_en   := !(reset.asBool)
+  val inst = Mux(io.ctrl.stall, 0.U, io.iCache.inst_sram_rdata)
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
-  except.slot := io.isSlot
 
   io.ctrlreq.block := resetTmp
   io.ctrlreq.clear := false.B
 
+  output.slot     := io.slotSignal.decode || io.slotSignal.execute
   output.exInfo   := except
-  output.inst     := io.iCache.inst_sram_rdata
+  output.inst     := inst
   output.pc       := pcNextTmp
   output.debug_pc := pcReg
 }

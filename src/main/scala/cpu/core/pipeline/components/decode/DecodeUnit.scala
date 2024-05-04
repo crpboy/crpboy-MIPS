@@ -7,11 +7,10 @@ import cpu.common.Const._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
-    val wb          = Input(new WBInfo)
-    val jinfo       = Output(new JmpInfo)
-    val ctrlreq     = Output(new CtrlRequest)
-    val slotForward = Output(Bool())
-    val eretInfo    = Output(new Bundle { val en = Bool() })
+    val wb      = Input(new WBInfo)
+    val jinfo   = Output(new JmpInfo)
+    val ctrlreq = Output(new CtrlRequest)
+    val isSlot  = Output(Bool())
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
@@ -66,27 +65,42 @@ class DecodeUnit extends Module {
   // except
   val except   = WireDefault(input.exInfo)
   val instInfo = decoder.instInfo
-  val cp0en    = instInfo.fu === fu_cp0
-  io.slotForward := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
-  when(cp0en) {
+  io.isSlot := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
+  when(instInfo.fu === fu_cp0) {
     when(instInfo.fuop === cp0_syscall) {
       except.en     := true.B
       except.excode := ex_Sys
+      except.pc     := input.debug_pc
     }
     when(instInfo.fuop === cp0_break) {
       except.en     := true.B
       except.excode := ex_Bp
+      except.pc     := input.debug_pc
+    }
+    when(instInfo.fuop === cp0_eret) {
+      except.eret := true.B
     }
   }
-  io.eretInfo.en := cp0en && instInfo.fuop === cp0_eret
+  when(jmp.isex) {
+    except.en       := true.B
+    except.excode   := ex_AdEL
+    except.pc       := jmp.out.jwaddr
+    except.badvaddr := jmp.out.jwaddr
+  }
+  when(decoder.isex) {
+    except.en     := true.B
+    except.excode := ex_RI
+  }
 
   // control request
   io.ctrlreq.block := io.exeDHazard.isload &&
     (io.exeDHazard.waddr === reg.rsaddr ||
       io.exeDHazard.waddr === reg.rtaddr)
-  io.ctrlreq.clear := except.en
+  io.ctrlreq.clear := false.B
+  // io.ctrlreq.clear := except.en
 
   output.exInfo   := except
+  output.slot     := input.slot
   output.inst     := decoder.instInfo
   output.rs       := rsdata
   output.rt       := rtdata

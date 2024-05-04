@@ -8,6 +8,7 @@ import cpu.common.Const._
 class PipelineStage extends Bundle {
   val pc       = UInt(PC_WIDTH.W)
   val debug_pc = UInt(PC_WIDTH.W)
+  val slot     = Bool()
   val exInfo   = new ExInfo
 }
 class StageFetchDecode extends PipelineStage {

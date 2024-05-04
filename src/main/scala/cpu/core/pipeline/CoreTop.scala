@@ -66,6 +66,7 @@ class CoreTop extends Module {
   sfCtrl.exereq <> execute.ctrlreq
   sfCtrl.memreq <> memory.ctrlreq
   sfCtrl.wbreq  <> writeback.ctrlreq
+  sfCtrl.cp0req <> cp0.ctrlreq
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -80,10 +81,10 @@ class CoreTop extends Module {
   sfCtrl.flush(0) <> writeback.ctrl.flush
 
   // exception ctrl
-  exCtrl.exID  <> decode.out.exInfo.en
-  exCtrl.exEXE <> execute.out.exInfo.en
-  exCtrl.exMEM <> memory.out.exInfo.en
-  exCtrl.exWB  <> writeback.cp0.exInfo.en
+  exCtrl.exID  <> decode.out.exInfo
+  exCtrl.exEXE <> execute.out.exInfo
+  exCtrl.exMEM <> memory.out.exInfo
+  exCtrl.exWB  <> cp0.exInfo
 
   exCtrl.out(4) <> fetch.ctrl.ex
   exCtrl.out(3) <> decode.ctrl.ex
@@ -97,12 +98,13 @@ class CoreTop extends Module {
   stageConnect(execute.out, memory.in,    memory.ctrl)
   stageConnect(memory.out,  writeback.in, writeback.ctrl)
 
-  // forward to fetch
-  fetch.jinfo  <> decode.jinfo
-  fetch.binfo  <> execute.binfo
-  fetch.isSlot <> decode.slotForward
+  // forward: -> fetch
+  fetch.jinfo              <> decode.jinfo
+  fetch.binfo              <> execute.binfo
+  fetch.slotSignal.decode  <> decode.isSlot
+  fetch.slotSignal.execute <> execute.isSlot
 
-  // data hazard
+  // forward: data hazard
   execute.dHazard   <> decode.exeDHazard
   memory.dHazard    <> decode.memDHazard
   writeback.dHazard <> decode.wbDHazard
@@ -112,14 +114,17 @@ class CoreTop extends Module {
   writeback.out.wdata <> decode.wb.wdata
   writeback.out.wen   <> decode.wb.wen
 
-  // exception connect (cp0, exe, wb)
-  writeback.exfetch.isex <> fetch.exInfo.isex
-  writeback.cp0.exInfo   <> cp0.wb
-  writeback.cp0.wCp0     <> cp0.write
-  execute.rCp0           <> cp0.read
-
-  // eret
-  decode.eretInfo.en <> cp0.eret.en
-  decode.eretInfo.en <> fetch.exInfo.eret
-  cp0.eret.pc <> fetch.exInfo.eretpc
+  // cp0 connect
+  // exception connect (exe, wb) -> cp0 -> fetch
+  writeback.cp0.exout <> cp0.wb
+  writeback.cp0.exres <> cp0.exInfo
+  writeback.cp0.wCp0  <> cp0.write
+  cp0.fetch           <> fetch.cp0
+  execute.rCp0        <> cp0.read
+  cp0.extIntIn        := 0.U
+  // slot judge (exe, mem) -> wb
+  execute.out.slot      <> writeback.exe.slot
+  execute.out.exInfo.en <> writeback.exe.ex
+  memory.out.slot       <> writeback.mem.slot
+  memory.out.exInfo.en  <> writeback.mem.ex
 }

@@ -6,16 +6,20 @@ import chisel3.util._
 import cpu.common._
 import cpu.common.Const._
 
-// TODO 完善CP0数据通路
+// TODO: 需要添加例外优先级
 class CP0 extends Module {
   val io = IO(new Bundle {
-    val wb    = Input(new ExInfoToCp0)  // <> wb
+    val wb    = Input(new ExInfo)       // <> wb
     val write = Input(new WriteCp0Info) // <> wb
-    val eret = new Bundle {
-      val en = Input(Bool())
-      val pc = Output(UInt(PC_WIDTH.W))
-    } // decode -> cp0 -> fetch
-    val read = new ReadCp0Info // <> exe
+    val read  = new ReadCp0Info         // <> exe
+    val fetch = new Bundle {
+      val isex   = Output(Bool())
+      val eret   = Output(Bool())
+      val eretpc = Output(UInt(PC_WIDTH.W))
+    } // <> fetch
+    val extIntIn = Input(UInt(6.W))
+    val ctrlreq  = Output(new CtrlRequest)
+    val exInfo   = Output(new ExInfo)
   })
 
   // reg init
@@ -34,39 +38,79 @@ class CP0 extends Module {
     epc,
   )
 
-  // count
-  val tick = RegInit(false.B)
-  tick := !tick
-  when(tick) { count.data := count.data + 1.U }
-
-  // TODO: BadVAddr signal isn't added
-  val except = io.wb
-  when(except.en) {
-    cause.data.ExcCode := except.excode
-    cause.data.BD      := except.bd
-    status.data.EXL    := true.B
-    epc.data           := Mux(except.bd, except.pc - 4.U, except.pc)
-  }.elsewhen(io.eret.en) {
-    status.data.EXL := false.B
-  }
-
-  // write cp0 reg
+  // write
   val writepos = Cat(io.write.addr, io.write.sel)
   when(io.write.en) {
     seq.foreach(it => {
-      when(it.getId.U === writepos) {
+      when(it.getId === writepos) {
         it.write(io.write.data)
       }
     })
   }
-  // read cp0 reg
+
+  // count
+  val tick = RegInit(false.B)
+  tick := !tick
+  when(tick && writepos =/= count.getId) { count.data := count.data + 1.U }
+
+  // cause
+  when(count.data === compare.data && compare.data =/= 0.U) {
+    cause.data.TI := true.B
+  }
+  when(writepos === compare.getId && io.write.en) {
+    cause.data.TI := false.B
+  }
+  cause.data.IP(7) := cause.data.TI
+
+  // check exception
+  val except = WireDefault(io.wb)
+  // bad pc
+  when(io.wb.eret && epc.data(1, 0) =/= "b00".U) {
+    except.en       := true.B
+    except.eret     := false.B
+    except.excode   := ex_AdEL
+    except.badvaddr := epc.data
+    except.pc       := epc.data
+  }
+  // interrupt
+  val hasInt = ((cause.data.IP.asUInt(7, 0) & status.data.IM.asUInt(7, 0)) =/= 0.U) &&
+    status.data.IE.asBool && !status.data.EXL.asBool
+  when(hasInt) {
+    except.en     := true.B
+    except.excode := ex_Int
+  }
+
+  io.exInfo := except
+
+  // exception writeback
+  when(except.en) {
+    cause.data.ExcCode := except.excode
+    badvaddr.data      := except.badvaddr
+    when(!status.data.EXL) {
+      status.data.EXL := true.B
+      cause.data.BD   := except.slot
+      epc.data        := Mux(except.slot, except.pc - 4.U, except.pc)
+    }
+  }.elsewhen(except.eret) {
+    status.data.EXL := false.B
+  }
+
+  // <> fetch
+  io.fetch.isex   := except.en
+  io.fetch.eret   := except.eret
+  io.fetch.eretpc := epc.data
+
+  // ctrl req
+  io.ctrlreq.block := false.B
+  io.ctrlreq.clear := except.en
+
+  // read info
   val readpos = Cat(io.read.addr, io.read.sel)
   io.read.data := MuxLookup(
     readpos,
     0.U,
-    seq.map(it => it.getId.U -> it.data.asUInt),
+    seq.map(it => it.getId -> it.data.asUInt),
   )
-  io.eret.pc := epc.data
 }
 
 /*

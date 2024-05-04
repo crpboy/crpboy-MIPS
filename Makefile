@@ -2,6 +2,8 @@
 
 all: run
 
+.PHONY: all
+
 CLEAR_INPUT += ./generated
 CLEAR_INPUT += ./obj_dir
 CLEAR_INPUT += ./logs

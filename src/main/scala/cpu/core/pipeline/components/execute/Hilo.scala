@@ -11,11 +11,12 @@ class Hilo extends Module {
     val wdata   = Input(UInt(HILO_WIDTH.W))
     val movdata = Input(UInt(DATA_WIDTH.W))
     val inst    = Input(new InstInfoExt)
+    val ctrl    = Input(new CtrlInfo)
     val hi      = Output(UInt(DATA_WIDTH.W))
     val lo      = Output(UInt(DATA_WIDTH.W))
   })
   val reg = RegEnable(io.wdata, 0.U, io.wen)
-  when(io.inst.fu === fu_mov && io.inst.fuop === _mov_ismt) {
+  when(io.inst.fu === fu_mov && io.inst.fuop === _mov_ismt && !io.ctrl.ex) {
     reg := Mux(
       io.inst.fuop === _mov_usehi,
       Cat(io.movdata, reg(DATA_WIDTH - 1, 0)),

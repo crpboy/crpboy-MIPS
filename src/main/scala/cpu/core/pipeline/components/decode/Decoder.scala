@@ -13,6 +13,7 @@ class Decoder extends Module {
     val instInfo = Output(new InstInfoExt)
     val rsaddr   = Output(UInt(REG_WIDTH.W))
     val rtaddr   = Output(UInt(REG_WIDTH.W))
+    val isex     = Output(Bool())
   })
   val inst = io.rawInst
   val res: List[UInt] = ListLookup(
@@ -93,7 +94,7 @@ class Decoder extends Module {
       MTC0 -> List(iy, instRN, wb_n, fu_cp0, cp0_mtc0),
     ),
   )
-  val valid :: t :: wb :: fu :: fuop :: Nil = res
+  val validInst :: t :: wb :: fu :: fuop :: Nil = res
 
   // get operand info
   val op1 = MuxLookup(
@@ -158,4 +159,6 @@ class Decoder extends Module {
       instIL -> zeroExtendHigh(inst(15, 0)),
     ),
   )
+
+  io.isex := !validInst
 }
