@@ -35,7 +35,6 @@ class MemoryUnit extends Module {
   val except = WireDefault(input.exInfo)
 
   io.ctrlreq.block := false.B
-  // io.ctrlreq.clear := except.en
   io.ctrlreq.clear := false.B
 
   output.exInfo   := except

@@ -11,7 +11,6 @@ class StallFlushCtrl extends Module {
     val idreq  = Input(new CtrlRequest)
     val exereq = Input(new CtrlRequestExecute)
     val memreq = Input(new CtrlRequest)
-    val cp0req = Input(new CtrlRequest)
     val wbreq  = Input(new CtrlRequest)
     val stall  = Output(UInt(CTRL_WIDTH.W))
     val flush  = Output(UInt(CTRL_WIDTH.W))
@@ -29,7 +28,7 @@ class StallFlushCtrl extends Module {
     io.idreq.clear | io.exereq.branchPause,
     io.exereq.clear,
     io.memreq.clear,
-    io.wbreq.clear | io.cp0req.clear,
+    io.wbreq.clear,
   )
 
   val ifstall = block(4) | block(3) | block(2) | block(1) | block(0)

@@ -20,7 +20,7 @@ class ExecuteUnit extends Module {
     val ctrlreq = Output(new CtrlRequestExecute)
     val ctrl    = Input(new CtrlInfo)
     val rCp0    = Flipped(new ReadCp0Info)
-    val isSlot  = Output(Bool())
+    val fetch   = new Bundle { val isBr = Output(Bool()) }
 
     val in  = Input(new StageDecodeExecute)
     val out = Output(new StageExecuteMemory)
@@ -110,7 +110,6 @@ class ExecuteUnit extends Module {
   io.dHazard.wdata  := data
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
 
-  // io.ctrlreq.clear       := except.en
   io.ctrlreq.clear       := false.B
   io.ctrlreq.block       := muldiv.block
   io.ctrlreq.branchPause := bra.binfo.bwen
@@ -128,7 +127,7 @@ class ExecuteUnit extends Module {
     except.badvaddr := memReq.badvaddr
   }
 
-  io.isSlot := input.inst.fu === fu_bra && io.binfo.bwen
+  io.fetch.isBr := input.inst.fu === fu_bra && io.binfo.bwen
 
   output.exInfo    := except
   output.slot      := input.slot

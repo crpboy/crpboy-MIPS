@@ -10,7 +10,7 @@ class DecodeUnit extends Module {
     val wb      = Input(new WBInfo)
     val jinfo   = Output(new JmpInfo)
     val ctrlreq = Output(new CtrlRequest)
-    val isSlot  = Output(Bool())
+    val fetch = new Bundle { val isJmp = Output(Bool()) }
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
@@ -65,7 +65,7 @@ class DecodeUnit extends Module {
   // except
   val except   = WireDefault(input.exInfo)
   val instInfo = decoder.instInfo
-  io.isSlot := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
+  io.fetch.isJmp := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
   when(instInfo.fu === fu_cp0) {
     when(instInfo.fuop === cp0_syscall) {
       except.en     := true.B
@@ -97,7 +97,6 @@ class DecodeUnit extends Module {
     (io.exeDHazard.waddr === reg.rsaddr ||
       io.exeDHazard.waddr === reg.rtaddr)
   io.ctrlreq.clear := false.B
-  // io.ctrlreq.clear := except.en
 
   output.exInfo   := except
   output.slot     := input.slot

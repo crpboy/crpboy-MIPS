@@ -66,7 +66,6 @@ class CoreTop extends Module {
   sfCtrl.exereq <> execute.ctrlreq
   sfCtrl.memreq <> memory.ctrlreq
   sfCtrl.wbreq  <> writeback.ctrlreq
-  sfCtrl.cp0req <> cp0.ctrlreq
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -101,8 +100,8 @@ class CoreTop extends Module {
   // forward: -> fetch
   fetch.jinfo              <> decode.jinfo
   fetch.binfo              <> execute.binfo
-  fetch.slotSignal.decode  <> decode.isSlot
-  fetch.slotSignal.execute <> execute.isSlot
+  fetch.slotSignal.decode  <> decode.fetch.isJmp
+  fetch.slotSignal.execute <> execute.fetch.isBr
 
   // forward: data hazard
   execute.dHazard   <> decode.exeDHazard
