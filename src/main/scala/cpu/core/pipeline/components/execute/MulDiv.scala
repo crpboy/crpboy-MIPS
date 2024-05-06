@@ -10,8 +10,8 @@ class MulDiv extends Module {
   val io = IO(new Bundle {
     val inst  = Input(new InstInfoExt)
     val ctrl  = Input(new CtrlInfo)
-    val rs    = Input(UInt(DATA_WIDTH.W))
-    val rt    = Input(UInt(DATA_WIDTH.W))
+    val op1   = Input(UInt(DATA_WIDTH.W))
+    val op2   = Input(UInt(DATA_WIDTH.W))
     val block = Output(Bool())
     val wen   = Output(Bool())
     val wdata = Output(UInt(HILO_WIDTH.W))
@@ -27,10 +27,10 @@ class MulDiv extends Module {
   mul.isSigned := isSigned
   div.isSigned := isSigned
 
-  mul.rs <> io.rs
-  mul.rt <> io.rt
-  div.rs <> io.rs
-  div.rt <> io.rt
+  mul.op1 <> io.op1
+  mul.op2 <> io.op2
+  div.op1 <> io.op1
+  div.op2 <> io.op2
 
   val ready = Mux(ismul, mul.ready, div.ready)
   val data  = Mux(ismul, mul.wdata, div.wdata)

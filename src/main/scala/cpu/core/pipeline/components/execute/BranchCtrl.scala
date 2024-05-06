@@ -10,26 +10,35 @@ class BranchCtrl extends Module {
     val ctrl  = Input(new CtrlInfo)
     val inst  = Input(new InstInfoExt)
     val pc    = Input(UInt(PC_WIDTH.W))
-    val rs    = Input(UInt(DATA_WIDTH.W))
-    val rt    = Input(UInt(DATA_WIDTH.W))
+    val op1   = Input(UInt(DATA_WIDTH.W))
+    val op2   = Input(UInt(DATA_WIDTH.W))
     val binfo = Output(new BraInfo)
   })
-  val rs = io.rs.asSInt
-  val rt = io.rt.asSInt
+
+  val op1 = io.op1.asSInt
+  val op2 = io.op2.asSInt
+
+  val eqRes  = op1 === op2
+  val neRes  = op1 =/= op2
+  val gezRes = op1 >= 0.S
+  val lezRes = op1 <= 0.S
+  val gtzRes = op1 > 0.S
+  val ltzRes = op1 < 0.S
+
   io.binfo.bwen := !io.ctrl.ex &&
     (io.inst.fu === fu_bra) &&
     MuxLookup(
       io.inst.fuop,
       false.B,
       Seq(
-        bra_beq    -> (rs === rt),
-        bra_bne    -> (rs =/= rt),
-        bra_bgez   -> (rs >= 0.S),
-        bra_bgtz   -> (rs > 0.S),
-        bra_blez   -> (rs <= 0.S),
-        bra_bltz   -> (rs < 0.S),
-        bra_bgezal -> (rs >= 0.S),
-        bra_bltzal -> (rs < 0.S),
+        bra_beq    -> eqRes,
+        bra_bne    -> neRes,
+        bra_bgez   -> gezRes,
+        bra_bgtz   -> gtzRes,
+        bra_blez   -> lezRes,
+        bra_bltz   -> ltzRes,
+        bra_bgezal -> gezRes,
+        bra_bltzal -> ltzRes,
       ),
     )
   io.binfo.bwaddr := io.pc + (io.inst.imm << 2)

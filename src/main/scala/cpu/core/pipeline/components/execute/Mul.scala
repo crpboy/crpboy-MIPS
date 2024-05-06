@@ -20,8 +20,8 @@ class SignedMul extends BlackBox with HasBlackBoxResource {
 class Mul extends Module with Config {
   val io = IO(new Bundle {
     val en       = Input(Bool())
-    val rs       = Input(UInt(DATA_WIDTH.W))
-    val rt       = Input(UInt(DATA_WIDTH.W))
+    val op1      = Input(UInt(DATA_WIDTH.W))
+    val op2      = Input(UInt(DATA_WIDTH.W))
     val isSigned = Input(Bool())
 
     val ready = Output(Bool())
@@ -36,13 +36,13 @@ class Mul extends Module with Config {
     mul.CE  := io.en
     mul.A := Mux(
       io.isSigned,
-      signedExtend(io.rs, mul.A.getWidth),
-      zeroExtend(io.rs, mul.A.getWidth),
+      signedExtend(io.op1, mul.A.getWidth),
+      zeroExtend(io.op1, mul.A.getWidth),
     )
     mul.B := Mux(
       io.isSigned,
-      signedExtend(io.rt, mul.B.getWidth),
-      zeroExtend(io.rt, mul.B.getWidth),
+      signedExtend(io.op2, mul.B.getWidth),
+      zeroExtend(io.op2, mul.B.getWidth),
     )
 
     io.ready := cnt >= mulClockNum.U
@@ -53,8 +53,8 @@ class Mul extends Module with Config {
     val signed   = RegInit(0.U(HILO_WIDTH.W))
     val unsigned = RegInit(0.U(HILO_WIDTH.W))
     when(io.en) {
-      signed   := (io.rs.asSInt * io.rt.asSInt).asUInt
-      unsigned := io.rs * io.rt
+      signed   := (io.op1.asSInt * io.op2.asSInt).asUInt
+      unsigned := io.op1 * io.op2
     }
     io.ready := cnt >= mulClockNum.U
     io.wdata := Mux(io.isSigned, signed, unsigned)

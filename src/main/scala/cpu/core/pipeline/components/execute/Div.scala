@@ -6,17 +6,17 @@ import cpu.common._
 import cpu.common.Const._
 import cpu.utils.Functions._
 
-// assume that $rs is divided by $rt
+// assume that $op1 is divided by $op2
 class SignedDiv extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
     val aclk = Input(Clock())
 
-    // rt
+    // op2
     val s_axis_divisor_tvalid = Input(Bool())
     val s_axis_divisor_tready = Output(Bool())
     val s_axis_divisor_tdata  = Input(UInt(DATA_WIDTH.W))
 
-    // rs
+    // op1
     val s_axis_dividend_tvalid = Input(Bool())
     val s_axis_dividend_tready = Output(Bool())
     val s_axis_dividend_tdata  = Input(UInt(DATA_WIDTH.W))
@@ -30,12 +30,12 @@ class UnsignedDiv extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
     val aclk = Input(Clock())
 
-    // rt
+    // op2
     val s_axis_divisor_tvalid = Input(Bool())
     val s_axis_divisor_tready = Output(Bool())
     val s_axis_divisor_tdata  = Input(UInt(DATA_WIDTH.W))
 
-    // rs
+    // op1
     val s_axis_dividend_tvalid = Input(Bool())
     val s_axis_dividend_tready = Output(Bool())
     val s_axis_dividend_tdata  = Input(UInt(DATA_WIDTH.W))
@@ -48,8 +48,8 @@ class UnsignedDiv extends BlackBox with HasBlackBoxResource {
 class Div extends Module with Config {
   val io = IO(new Bundle {
     val en       = Input(Bool())
-    val rs       = Input(UInt(DATA_WIDTH.W))
-    val rt       = Input(UInt(DATA_WIDTH.W))
+    val op1      = Input(UInt(DATA_WIDTH.W))
+    val op2      = Input(UInt(DATA_WIDTH.W))
     val isSigned = Input(Bool())
     val ready    = Output(Bool())
     val wdata    = Output(UInt(HILO_WIDTH.W))
@@ -60,11 +60,11 @@ class Div extends Module with Config {
     val uDiv = Module(new UnsignedDiv).io
 
     sDiv.aclk                  <> clock
-    sDiv.s_axis_dividend_tdata <> io.rs
-    sDiv.s_axis_divisor_tdata  <> io.rt
+    sDiv.s_axis_dividend_tdata <> io.op1
+    sDiv.s_axis_divisor_tdata  <> io.op2
     uDiv.aclk                  <> clock
-    uDiv.s_axis_dividend_tdata <> io.rs
-    uDiv.s_axis_divisor_tdata  <> io.rt
+    uDiv.s_axis_dividend_tdata <> io.op1
+    uDiv.s_axis_divisor_tdata  <> io.op2
 
     val sDividendSent = RegInit(false.B)
     val sDivisorSent  = RegInit(false.B)
@@ -107,14 +107,14 @@ class Div extends Module with Config {
     val cnt = RegInit(0.U(log2Ceil(divClockNum + 1).W))
     cnt := Mux(io.en && !io.ready, cnt + 1.U, 0.U)
 
-    val dividendSigned = io.rs(31) & io.isSigned
-    val divisorSgned   = io.rt(31) & io.isSigned
+    val dividendSigned = io.op1(31) & io.isSigned
+    val divisorSgned   = io.op2(31) & io.isSigned
 
-    val dividendAbs = Mux(dividendSigned, (-io.rs).asUInt, io.rs.asUInt)
-    val divisorAbs  = Mux(divisorSgned, (-io.rt).asUInt, io.rt.asUInt)
+    val dividendAbs = Mux(dividendSigned, (-io.op1).asUInt, io.op1.asUInt)
+    val divisorAbs  = Mux(divisorSgned, (-io.op2).asUInt, io.op2.asUInt)
 
-    val quotientSigned  = (io.rs(31) ^ io.rt(31)) & io.isSigned
-    val remainderSigned = io.rs(31) & io.isSigned
+    val quotientSigned  = (io.op1(31) ^ io.op2(31)) & io.isSigned
+    val remainderSigned = io.op1(31) & io.isSigned
 
     val quotientAbs  = dividendAbs / divisorAbs
     val remainderAbs = dividendAbs - quotientAbs * divisorAbs

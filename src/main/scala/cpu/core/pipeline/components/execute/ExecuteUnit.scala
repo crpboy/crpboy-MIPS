@@ -36,35 +36,35 @@ class ExecuteUnit extends Module {
   val output = io.out
   val except = WireDefault(input.exInfo)
 
-  input.rs   <> alu.rs
-  input.rt   <> alu.rt
+  input.op1  <> alu.op1
+  input.op2  <> alu.op2
   input.inst <> alu.inst
 
-  input.rs   <> muldiv.rs
-  input.rt   <> muldiv.rt
+  input.op1  <> muldiv.op1
+  input.op2  <> muldiv.op2
   input.inst <> muldiv.inst
 
-  input.rs         <> bra.rs
-  input.rt         <> bra.rt
+  input.op1        <> bra.op1
+  input.op2        <> bra.op2
   input.inst       <> bra.inst
   input.pc         <> bra.pc
   io.ctrl          <> bra.ctrl
   bra.binfo.bwen   <> io.binfo.bwen
   bra.binfo.bwaddr <> io.binfo.bwaddr
 
-  input.rs   <> muldiv.rs
-  input.rt   <> muldiv.rt
+  input.op1  <> muldiv.op1
+  input.op2  <> muldiv.op2
   input.inst <> muldiv.inst
   io.ctrl    <> muldiv.ctrl
 
-  input.rs     <> hilo.movdata
+  input.op1    <> hilo.movdata
   input.inst   <> hilo.inst
   muldiv.wen   <> hilo.wen
   muldiv.wdata <> hilo.wdata
   io.ctrl      <> hilo.ctrl
 
-  input.rs   <> memReq.rs
-  input.rt   <> memReq.rt
+  input.op1  <> memReq.op1
+  input.op2  <> memReq.op2
   input.inst <> memReq.inst
   io.dCache  <> memReq.dCache
   io.ctrl    <> memReq.ctrl
@@ -81,11 +81,11 @@ class ExecuteUnit extends Module {
     0.U,
     Seq(
       fu_alu -> alu.out,
-      fu_mem -> input.rt,
+      fu_mem -> input.op2,
       fu_cp0 -> Mux(
         cp0ismfc0,
         io.rCp0.data,
-        input.rt,
+        input.op2,
       ),
       fu_mov -> MuxLookup(
         input.inst.fuop,

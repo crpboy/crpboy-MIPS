@@ -9,8 +9,8 @@ import cpu.utils.Functions._
 class ALU extends Module {
   val io = IO(new Bundle {
     val inst = Input(new InstInfoExt)
-    val rs   = Input(UInt(DATA_WIDTH.W))
-    val rt   = Input(UInt(DATA_WIDTH.W))
+    val op1  = Input(UInt(DATA_WIDTH.W))
+    val op2  = Input(UInt(DATA_WIDTH.W))
     val ex   = Output(Bool())
     val out  = Output(UInt(DATA_WIDTH.W))
   })
@@ -19,7 +19,7 @@ class ALU extends Module {
     io.inst.op1,
     0.U,
     Seq(
-      op_reg -> io.rs,
+      op_reg -> io.op1,
       op_imm -> io.inst.imm,
     ),
   )
@@ -27,7 +27,7 @@ class ALU extends Module {
     io.inst.op2,
     0.U,
     Seq(
-      op_reg -> io.rt,
+      op_reg -> io.op2,
       op_imm -> io.inst.imm,
     ),
   )

@@ -10,7 +10,7 @@ class DecodeUnit extends Module {
     val wb      = Input(new WBInfo)
     val jinfo   = Output(new JmpInfo)
     val ctrlreq = Output(new CtrlRequest)
-    val fetch = new Bundle { val isJmp = Output(Bool()) }
+    val fetch   = new Bundle { val isJmp = Output(Bool()) }
 
     val exeDHazard = Input(new DataHazardExe)
     val memDHazard = Input(new DataHazard)
@@ -101,8 +101,8 @@ class DecodeUnit extends Module {
   output.exInfo   := except
   output.slot     := input.slot
   output.inst     := decoder.instInfo
-  output.rs       := rsdata
-  output.rt       := rtdata
+  output.op1      := rsdata
+  output.op2      := rtdata
   output.pc       := input.pc
   output.debug_pc := input.debug_pc
   output.rsaddr   := decoder.rsaddr
