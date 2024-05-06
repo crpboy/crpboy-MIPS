@@ -7,11 +7,9 @@ import cpu.common.Const._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
-    val iCache = new Bundle {
-      val inst_sram_rdata = Input(UInt(INST_WIDTH.W))
-      val inst_sram_en    = Output(Bool())
-      val inst_sram_addr  = Output(UInt(ADDR_WIDTH.W))
-      val pcNext          = Output(UInt(PC_WIDTH.W))
+    val preFetch = new Bundle {
+      val pcNext = Output(UInt(PC_WIDTH.W))
+      val data   = Flipped(Decoupled(UInt(INST_WIDTH.W)))
     }
     val jinfo = Input(new JmpInfo)
     val binfo = Input(new BraInfo)
@@ -24,17 +22,17 @@ class FetchUnit extends Module {
       val decode  = Input(Bool())
       val execute = Input(Bool())
     })
-    val ctrl   = Input(new CtrlInfo)
-
+    val ctrl    = Input(new CtrlInfo)
     val ctrlreq = Output(new CtrlRequest)
     val out     = Output(new StageFetchDecode)
   })
   val output = io.out
 
-  val pcReg      = RegNext(io.iCache.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
+  // gen next pc
+  val pcReg      = RegNext(io.preFetch.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
   val pcNextTmp  = pcReg + 4.U
   val ctrlSignal = io.ctrl.stall || io.ctrl.ex
-  val pcNext = MuxCase(
+  io.preFetch.pcNext := MuxCase(
     pcNextTmp,
     Seq(
       io.cp0.isex   -> EX_INIT_ADDR.U,
@@ -44,14 +42,14 @@ class FetchUnit extends Module {
       io.binfo.bwen -> io.binfo.bwaddr,
     ),
   )
-  val resetTmp = RegNext(reset)
-  io.iCache.pcNext         := pcNext
-  io.iCache.inst_sram_addr := io.iCache.pcNext
-  io.iCache.inst_sram_en   := !(reset.asBool)
-  val inst = Mux(io.ctrl.stall, 0.U, io.iCache.inst_sram_rdata)
+
+  // prefetch inst fetch
+  io.preFetch.data.ready := !io.ctrl.stall
+  val inst = Mux(io.preFetch.data.fire, io.preFetch.data.bits, 0.U)
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 
+  val resetTmp = RegNext(reset)
   io.ctrlreq.block := resetTmp
   io.ctrlreq.clear := false.B
 

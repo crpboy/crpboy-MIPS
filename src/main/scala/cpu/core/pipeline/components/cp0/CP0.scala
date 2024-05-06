@@ -116,7 +116,7 @@ CP0 各个数据来源如下
 read cp0  : exe
 write cp0 : writeback
 exception : writeback
-eret      : decoder
+eret      : writeback
 
 一旦出现exception，就会使得前面所有指令被直接冲刷为0
 同时当i部件出现exception的时候 使得下一时钟周期 [1, i] 全部寄存器写使能无效

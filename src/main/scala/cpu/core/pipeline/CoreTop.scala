@@ -30,10 +30,11 @@ class CoreTop extends Module {
   val memoryUnit    = Module(new MemoryUnit)
   val writebackUnit = Module(new WriteBackUnit)
 
-  // functional unit (control, cp0)
-  val sfCtrlUnit = Module(new StallFlushCtrl)
-  val exCtrlUnit = Module(new ExCtrl)
-  val cp0Unit    = Module(new CP0)
+  // functional unit
+  val preFetchUnit = Module(new PreFetch)
+  val sfCtrlUnit   = Module(new StallFlushCtrl)
+  val exCtrlUnit   = Module(new ExCtrl)
+  val cp0Unit      = Module(new CP0)
 
   // unit io
   val fetch     = fetchUnit.io
@@ -41,16 +42,15 @@ class CoreTop extends Module {
   val execute   = executeUnit.io
   val memory    = memoryUnit.io
   val writeback = writebackUnit.io
+  val preFetch  = preFetchUnit.io
   val sfCtrl    = sfCtrlUnit.io
   val exCtrl    = exCtrlUnit.io
   val cp0       = cp0Unit.io
 
   // top io
-  io.iCache.sram_rdata <> fetch.iCache.inst_sram_rdata
-  io.iCache.sram_en    <> fetch.iCache.inst_sram_en
-  io.iCache.sram_addr  <> fetch.iCache.inst_sram_addr
-  io.iCache.sram_wen   := 0.U
-  io.iCache.sram_wdata := 0.U
+  preFetch.data   <> fetch.preFetch.data
+  preFetch.pcNext <> fetch.preFetch.pcNext
+  preFetch.iCache <> io.iCache
 
   io.dCache.sram_rdata <> memory.dCache.sram_rdata
   io.dCache.sram_en    <> execute.dCache.sram_en
