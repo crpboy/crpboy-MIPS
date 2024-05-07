@@ -74,8 +74,9 @@ class CP0 extends Module {
     except.pc       := epc.data
   }
   // interrupt
-  val hasInt = ((cause.data.IP.asUInt(7, 0) & status.data.IM.asUInt(7, 0)) =/= 0.U) &&
-    status.data.IE.asBool && !status.data.EXL.asBool
+  val hasInt =
+    ((cause.data.IP.asUInt(7, 0) & status.data.IM.asUInt(7, 0)) =/= 0.U) &&
+      status.data.IE.asBool && !status.data.EXL.asBool
   when(hasInt) {
     except.en     := true.B
     except.excode := ex_Int
@@ -103,9 +104,7 @@ class CP0 extends Module {
 
   // read info
   val readpos = Cat(io.read.addr, io.read.sel)
-  io.read.data := MuxLookup(
-    readpos,
-    0.U,
+  io.read.data := MuxLookup(readpos, 0.U)(
     seq.map(it => it.getId -> it.data.asUInt),
   )
 }

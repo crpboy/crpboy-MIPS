@@ -18,14 +18,7 @@ class JumpCtrl extends Module {
   val target = Cat(io.pc.asUInt(31, 28), (io.inst.imm << 2)(27, 0))
   val isrReg = io.inst.fuop === _jmp_rreg
   val iswReg = io.inst.fuop === _jmp_wreg
-  io.isex     := valid && io.out.jwaddr(1, 0) =/= "b00".U
-  io.out.jwen := valid && !io.ctrl.ex && !io.isex
-  io.out.jwaddr := MuxLookup(
-    isrReg,
-    0.U,
-    Seq(
-      0.U -> target,
-      1.U -> io.regData,
-    ),
-  )
+  io.isex       := valid && io.out.jwaddr(1, 0) =/= "b00".U
+  io.out.jwen   := valid && !io.ctrl.ex && !io.isex
+  io.out.jwaddr := Mux(isrReg, io.regData, target)
 }

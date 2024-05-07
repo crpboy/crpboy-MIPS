@@ -9,22 +9,24 @@ CLEAR_INPUT += ./obj_dir
 CLEAR_INPUT += ./logs
 CLEAR_INPUT += ./test_run_dir
 
+TOP_HOME = mycpu_top.sv
+
 clean:
 	rm -rf $(CLEAR_INPUT)
 
 CPY_HOME1 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab3/CPU_CDE/mycpu_verify/rtl/myCPU/mycpu_top.v
 
 define REPLACE_COMMAND
-sed -i 's/\bclock\b/clk/g' ./generated/mycpu_top.v
-sed -i 's/\breset\b/resetn/g' ./generated/mycpu_top.v
-sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' ./generated/mycpu_top.v
+sed -i 's/\bclock\b/clk/g' $(TOP_HOME)
+sed -i 's/\breset\b/resetn/g' $(TOP_HOME)
+sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' $(TOP_HOME)
 endef
 
 replace:
 	$(REPLACE_COMMAND)
 
 define COPYFILE_COMMAND
-cp ./generated/mycpu_top.v $(CPY_HOME1)
+cp $(TOP_HOME) $(CPY_HOME1)
 endef
 
 copyfile:

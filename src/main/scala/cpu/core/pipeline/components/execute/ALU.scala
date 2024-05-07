@@ -15,17 +15,13 @@ class ALU extends Module {
     val out  = Output(UInt(DATA_WIDTH.W))
   })
   val en = io.inst.fu === fu_alu
-  val op1 = MuxLookup(
-    io.inst.op1,
-    0.U,
+  val op1 = MuxLookup(io.inst.op1, 0.U)(
     Seq(
       op_reg -> io.op1,
       op_imm -> io.inst.imm,
     ),
   )
-  val op2 = MuxLookup(
-    io.inst.op2,
-    0.U,
+  val op2 = MuxLookup(io.inst.op2, 0.U)(
     Seq(
       op_reg -> io.op2,
       op_imm -> io.inst.imm,
@@ -48,15 +44,13 @@ class ALU extends Module {
   val xorRes  = op1 ^ op2
   val lshift  = op2 << op1(4, 0)
   val rshift  = op2 >> op1(4, 0)
-  val rashift = (op2.asSInt() >> op1(4, 0)).asUInt
+  val rashift = (op2.asSInt >> op1(4, 0)).asUInt
   val sltRes  = zeroExtend((calcRes.asSInt < 0.S).asBool)
   val sltuRes = zeroExtend(op1 < op2)
 
   io.out := Mux(
     en,
-    MuxLookup(
-      io.inst.fuop,
-      0.U,
+    MuxLookup(io.inst.fuop, 0.U)(
       Seq(
         alu_or   -> orRes,
         alu_and  -> andRes,

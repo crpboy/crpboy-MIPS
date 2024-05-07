@@ -97,9 +97,7 @@ class Decoder extends Module {
   val validInst :: t :: wb :: fu :: fuop :: Nil = res
 
   // get operand info
-  val op1 = MuxLookup(
-    t,
-    op_reg,
+  val op1 = MuxLookup(t, op_reg)(
     Seq(
       instRN -> op_reg,
       instRS -> op_imm,
@@ -109,9 +107,7 @@ class Decoder extends Module {
       instIL -> op_reg,
     ),
   )
-  val op2 = MuxLookup(
-    t,
-    op_reg,
+  val op2 = MuxLookup(t, op_reg)(
     Seq(
       instRN -> op_reg,
       instRS -> op_reg,
@@ -131,9 +127,7 @@ class Decoder extends Module {
   // reg
   io.rsaddr := inst(25, 21)
   io.rtaddr := inst(20, 16)
-  io.instInfo.rd := MuxLookup(
-    t,
-    0.U,
+  io.instInfo.rd := MuxLookup(t, 0.U)(
     Seq(
       instRN -> inst(15, 11),
       instRS -> inst(15, 11),
@@ -146,9 +140,7 @@ class Decoder extends Module {
   )
 
   // imm
-  io.instInfo.imm := MuxLookup(
-    t,
-    0.U,
+  io.instInfo.imm := MuxLookup(t, 0.U)(
     Seq(
       instRN -> zeroExtend(inst(10, 0)),
       instRS -> zeroExtend(inst(10, 6)),

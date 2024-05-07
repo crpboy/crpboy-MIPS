@@ -76,9 +76,7 @@ class ExecuteUnit extends Module {
 
   // data select
   val pcNext = input.pc + 4.U
-  val data = MuxLookup(
-    input.inst.fu,
-    0.U,
+  val data = MuxLookup(input.inst.fu, 0.U)(
     Seq(
       fu_alu -> alu.out,
       fu_mem -> input.op2,
@@ -87,9 +85,7 @@ class ExecuteUnit extends Module {
         io.rCp0.data,
         input.op2,
       ),
-      fu_mov -> MuxLookup(
-        input.inst.fuop,
-        0.U,
+      fu_mov -> MuxLookup(input.inst.fuop, 0.U)(
         Seq(
           mov_mfhi -> hilo.hi,
           mov_mflo -> hilo.lo,

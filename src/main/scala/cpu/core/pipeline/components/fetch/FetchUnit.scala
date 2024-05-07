@@ -26,36 +26,31 @@ class FetchUnit extends Module {
     val ctrlreq = Output(new CtrlRequest)
     val out     = Output(new StageFetchDecode)
   })
-  val output = io.out
+  val decInput = io.preFetch.data
+  val output   = io.out
 
   // gen next pc
-  val pcReg      = RegNext(io.preFetch.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
-  val pcNextTmp  = pcReg + 4.U
-  val ctrlSignal = io.ctrl.stall || io.ctrl.ex
+  val pcReg     = RegNext(io.preFetch.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
+  val pcNextTmp = pcReg + 4.U
+  val dontgo    = !decInput.fire || io.ctrl.stall || io.ctrl.ex
   io.preFetch.pcNext := MuxCase(
     pcNextTmp,
     Seq(
       io.cp0.isex   -> EX_INIT_ADDR.U,
       io.cp0.eret   -> io.cp0.eretpc,
-      ctrlSignal    -> pcReg,
+      dontgo        -> pcReg,
       io.jinfo.jwen -> io.jinfo.jwaddr,
       io.binfo.bwen -> io.binfo.bwaddr,
     ),
   )
 
-  // prefetch inst fetch
-  io.preFetch.data.ready := !io.ctrl.stall
-  val inst = Mux(io.preFetch.data.fire, io.preFetch.data.bits, 0.U)
-
-  val except = WireDefault(0.U.asTypeOf(new ExInfo))
-
-  val resetTmp = RegNext(reset)
-  io.ctrlreq.block := resetTmp
+  decInput.ready   := true.B
+  io.ctrlreq.block := false.B
   io.ctrlreq.clear := false.B
 
   output.slot     := io.slotSignal.decode || io.slotSignal.execute
-  output.exInfo   := except
-  output.inst     := inst
+  output.exInfo   := WireDefault(0.U.asTypeOf(new ExInfo))
+  output.inst     := Mux(io.preFetch.data.fire, io.preFetch.data.bits, 0.U)
   output.pc       := pcNextTmp
   output.debug_pc := pcReg
 }

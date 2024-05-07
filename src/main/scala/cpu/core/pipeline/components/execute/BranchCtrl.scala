@@ -27,9 +27,7 @@ class BranchCtrl extends Module {
 
   io.binfo.bwen := !io.ctrl.ex &&
     (io.inst.fu === fu_bra) &&
-    MuxLookup(
-      io.inst.fuop,
-      false.B,
+    MuxLookup(io.inst.fuop, false.B)(
       Seq(
         bra_beq    -> eqRes,
         bra_bne    -> neRes,

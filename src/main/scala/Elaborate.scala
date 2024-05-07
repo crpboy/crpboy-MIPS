@@ -1,11 +1,9 @@
-import firrtl.options.TargetDirAnnotation
-import chisel3._
-import chisel3.util._
 import cpu._
-import cpu.core._
+import circt.stage._
 
-object elaborateMain extends App {
-  (new chisel3.stage.ChiselStage).emitVerilog(
-    new mycpu_top(), Array("--target-dir", "generated"),
-  )
+object Elaborate extends App {
+  def top       = new mycpu_top()
+  val generator = Seq(chisel3.stage.ChiselGeneratorAnnotation(() => top))
+  (new ChiselStage)
+    .execute(args, generator :+ CIRCTTargetAnnotation(CIRCTTarget.SystemVerilog))
 }

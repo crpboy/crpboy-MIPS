@@ -35,13 +35,9 @@ class MemReq extends Module {
   io.dCache.sram_wen := Mux(
     io.inst.wb || !io.dCache.sram_en,
     "b0000".U,
-    MuxLookup(
-      io.inst.fuop,
-      0.U,
+    MuxLookup(io.inst.fuop, 0.U)(
       Seq(
-        mem_sb -> MuxLookup(
-          memByte,
-          0.U,
+        mem_sb -> MuxLookup(memByte, 0.U)(
           Seq(
             "b11".U -> "b1000".U,
             "b10".U -> "b0100".U,
@@ -55,9 +51,7 @@ class MemReq extends Module {
           "b0011".U,
         ),
         mem_sw -> "b1111".U,
-        mem_swl -> MuxLookup(
-          memByte,
-          0.U,
+        mem_swl -> MuxLookup(memByte, 0.U)(
           Seq(
             "b00".U -> "b0001".U,
             "b01".U -> "b0011".U,
@@ -65,9 +59,7 @@ class MemReq extends Module {
             "b11".U -> "b1111".U,
           ),
         ),
-        mem_swr -> MuxLookup(
-          memByte,
-          0.U,
+        mem_swr -> MuxLookup(memByte, 0.U)(
           Seq(
             "b00".U -> "b1111".U,
             "b01".U -> "b1110".U,
@@ -78,15 +70,11 @@ class MemReq extends Module {
       ),
     ),
   )
-  io.dCache.sram_wdata := MuxLookup(
-    io.inst.fuop,
-    io.op2,
+  io.dCache.sram_wdata := MuxLookup(io.inst.fuop, io.op2)(
     Seq(
       mem_sb -> Fill(4, io.op2(7, 0)),
       mem_sh -> Fill(2, io.op2(15, 0)),
-      mem_swl -> MuxLookup(
-        memByte,
-        0.U,
+      mem_swl -> MuxLookup(memByte, 0.U)(
         Seq(
           "b00".U -> Cat(0.U(24.W), io.op2(31, 24)),
           "b01".U -> Cat(0.U(16.W), io.op2(31, 16)),
@@ -94,9 +82,7 @@ class MemReq extends Module {
           "b11".U -> io.op2,
         ),
       ),
-      mem_swr -> MuxLookup(
-        memByte,
-        0.U,
+      mem_swr -> MuxLookup(memByte, 0.U)(
         Seq(
           "b00".U -> io.op2,
           "b01".U -> Cat(io.op2(23, 0), 0.U(8.W)),
@@ -106,18 +92,14 @@ class MemReq extends Module {
       ),
     ),
   )
-  io.exLoad := en && MuxLookup(
-    io.inst.fuop,
-    false.B,
+  io.exLoad := en && MuxLookup(io.inst.fuop, false.B)(
     Seq(
       mem_lw  -> (memByte(1, 0) =/= "b00".U),
       mem_lh  -> (memByte(0) =/= "b0".U),
       mem_lhu -> (memByte(0) =/= "b0".U),
     ),
   )
-  io.exStore := en && MuxLookup(
-    io.inst.fuop,
-    false.B,
+  io.exStore := en && MuxLookup(io.inst.fuop, false.B)(
     Seq(
       mem_sw -> (memByte(1, 0) =/= "b00".U),
       mem_sh -> (memByte(0) =/= "b0".U),

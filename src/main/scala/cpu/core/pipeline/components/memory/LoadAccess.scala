@@ -19,13 +19,9 @@ class LoadAccess extends Module {
   val word = Mux(
     io.inst.fuop === _mem_lw,
     rdata,
-    MuxLookup(
-      io.inst.fuop,
-      0.U,
+    MuxLookup(io.inst.fuop, 0.U)(
       Seq(
-        mem_lb -> MuxLookup(
-          io.memByte,
-          0.U,
+        mem_lb -> MuxLookup(io.memByte, 0.U)(
           Seq(
             "b00".U -> signedExtend(rdata(7, 0)),
             "b01".U -> signedExtend(rdata(15, 8)),
@@ -33,9 +29,7 @@ class LoadAccess extends Module {
             "b11".U -> signedExtend(rdata(31, 24)),
           ),
         ),
-        mem_lbu -> MuxLookup(
-          io.memByte,
-          0.U,
+        mem_lbu -> MuxLookup(io.memByte, 0.U)(
           Seq(
             "b00".U -> zeroExtend(rdata(7, 0)),
             "b01".U -> zeroExtend(rdata(15, 8)),
@@ -58,13 +52,9 @@ class LoadAccess extends Module {
   )
   val data = Mux(
     io.inst.fu === fu_mem && io.inst.wb,
-    MuxLookup(
-      io.inst.fuop,
-      word,
+    MuxLookup(io.inst.fuop, word)(
       Seq(
-        mem_lwl -> MuxLookup(
-          io.memByte,
-          0.U,
+        mem_lwl -> MuxLookup(io.memByte, 0.U)(
           Seq(
             "b00".U -> Cat(word(7, 0), io.data(23, 0)),
             "b01".U -> Cat(word(15, 0), io.data(15, 0)),
@@ -72,9 +62,7 @@ class LoadAccess extends Module {
             "b11".U -> word,
           ),
         ),
-        mem_lwr -> MuxLookup(
-          io.memByte,
-          0.U,
+        mem_lwr -> MuxLookup(io.memByte, 0.U)(
           Seq(
             "b00".U -> word,
             "b01".U -> Cat(io.data(31, 24), word(31, 8)),

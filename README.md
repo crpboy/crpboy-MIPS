@@ -10,7 +10,7 @@
 
 scala version: 2.13.8
 
-chisel version: 3.5.4
+chisel version: 6.3.0
 
 ## 运行方式
 
