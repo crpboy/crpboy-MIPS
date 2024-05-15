@@ -12,3 +12,4 @@ target/
 obj_dir/
 test_run_dir/
 uml-graph/
+mycpu_top.sv

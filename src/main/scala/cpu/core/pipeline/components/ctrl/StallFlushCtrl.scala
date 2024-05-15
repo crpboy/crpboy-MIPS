@@ -2,8 +2,9 @@ package cpu.core.pipeline.components.ctrl
 
 import chisel3._
 import chisel3.util._
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 
 class StallFlushCtrl extends Module {
   val io = IO(new Bundle {
@@ -12,27 +13,31 @@ class StallFlushCtrl extends Module {
     val exereq = Input(new CtrlRequestExecute)
     val memreq = Input(new CtrlRequest)
     val wbreq  = Input(new CtrlRequest)
-    val stall  = Output(UInt(CTRL_WIDTH.W))
-    val flush  = Output(UInt(CTRL_WIDTH.W))
+    val cacheReq = new Bundle {
+      val iCacheReq = Input(Bool())
+      // val dCacheReq = Input(Bool())
+    }
+    val stall = Output(UInt(CTRL_WIDTH.W))
+    val flush = Output(UInt(CTRL_WIDTH.W))
   })
   val block: UInt = Cat(
     io.ifreq.block,
     io.idreq.block,
     io.exereq.block,
     io.memreq.block,
-    io.wbreq.block,
+    io.wbreq.block | io.cacheReq.iCacheReq, // | io.cacheReq.dCacheReq,
   )
   // clear : the inst in this unit will be passed, pre inst will be flush
   val clear: UInt = Cat(
     io.ifreq.clear,
-    io.idreq.clear | io.exereq.branchPause,
+    io.idreq.clear,
     io.exereq.clear,
     io.memreq.clear,
     io.wbreq.clear,
   )
 
   val ifstall = block(4) | block(3) | block(2) | block(1) | block(0)
-  val ifflush = false.B // clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
+  val ifflush = clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
 
   val idstall = block(3) | block(2) | block(1) | block(0)
   val idflush = block(4) | clear(3) | clear(2) | clear(1) | clear(0)

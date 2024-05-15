@@ -3,7 +3,8 @@ package cpu.core.pipeline.components.ctrl
 import chisel3._
 import chisel3.util._
 import cpu.common._
-import cpu.common.Const._
+import cpu.common.const.Const._
+import cpu.common.bundles.ExInfo
 
 class ExCtrl extends Module {
   val io = IO(new Bundle {

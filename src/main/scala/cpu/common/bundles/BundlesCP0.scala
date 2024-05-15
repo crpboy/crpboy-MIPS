@@ -1,8 +1,8 @@
-package cpu.common
+package cpu.common.bundles
 
 import chisel3._
 import chisel3.util._
-import cpu.common.Const._
+import cpu.common.const.Const._
 
 trait Cp0Base {
   val id: Int

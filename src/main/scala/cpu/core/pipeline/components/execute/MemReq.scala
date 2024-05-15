@@ -2,23 +2,19 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
-
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.Functions._
 
 class MemReq extends Module {
   val io = IO(new Bundle {
-    val dCache = new Bundle {
-      val sram_en    = Output(Bool())
-      val sram_wen   = Output(UInt(WEN_WIDTH.W))
-      val sram_addr  = Output(UInt(ADDR_WIDTH.W))
-      val sram_wdata = Output(UInt(DATA_WIDTH.W))
-    }
+    val dCache   = new DCacheIOExe
     val op1      = Input(UInt(DATA_WIDTH.W))
     val op2      = Input(UInt(DATA_WIDTH.W))
     val inst     = Input(new InstInfoExt)
     val ctrl     = Input(new CtrlInfo)
+    val block    = Output(Bool())
     val exLoad   = Output(Bool())
     val exStore  = Output(Bool())
     val badvaddr = Output(UInt(ADDR_WIDTH.W))
@@ -26,51 +22,68 @@ class MemReq extends Module {
   })
 
   val en      = io.inst.fu === fu_mem
-  val vaddr   = io.op1 + io.inst.imm
+  val vaddr   = io.op1 + io.inst.imm // TODO: 这里需要接入alu
   val memByte = vaddr(1, 0)
+  io.memByte := memByte
 
-  io.memByte          := memByte
-  io.dCache.sram_en   := en && !io.exLoad && !io.exStore && !io.ctrl.ex
-  io.dCache.sram_addr := vaddr
-  io.dCache.sram_wen := Mux(
-    io.inst.wb || !io.dCache.sram_en,
-    "b0000".U,
-    MuxLookup(io.inst.fuop, 0.U)(
-      Seq(
-        mem_sb -> MuxLookup(memByte, 0.U)(
-          Seq(
-            "b11".U -> "b1000".U,
-            "b10".U -> "b0100".U,
-            "b01".U -> "b0010".U,
-            "b00".U -> "b0001".U,
-          ),
+  io.dCache.valid := en && !io.exLoad && !io.exStore && !io.ctrl.ex
+  io.dCache.wen   := !io.inst.wb
+  io.dCache.addr := Mux(
+    io.inst.fuop === mem_lwl || io.inst.fuop === mem_swl,
+    vaddr,
+    Cat(vaddr(DATA_WIDTH - 1, 2), 0.U(2.W)),
+  )
+  io.dCache.size := MuxLookup(io.inst.fuop, 0.U)(
+    Seq(
+      mem_lw  -> 2.U,
+      mem_lh  -> 1.U,
+      mem_lhu -> 1.U,
+      mem_lb  -> 0.U,
+      mem_lbu -> 0.U,
+      mem_lwl -> 2.U,
+      mem_lwr -> 2.U,
+      mem_sw  -> 2.U,
+      mem_swl -> 2.U,
+      mem_swr -> 2.U,
+      mem_sh  -> 1.U,
+      mem_sb  -> 0.U,
+    ),
+  )
+  io.dCache.wstrb := MuxLookup(io.inst.fuop, 0.U)(
+    Seq(
+      mem_sb -> MuxLookup(memByte, 0.U)(
+        Seq(
+          "b11".U -> "b1000".U,
+          "b10".U -> "b0100".U,
+          "b01".U -> "b0010".U,
+          "b00".U -> "b0001".U,
         ),
-        mem_sh -> Mux(
-          memByte(1).asBool,
-          "b1100".U,
-          "b0011".U,
+      ),
+      mem_sh -> Mux(
+        memByte(1).asBool,
+        "b1100".U,
+        "b0011".U,
+      ),
+      mem_sw -> "b1111".U,
+      mem_swl -> MuxLookup(memByte, 0.U)(
+        Seq(
+          "b00".U -> "b0001".U,
+          "b01".U -> "b0011".U,
+          "b10".U -> "b0111".U,
+          "b11".U -> "b1111".U,
         ),
-        mem_sw -> "b1111".U,
-        mem_swl -> MuxLookup(memByte, 0.U)(
-          Seq(
-            "b00".U -> "b0001".U,
-            "b01".U -> "b0011".U,
-            "b10".U -> "b0111".U,
-            "b11".U -> "b1111".U,
-          ),
-        ),
-        mem_swr -> MuxLookup(memByte, 0.U)(
-          Seq(
-            "b00".U -> "b1111".U,
-            "b01".U -> "b1110".U,
-            "b10".U -> "b1100".U,
-            "b11".U -> "b1000".U,
-          ),
+      ),
+      mem_swr -> MuxLookup(memByte, 0.U)(
+        Seq(
+          "b00".U -> "b1111".U,
+          "b01".U -> "b1110".U,
+          "b10".U -> "b1100".U,
+          "b11".U -> "b1000".U,
         ),
       ),
     ),
   )
-  io.dCache.sram_wdata := MuxLookup(io.inst.fuop, io.op2)(
+  io.dCache.wdata := MuxLookup(io.inst.fuop, io.op2)(
     Seq(
       mem_sb -> Fill(4, io.op2(7, 0)),
       mem_sh -> Fill(2, io.op2(15, 0)),
@@ -106,4 +119,7 @@ class MemReq extends Module {
     ),
   )
   io.badvaddr := vaddr
+
+  io.block            := io.dCache.valid && io.dCache.stall
+  io.dCache.coreReady := !io.ctrl.stall
 }

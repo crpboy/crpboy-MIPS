@@ -2,19 +2,14 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
-
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.Functions._
 
 class ExecuteUnit extends Module {
   val io = IO(new Bundle {
-    val dCache = new Bundle {
-      val sram_en    = Output(Bool())
-      val sram_wen   = Output(UInt(WEN_WIDTH.W))
-      val sram_addr  = Output(UInt(ADDR_WIDTH.W))
-      val sram_wdata = Output(UInt(DATA_WIDTH.W))
-    }
+    val dCache  = new DCacheIOExe
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
@@ -22,8 +17,8 @@ class ExecuteUnit extends Module {
     val rCp0    = Flipped(new ReadCp0Info)
     val fetch   = new Bundle { val isBr = Output(Bool()) }
 
-    val in  = Input(new StageDecodeExecute)
-    val out = Output(new StageExecuteMemory)
+    val in  = Flipped(Decoupled((new StageDecodeExecute)))
+    val out = Decoupled(new StageExecuteMemory)
   })
 
   val alu    = Module(new ALU).io
@@ -32,8 +27,8 @@ class ExecuteUnit extends Module {
   val bra    = Module(new BranchCtrl).io
   val memReq = Module(new MemReq).io
 
-  val input  = io.in
-  val output = io.out
+  val input  = io.in.bits
+  val output = io.out.bits
   val except = WireDefault(input.exInfo)
 
   input.op1  <> alu.op1
@@ -104,11 +99,14 @@ class ExecuteUnit extends Module {
   io.dHazard.wen    := input.inst.wb
   io.dHazard.waddr  := rd
   io.dHazard.wdata  := data
-  io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb
+  io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb && !io.ctrl.ex
 
-  io.ctrlreq.clear       := false.B
-  io.ctrlreq.block       := muldiv.block
-  io.ctrlreq.branchPause := bra.binfo.bwen
+  io.ctrlreq.clear := false.B
+  io.ctrlreq.block := muldiv.block
+  io.in.ready      := io.out.ready
+  io.out.valid     := io.in.valid
+
+  io.ctrlreq.branchPause := bra.binfo.bwen // TODO: delete this, dont care ???
 
   when(alu.ex) {
     except.en     := true.B

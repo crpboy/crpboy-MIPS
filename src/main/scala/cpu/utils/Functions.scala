@@ -2,7 +2,9 @@ package cpu.utils
 
 import chisel3._
 import chisel3.util._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 
 object Functions {
   def signedExtend(data: UInt, width: Int = DATA_WIDTH): UInt = {

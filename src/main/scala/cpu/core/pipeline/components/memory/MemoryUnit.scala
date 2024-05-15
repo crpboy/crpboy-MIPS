@@ -2,24 +2,23 @@ package cpu.core.pipeline.components.memory
 
 import chisel3._
 import chisel3.util._
-
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.Functions._
-import cpu.common._
-import cpu.common.Const._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
-    val dCache  = new Bundle { val sram_rdata = Input(UInt(DATA_WIDTH.W)) }
-    val dHazard = Output(new DataHazard)
+    val dCache  = new DCacheIOMem
+    val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
-
-    val ctrl = Input(new CtrlInfo)
-    val in   = Input(new StageExecuteMemory)
-    val out  = Output(new StageMemoryWriteback)
+    val ctrl    = Input(new CtrlInfo)
+    val in      = Flipped(Decoupled((new StageExecuteMemory)))
+    val out     = Decoupled(new StageMemoryWriteback)
   })
 
-  val input  = io.in
-  val output = io.out
+  val input  = io.in.bits
+  val output = io.out.bits
 
   val load = Module(new LoadAccess).io
 
@@ -27,6 +26,7 @@ class MemoryUnit extends Module {
   load.inst    <> input.inst
   load.data    <> input.data
   load.memByte <> input.memByte
+  load.ctrl    <> io.ctrl
 
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
@@ -34,8 +34,10 @@ class MemoryUnit extends Module {
 
   val except = WireDefault(input.exInfo)
 
-  io.ctrlreq.block := false.B
+  io.ctrlreq.block := load.block
   io.ctrlreq.clear := false.B
+  io.in.ready      := io.out.ready
+  io.out.valid     := io.in.valid
 
   output.exInfo   := except
   output.slot     := input.slot

@@ -1,4 +1,4 @@
-package cpu.common
+package cpu.common.const
 
 import chisel3._
 import chisel3.util._
@@ -10,7 +10,7 @@ trait Config {
   val isBuild = false
 
   // 乘除法器需要的时钟周期
-  // 需要在xilinx ip当中同步修改
+  // 上板时除法使用握手信号，不需要给定周期
   val mulClockNum = 2
   val divClockNum = 8
 }

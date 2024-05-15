@@ -2,8 +2,9 @@ package cpu.core.pipeline.components.writeback
 
 import chisel3._
 import chisel3.util._
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 
 class WriteBackUnit extends Module {
   val io = IO(new Bundle {
@@ -23,19 +24,21 @@ class WriteBackUnit extends Module {
       val slot = Input(Bool())
       val ex   = Input(Bool())
     }
-    val in    = Input(new StageMemoryWriteback)
+    val in    = Flipped(Decoupled(new StageMemoryWriteback))
     val out   = Output(new WBInfo)
     val debug = Output(new DebugIO)
   })
-  val input = io.in
+  val input = io.in.bits
   val cp0en = input.inst.fu === fu_cp0
 
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := input.data
 
+  val valid = io.in.valid
+
   // <> regfile
-  io.out.wen   := !io.cp0.exres.en && input.inst.wb
+  io.out.wen   := !io.cp0.exres.en && input.inst.wb && valid
   io.out.wdata := input.data
   io.out.waddr := input.inst.rd
 
@@ -48,9 +51,13 @@ class WriteBackUnit extends Module {
   when((io.exe.slot && io.exe.ex) || (io.mem.slot && io.mem.ex)) {
     except.en := false.B
   }
+  when(!valid) {
+    except.en   := false.B
+    except.eret := false.B
+  }
 
   // <> cp0 (mtc0)
-  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0
+  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0 && valid
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel
@@ -58,6 +65,7 @@ class WriteBackUnit extends Module {
 
   io.ctrlreq.block := false.B
   io.ctrlreq.clear := io.cp0.exres.en || io.cp0.exres.eret
+  io.in.ready      := true.B
 
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := io.out.wdata

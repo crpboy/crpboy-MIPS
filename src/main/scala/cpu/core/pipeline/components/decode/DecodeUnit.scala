@@ -2,8 +2,9 @@ package cpu.core.pipeline.components.decode
 
 import chisel3._
 import chisel3.util._
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
@@ -13,20 +14,20 @@ class DecodeUnit extends Module {
     val fetch   = new Bundle { val isJmp = Output(Bool()) }
 
     val exeDHazard = Input(new DataHazardExe)
-    val memDHazard = Input(new DataHazard)
+    val memDHazard = Input(new DataHazardMem)
     val wbDHazard  = Input(new DataHazard)
 
     val ctrl = Input(new CtrlInfo)
-    val in   = Input(new StageFetchDecode)
-    val out  = Output(new StageDecodeExecute)
+    val in   = Flipped(Decoupled((new StageFetchDecode)))
+    val out  = Decoupled(new StageDecodeExecute)
   })
 
   val decoder = Module(new Decoder).io
   val reg     = Module(new RegFile).io
   val jmp     = Module(new JumpCtrl).io
 
-  val input  = io.in
-  val output = io.out
+  val input  = io.in.bits
+  val output = io.out.bits
 
   // data forward
   val rsdata = MuxCase(
@@ -92,11 +93,15 @@ class DecodeUnit extends Module {
     except.excode := ex_RI
   }
 
+  // TODO: 添加依赖于memunit的阻塞
   // control request
-  io.ctrlreq.block := io.exeDHazard.isload &&
+  val isLoadHazard = io.exeDHazard.isload &&
     (io.exeDHazard.waddr === reg.rsaddr ||
       io.exeDHazard.waddr === reg.rtaddr)
+  io.ctrlreq.block := isLoadHazard
   io.ctrlreq.clear := false.B
+  io.in.ready      := io.out.ready
+  io.out.valid     := io.in.valid
 
   output.exInfo   := except
   output.slot     := input.slot

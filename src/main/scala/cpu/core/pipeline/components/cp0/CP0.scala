@@ -2,9 +2,9 @@ package cpu.core.pipeline.components.cp0
 
 import chisel3._
 import chisel3.util._
-
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 
 // TODO: 需要添加例外优先级
 // TODO: mfc0 mtc0 暂时共用了写通用寄存器的前递数据通路

@@ -15,18 +15,20 @@ clean:
 	rm -rf $(CLEAR_INPUT)
 
 CPY_HOME1 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab3/CPU_CDE/mycpu_verify/rtl/myCPU/mycpu_top.v
+CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/CPU_CDE_AXI/mycpu_axi_verify/rtl/myCPU/mycpu_top.v
 
 define REPLACE_COMMAND
-sed -i 's/\bclock\b/clk/g' $(TOP_HOME)
-sed -i 's/\breset\b/resetn/g' $(TOP_HOME)
-sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' $(TOP_HOME)
+sed -i 's/\bclock\b/aclk/g' $(TOP_HOME)
+sed -i 's/\breset\b/aresetn/g' $(TOP_HOME)
 endef
+# sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' $(TOP_HOME)
 
 replace:
 	$(REPLACE_COMMAND)
 
 define COPYFILE_COMMAND
 cp $(TOP_HOME) $(CPY_HOME1)
+cp $(TOP_HOME) $(CPY_HOME2)
 endef
 
 copyfile:
@@ -59,10 +61,13 @@ define SOC_SIM_ASK_TO_WAVE_COMMAND
     fi
 endef
 
+SIMULATOR_HOME = /mnt/e/crpboy/file/NSCSCC/soc-simulator
+# SIMULATOR_HOME = /mnt/e/crpboy/file/NSCSCC/soc-simulator
+
 define SOC_SIM_COMMAND
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make clean
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && make run
+cd $(SIMULATOR_HOME) && make clean
+cd $(SIMULATOR_HOME) && make
+cd $(SIMULATOR_HOME) && make run
 $(SOC_SIM_ASK_TO_WAVE_COMMAND)
 endef
 

@@ -2,20 +2,23 @@ package cpu.core.pipeline.components.memory
 
 import chisel3._
 import chisel3.util._
-
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.Functions._
-import cpu.common._
-import cpu.common.Const._
 
 class LoadAccess extends Module {
   val io = IO(new Bundle {
-    val dCache  = new Bundle { val sram_rdata = Input(UInt(DATA_WIDTH.W)) }
+    val dCache  = new DCacheIOMem
     val inst    = Input(new InstInfo)
     val data    = Input(UInt(DATA_WIDTH.W))
     val memByte = Input(UInt(2.W))
+    val ctrl    = Input(new CtrlInfo)
+    val block   = Output(Bool())
     val out     = Output(UInt(DATA_WIDTH.W))
   })
-  val rdata = io.dCache.sram_rdata
+  val rdata  = io.dCache.data
+  val isload = io.inst.fu === fu_mem && io.inst.wb
   val word = Mux(
     io.inst.fuop === _mem_lw,
     rdata,
@@ -51,7 +54,7 @@ class LoadAccess extends Module {
     ),
   )
   val data = Mux(
-    io.inst.fu === fu_mem && io.inst.wb,
+    isload,
     MuxLookup(io.inst.fuop, word)(
       Seq(
         mem_lwl -> MuxLookup(io.memByte, 0.U)(
@@ -74,5 +77,7 @@ class LoadAccess extends Module {
     ),
     io.data,
   )
-  io.out := data
+  io.out              := data
+  io.block            := isload && io.dCache.stall
+  io.dCache.coreReady := !io.ctrl.stall
 }

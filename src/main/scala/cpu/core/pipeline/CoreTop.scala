@@ -3,8 +3,9 @@ package cpu.core.pipeline
 import chisel3._
 import chisel3.util._
 
-import cpu.common._
-import cpu.common.Const._
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.StageConnect._
 
 import components._
@@ -24,41 +25,22 @@ class CoreTop extends Module {
   })
 
   // pipeline unit
-  val fetchUnit     = Module(new FetchUnit)
-  val decodeUnit    = Module(new DecodeUnit)
-  val executeUnit   = Module(new ExecuteUnit)
-  val memoryUnit    = Module(new MemoryUnit)
-  val writebackUnit = Module(new WriteBackUnit)
+  val fetch     = Module(new FetchUnit).io
+  val decode    = Module(new DecodeUnit).io
+  val execute   = Module(new ExecuteUnit).io
+  val memory    = Module(new MemoryUnit).io
+  val writeback = Module(new WriteBackUnit).io
 
   // functional unit
-  val preFetchUnit = Module(new PreFetch)
-  val sfCtrlUnit   = Module(new StallFlushCtrl)
-  val exCtrlUnit   = Module(new ExCtrl)
-  val cp0Unit      = Module(new CP0)
+  val sfCtrl = Module(new StallFlushCtrl).io
+  val exCtrl = Module(new ExCtrl).io
+  val cp0    = Module(new CP0).io
 
-  // unit io
-  val fetch     = fetchUnit.io
-  val decode    = decodeUnit.io
-  val execute   = executeUnit.io
-  val memory    = memoryUnit.io
-  val writeback = writebackUnit.io
-  val preFetch  = preFetchUnit.io
-  val sfCtrl    = sfCtrlUnit.io
-  val exCtrl    = exCtrlUnit.io
-  val cp0       = cp0Unit.io
-
-  // top io
-  preFetch.data   <> fetch.preFetch.data
-  preFetch.pcNext <> fetch.preFetch.pcNext
-  preFetch.iCache <> io.iCache
-
-  io.dCache.sram_rdata <> memory.dCache.sram_rdata
-  io.dCache.sram_en    <> execute.dCache.sram_en
-  io.dCache.sram_addr  <> execute.dCache.sram_addr
-  io.dCache.sram_wen   <> execute.dCache.sram_wen
-  io.dCache.sram_wdata <> execute.dCache.sram_wdata
-
-  io.debug <> writeback.debug
+  // sram connect
+  io.debug      <> writeback.debug
+  io.iCache     <> fetch.iCache
+  io.dCache.exe <> execute.dCache
+  io.dCache.mem <> memory.dCache
 
   // stall and flush control
   sfCtrl.ifreq  <> fetch.ctrlreq
@@ -66,6 +48,8 @@ class CoreTop extends Module {
   sfCtrl.exereq <> execute.ctrlreq
   sfCtrl.memreq <> memory.ctrlreq
   sfCtrl.wbreq  <> writeback.ctrlreq
+
+  sfCtrl.cacheReq.iCacheReq <> io.iCache.stall
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -80,9 +64,9 @@ class CoreTop extends Module {
   sfCtrl.flush(0) <> writeback.ctrl.flush
 
   // exception ctrl
-  exCtrl.exID  <> decode.out.exInfo
-  exCtrl.exEXE <> execute.out.exInfo
-  exCtrl.exMEM <> memory.out.exInfo
+  exCtrl.exID  <> decode.out.bits.exInfo
+  exCtrl.exEXE <> execute.out.bits.exInfo
+  exCtrl.exMEM <> memory.out.bits.exInfo
   exCtrl.exWB  <> cp0.exInfo
 
   exCtrl.out(4) <> fetch.ctrl.ex
@@ -97,7 +81,7 @@ class CoreTop extends Module {
   stageConnect(execute.out, memory.in,    memory.ctrl)
   stageConnect(memory.out,  writeback.in, writeback.ctrl)
 
-  // forward: -> fetch
+  // forward: to fetch
   fetch.jinfo              <> decode.jinfo
   fetch.binfo              <> execute.binfo
   fetch.slotSignal.decode  <> decode.fetch.isJmp
@@ -113,17 +97,17 @@ class CoreTop extends Module {
   writeback.out.wdata <> decode.wb.wdata
   writeback.out.wen   <> decode.wb.wen
 
-  // cp0 connect
-  // exception connect (exe, wb) -> cp0 -> fetch
+  // ex: exception connect (exe, wb) -> cp0 -> fetch
   writeback.cp0.exout <> cp0.wb
   writeback.cp0.exres <> cp0.exInfo
   writeback.cp0.wCp0  <> cp0.write
   cp0.fetch           <> fetch.cp0
   execute.rCp0        <> cp0.read
   cp0.extIntIn        := 0.U
-  // slot judge (exe, mem) -> wb
-  execute.out.slot      <> writeback.exe.slot
-  execute.out.exInfo.en <> writeback.exe.ex
-  memory.out.slot       <> writeback.mem.slot
-  memory.out.exInfo.en  <> writeback.mem.ex
+
+  // ex: slot judge (exe, mem) -> wb
+  execute.out.bits.slot      <> writeback.exe.slot
+  execute.out.bits.exInfo.en <> writeback.exe.ex
+  memory.out.bits.slot       <> writeback.mem.slot
+  memory.out.bits.exInfo.en  <> writeback.mem.ex
 }

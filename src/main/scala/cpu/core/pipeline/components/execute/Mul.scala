@@ -2,9 +2,9 @@ package cpu.core.pipeline.components.execute
 
 import chisel3._
 import chisel3.util._
-import cpu.common._
-import cpu.common.Const._
-import cpu.common.Config
+import cpu.common.const._
+import cpu.common.bundles._
+import cpu.common.const.Const._
 import cpu.utils.Functions._
 
 class SignedMul extends BlackBox with HasBlackBoxResource {
