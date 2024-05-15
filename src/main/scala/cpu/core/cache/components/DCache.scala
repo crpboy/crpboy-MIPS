@@ -12,11 +12,9 @@ class DCache extends Module {
     val axi     = new AXI
     val working = Output(Bool())
   })
-  val srIdle :: srAddr :: srData :: srWait :: Nil                       = Enum(4)
-  val swIdle :: swBoth :: swAddr :: swData :: swWait0 :: swWait1 :: Nil = Enum(6)
+  val sIdle :: srAddr :: srData :: srWait :: swBoth :: swAddr :: swData :: swWait :: Nil = Enum(8)
 
-  val rstate  = RegInit(srIdle)
-  val wstate  = RegInit(swIdle)
+  val state   = RegInit(sIdle)
   val dataTmp = RegInit(0.U(DATA_WIDTH.W))
 
   val ar = io.axi.ar
@@ -29,106 +27,105 @@ class DCache extends Module {
   val awvalid = WireDefault(false.B)
   val wvalid  = WireDefault(false.B)
 
-  val exeStall = WireDefault(false.B)
-  val memStall = WireDefault(false.B)
-  val working  = WireDefault(true.B)
-  val memData  = WireDefault(io.axi.r.bits.data)
+  val stall   = WireDefault(false.B)
+  val working = WireDefault(true.B)
+  val rsent   = WireDefault(false.B)
+  val memData = WireDefault(io.axi.r.bits.data)
 
-  // read state
-  val isRead = io.core.exe.valid && !io.core.exe.wen
-  switch(rstate) {
-    // execute (send request)
-    is(srIdle) {
+  val req     = io.core.req.info
+  val isRead  = req.valid && !req.wen
+  val isWrite = req.valid && req.wen
+  switch(state) {
+    is(sIdle) {
       when(isRead) {
-        exeStall := true.B
-        rstate   := srAddr
+        stall := true.B
+        state := srAddr
       }.otherwise {
         working := false.B
+        when(isWrite) {
+          stall := true.B
+          state := swBoth
+        }
       }
     }
+
+    // read
     is(srAddr) {
       arvalid := true.B
+      stall   := true.B
       when(ar.ready) {
-        rstate := srData
-      }.otherwise {
-        exeStall := true.B
+        state := srData
       }
     }
-    // memory (recieve data)
     is(srData) {
       when(r.valid) {
-        when(io.core.mem.coreReady) {
-          rstate := srIdle
+        when(io.core.coreReady) {
+          state := sIdle
         }.otherwise {
           dataTmp := r.bits.data
-          rstate  := srWait
+          state   := srWait
         }
       }.otherwise {
-        memStall := true.B
+        stall := true.B
       }
     }
     is(srWait) {
+      working := false.B
       memData := dataTmp
-      when(io.core.mem.coreReady) {
-        rstate := srIdle
+      when(io.core.coreReady) {
+        state := sIdle
       }
     }
-  }
 
-  // write state
-  val isWrite = io.core.exe.valid && io.core.exe.wen
-  switch(wstate) {
-    is(swIdle) {
-      when(isWrite) {
-        exeStall := true.B
-        wstate   := swBoth
-      }
-    }
+    // write
     is(swBoth) {
       awvalid := true.B
       wvalid  := true.B
       when(aw.ready && w.ready) {
-        wstate := swIdle
+        state := sIdle
       }.otherwise {
-        exeStall := true.B
+        stall := true.B
         when(aw.ready) {
-          wstate := swData
+          state := swData
         }.elsewhen(w.ready) {
-          wstate := swAddr
+          state := swAddr
         }
       }
     }
     is(swData) {
       wvalid := true.B
       when(w.ready) {
-        wstate := swWait0
+        state := swWait
       }.otherwise {
-        exeStall := true.B
+        stall := true.B
       }
     }
     is(swAddr) {
       awvalid := true.B
       when(aw.ready) {
-        wstate := swWait0
+        state := swWait
       }.otherwise {
-        exeStall := true.B
+        stall := true.B
       }
     }
-    is(swWait0) {
+    is(swWait) {
       when(isWrite) {
-        exeStall := true.B
+        stall := true.B
       }
       when(b.valid) {
-        wstate := swIdle
+        state := sIdle
       }
     }
   }
 
+  when(state > srWait) {
+    working := false.B
+  }
+
   // cache <> core (exe, mem)
   io.working        := working
-  io.core.exe.stall := !exeStall
-  io.core.mem.stall := !memStall
-  io.core.mem.data  := memData
+  io.core.stall     := stall
+  io.core.resp.data := memData
 
   // axi (ar)
   ar.bits.id    := 1.U
@@ -137,8 +134,8 @@ class DCache extends Module {
   ar.bits.lock  := 0.U
   ar.bits.prot  := 0.U
   ar.bits.cache := 0.U
-  ar.bits.size  := io.core.exe.size
-  ar.bits.addr  := io.core.exe.addr
+  ar.bits.size  := req.size
+  ar.bits.addr  := req.addr
 
   // axi (aw)
   aw.bits.id    := 1.U
@@ -147,14 +144,14 @@ class DCache extends Module {
   aw.bits.lock  := 0.U
   aw.bits.prot  := 0.U
   aw.bits.cache := 0.U
-  aw.bits.size  := io.core.exe.size
-  aw.bits.addr  := io.core.exe.addr
+  aw.bits.size  := req.size
+  aw.bits.addr  := req.addr
 
   // axi (w)
   w.bits.id   := 1.U
   w.bits.last := 1.U
-  w.bits.strb := io.core.exe.wstrb
-  w.bits.data := io.core.exe.wdata
+  w.bits.strb := req.wstrb
+  w.bits.data := req.wdata
 
   // axi (ready & valid)
   io.axi.r.ready  := true.B

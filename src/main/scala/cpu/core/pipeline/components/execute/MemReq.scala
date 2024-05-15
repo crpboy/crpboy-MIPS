@@ -9,12 +9,11 @@ import cpu.utils.Functions._
 
 class MemReq extends Module {
   val io = IO(new Bundle {
-    val dCache   = new DCacheIOExe
+    val reqInfo  = Output(new MemReqInfo)
     val op1      = Input(UInt(DATA_WIDTH.W))
     val op2      = Input(UInt(DATA_WIDTH.W))
     val inst     = Input(new InstInfoExt)
     val ctrl     = Input(new CtrlInfo)
-    val block    = Output(Bool())
     val exLoad   = Output(Bool())
     val exStore  = Output(Bool())
     val badvaddr = Output(UInt(ADDR_WIDTH.W))
@@ -26,14 +25,14 @@ class MemReq extends Module {
   val memByte = vaddr(1, 0)
   io.memByte := memByte
 
-  io.dCache.valid := en && !io.exLoad && !io.exStore && !io.ctrl.ex
-  io.dCache.wen   := !io.inst.wb
-  io.dCache.addr := Mux(
+  io.reqInfo.valid := en && !io.exLoad && !io.exStore && !io.ctrl.ex
+  io.reqInfo.wen   := !io.inst.wb
+  io.reqInfo.addr := Mux(
     io.inst.fuop === mem_lwl || io.inst.fuop === mem_swl,
     vaddr,
     Cat(vaddr(DATA_WIDTH - 1, 2), 0.U(2.W)),
   )
-  io.dCache.size := MuxLookup(io.inst.fuop, 0.U)(
+  io.reqInfo.size := MuxLookup(io.inst.fuop, 0.U)(
     Seq(
       mem_lw  -> 2.U,
       mem_lh  -> 1.U,
@@ -49,7 +48,7 @@ class MemReq extends Module {
       mem_sb  -> 0.U,
     ),
   )
-  io.dCache.wstrb := MuxLookup(io.inst.fuop, 0.U)(
+  io.reqInfo.wstrb := MuxLookup(io.inst.fuop, 0.U)(
     Seq(
       mem_sb -> MuxLookup(memByte, 0.U)(
         Seq(
@@ -83,7 +82,7 @@ class MemReq extends Module {
       ),
     ),
   )
-  io.dCache.wdata := MuxLookup(io.inst.fuop, io.op2)(
+  io.reqInfo.wdata := MuxLookup(io.inst.fuop, io.op2)(
     Seq(
       mem_sb -> Fill(4, io.op2(7, 0)),
       mem_sh -> Fill(2, io.op2(15, 0)),
@@ -119,7 +118,4 @@ class MemReq extends Module {
     ),
   )
   io.badvaddr := vaddr
-
-  io.block            := io.dCache.valid && io.dCache.stall
-  io.dCache.coreReady := !io.ctrl.stall
 }

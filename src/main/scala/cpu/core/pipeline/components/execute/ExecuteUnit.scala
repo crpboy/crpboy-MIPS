@@ -9,7 +9,6 @@ import cpu.utils.Functions._
 
 class ExecuteUnit extends Module {
   val io = IO(new Bundle {
-    val dCache  = new DCacheIOExe
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
@@ -61,7 +60,6 @@ class ExecuteUnit extends Module {
   input.op1  <> memReq.op1
   input.op2  <> memReq.op2
   input.inst <> memReq.inst
-  io.dCache  <> memReq.dCache
   io.ctrl    <> memReq.ctrl
 
   val cp0ismfc0 = input.inst.fuop === cp0_mfc0
@@ -106,7 +104,7 @@ class ExecuteUnit extends Module {
   io.in.ready      := io.out.ready
   io.out.valid     := io.in.valid
 
-  io.ctrlreq.branchPause := bra.binfo.bwen // TODO: delete this, dont care ???
+  io.ctrlreq.branchPause := bra.binfo.bwen
 
   when(alu.ex) {
     except.en     := true.B
@@ -123,17 +121,18 @@ class ExecuteUnit extends Module {
 
   io.fetch.isBr := input.inst.fu === fu_bra && io.binfo.bwen
 
-  output.exInfo    := except
-  output.slot      := input.slot
-  output.exSel     := cp0sel
-  output.data      := data
-  output.rsaddr    := input.rsaddr
-  output.rtaddr    := input.rtaddr
-  output.memByte   := memReq.memByte
-  output.inst.fu   := input.inst.fu
-  output.inst.fuop := input.inst.fuop
-  output.inst.rd   := rd
-  output.inst.wb   := input.inst.wb
-  output.pc        := input.pc
-  output.debug_pc  := input.debug_pc
+  output.exInfo     := except
+  output.slot       := input.slot
+  output.exSel      := cp0sel
+  output.data       := data
+  output.rsaddr     := input.rsaddr
+  output.rtaddr     := input.rtaddr
+  output.memByte    := memReq.memByte
+  output.memReqInfo := memReq.reqInfo
+  output.inst.fu    := input.inst.fu
+  output.inst.fuop  := input.inst.fuop
+  output.inst.rd    := rd
+  output.inst.wb    := input.inst.wb
+  output.pc         := input.pc
+  output.debug_pc   := input.debug_pc
 }

@@ -9,7 +9,7 @@ import cpu.utils.Functions._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
-    val dCache  = new DCacheIOMem
+    val dCache  = new DCacheIO
     val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
     val ctrl    = Input(new CtrlInfo)
@@ -20,21 +20,22 @@ class MemoryUnit extends Module {
   val input  = io.in.bits
   val output = io.out.bits
 
-  val load = Module(new LoadAccess).io
+  val memAccess = Module(new MemAccess).io
 
-  load.dCache  <> io.dCache
-  load.inst    <> input.inst
-  load.data    <> input.data
-  load.memByte <> input.memByte
-  load.ctrl    <> io.ctrl
+  memAccess.dCache  <> io.dCache
+  memAccess.reqInfo <> input.memReqInfo
+  memAccess.inst    <> input.inst
+  memAccess.data    <> input.data
+  memAccess.memByte <> input.memByte
+  memAccess.ctrl    <> io.ctrl
 
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
-  io.dHazard.wdata := load.out
+  io.dHazard.wdata := memAccess.out
 
   val except = WireDefault(input.exInfo)
 
-  io.ctrlreq.block := load.block
+  io.ctrlreq.block := io.dCache.stall
   io.ctrlreq.clear := false.B
   io.in.ready      := io.out.ready
   io.out.valid     := io.in.valid
@@ -42,7 +43,7 @@ class MemoryUnit extends Module {
   output.exInfo   := except
   output.slot     := input.slot
   output.exSel    := input.exSel
-  output.data     := load.out
+  output.data     := memAccess.out
   output.rsaddr   := input.rsaddr
   output.rtaddr   := input.rtaddr
   output.inst     := input.inst

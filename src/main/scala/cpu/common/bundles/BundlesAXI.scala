@@ -32,7 +32,6 @@ class AxiWriteResp extends Bundle {
 class AxiReadAddr extends Bundle {
   val id    = UInt(AXI_ID_WIDTH.W)
   val addr  = UInt(AXI_ADDR_WIDTH.W)
-  
   val len   = UInt(AXI_LEN_WIDTH.W)
   val size  = UInt(AXI_SIZE_WIDTH.W)
   val burst = UInt(AXI_BURST_WIDTH.W)

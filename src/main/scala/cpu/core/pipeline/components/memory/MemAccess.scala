@@ -7,18 +7,20 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
 
-class LoadAccess extends Module {
+class MemAccess extends Module {
   val io = IO(new Bundle {
-    val dCache  = new DCacheIOMem
+    val reqInfo = Input(new MemReqInfo)
+    val dCache  = new DCacheIO
     val inst    = Input(new InstInfo)
     val data    = Input(UInt(DATA_WIDTH.W))
     val memByte = Input(UInt(2.W))
     val ctrl    = Input(new CtrlInfo)
-    val block   = Output(Bool())
     val out     = Output(UInt(DATA_WIDTH.W))
   })
-  val rdata  = io.dCache.data
+  val rdata  = io.dCache.resp.data
   val isload = io.inst.fu === fu_mem && io.inst.wb
+  io.dCache.req.info := io.reqInfo
+  val done = RegInit(false.B)
   val word = Mux(
     io.inst.fuop === _mem_lw,
     rdata,
@@ -78,6 +80,5 @@ class LoadAccess extends Module {
     io.data,
   )
   io.out              := data
-  io.block            := isload && io.dCache.stall
-  io.dCache.coreReady := !io.ctrl.stall
+  io.dCache.coreReady := !io.ctrl.stall && !io.ctrl.cache.iStall
 }

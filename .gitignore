@@ -12,4 +12,5 @@ target/
 obj_dir/
 test_run_dir/
 uml-graph/
+simulator/
 mycpu_top.sv

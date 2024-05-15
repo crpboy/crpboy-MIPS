@@ -14,13 +14,14 @@ TOP_HOME = mycpu_top.sv
 clean:
 	rm -rf $(CLEAR_INPUT)
 
-CPY_HOME1 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab3/CPU_CDE/mycpu_verify/rtl/myCPU/mycpu_top.v
-CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/CPU_CDE_AXI/mycpu_axi_verify/rtl/myCPU/mycpu_top.v
+CPY_HOME1 = ./simulator/mycpu/mycpu_top.sv
+CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab11/CPU_CDE_AXI/mycpu_axi_verify/rtl/myCPU/mycpu_top.v
 
 define REPLACE_COMMAND
 sed -i 's/\bclock\b/aclk/g' $(TOP_HOME)
 sed -i 's/\breset\b/aresetn/g' $(TOP_HOME)
 endef
+# sed -i 's/\bint_0\b/int/g' $(TOP_HOME)
 # sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' $(TOP_HOME)
 
 replace:
@@ -48,8 +49,11 @@ test:
 	clean
 	sbt test
 
+SIMULATOR_HOME = ./simulator/verilator
+# SIMULATOR_HOME = /mnt/e/crpboy/file/NSCSCC/soc-simulator
+
 define SOC_SIM_WAVE_COMMAND
-cd /mnt/e/crpboy/file/NSCSCC/soc-simulator && gtkwave trace.vcd config.gtkw
+cd $(SIMULATOR_HOME) && make sim
 endef
 
 define SOC_SIM_ASK_TO_WAVE_COMMAND
@@ -61,13 +65,10 @@ define SOC_SIM_ASK_TO_WAVE_COMMAND
     fi
 endef
 
-SIMULATOR_HOME = /mnt/e/crpboy/file/NSCSCC/soc-simulator
-# SIMULATOR_HOME = /mnt/e/crpboy/file/NSCSCC/soc-simulator
-
 define SOC_SIM_COMMAND
 cd $(SIMULATOR_HOME) && make clean
 cd $(SIMULATOR_HOME) && make
-cd $(SIMULATOR_HOME) && make run
+cd $(SIMULATOR_HOME) && make trace
 $(SOC_SIM_ASK_TO_WAVE_COMMAND)
 endef
 

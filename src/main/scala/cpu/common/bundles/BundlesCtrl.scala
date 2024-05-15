@@ -4,10 +4,16 @@ import chisel3._
 import chisel3.util._
 import cpu.common.const.Const._
 
+class CacheStallInfo extends Bundle {
+  val iStall = Bool()
+  val dStall = Bool()
+}
 class CtrlInfo extends Bundle {
   val stall = Bool()
   val flush = Bool()
-  val ex    = Bool()
+  val cache = new CacheStallInfo
+  val ex = Bool()
+  def getStall = stall
 }
 class CtrlRequest extends Bundle {
   val block = Bool()

@@ -10,6 +10,8 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 
 class TopIO extends Bundle {
+  val ext_int = Input(UInt(INT_WIDTH.W))
+
   // axi interface
   val arid    = Output(UInt(AXI_ID_WIDTH.W))
   val araddr  = Output(UInt(AXI_ADDR_WIDTH.W))
@@ -71,6 +73,8 @@ class mycpu_top extends Module with Config {
   core.io.iCache <> cache.io.iCache
   core.io.dCache <> cache.io.dCache
 
+  io.ext_int <> core.io.ext_int
+
   // axi - ar
   io.arid    <> cache.io.axi.ar.bits.id
   io.araddr  <> cache.io.axi.ar.bits.addr
@@ -85,22 +89,21 @@ class mycpu_top extends Module with Config {
 
   // axi - r
   io.rid    <> cache.io.axi.r.bits.id
-  io.rdata  <> cache.io.axi.r.bits.id
-  io.rresp  <> cache.io.axi.r.bits.id
-  io.rlast  <> cache.io.axi.r.bits.id
-  io.rid    <> cache.io.axi.r.bits.id
+  io.rdata  <> cache.io.axi.r.bits.data
+  io.rresp  <> cache.io.axi.r.bits.resp
+  io.rlast  <> cache.io.axi.r.bits.last
   io.rvalid <> cache.io.axi.r.valid
   io.rready <> cache.io.axi.r.ready
 
   // axi - aw
   io.awid    <> cache.io.axi.aw.bits.id
-  io.awaddr  <> cache.io.axi.aw.bits.id
-  io.awlen   <> cache.io.axi.aw.bits.id
-  io.awsize  <> cache.io.axi.aw.bits.id
-  io.awburst <> cache.io.axi.aw.bits.id
-  io.awlock  <> cache.io.axi.aw.bits.id
-  io.awcache <> cache.io.axi.aw.bits.id
-  io.awprot  <> cache.io.axi.aw.bits.id
+  io.awaddr  <> cache.io.axi.aw.bits.addr
+  io.awlen   <> cache.io.axi.aw.bits.len
+  io.awsize  <> cache.io.axi.aw.bits.size
+  io.awburst <> cache.io.axi.aw.bits.burst
+  io.awlock  <> cache.io.axi.aw.bits.lock
+  io.awcache <> cache.io.axi.aw.bits.cache
+  io.awprot  <> cache.io.axi.aw.bits.prot
   io.awvalid <> cache.io.axi.aw.valid
   io.awready <> cache.io.axi.aw.ready
 

@@ -31,4 +31,5 @@ trait ConstWidthAxi {
   val AXI_PROT_WIDTH  = 3
   val AXI_STRB_WIDTH  = 4
   val AXI_RESP_WIDTH  = 2
+  val INT_WIDTH       = 6
 }

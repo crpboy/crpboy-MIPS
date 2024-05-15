@@ -8,29 +8,26 @@ import cpu.common.const.Const._
 
 class StallFlushCtrl extends Module {
   val io = IO(new Bundle {
-    val ifreq  = Input(new CtrlRequest)
-    val idreq  = Input(new CtrlRequest)
-    val exereq = Input(new CtrlRequestExecute)
-    val memreq = Input(new CtrlRequest)
-    val wbreq  = Input(new CtrlRequest)
-    val cacheReq = new Bundle {
-      val iCacheReq = Input(Bool())
-      // val dCacheReq = Input(Bool())
-    }
-    val stall = Output(UInt(CTRL_WIDTH.W))
-    val flush = Output(UInt(CTRL_WIDTH.W))
+    val ifreq       = Input(new CtrlRequest)
+    val idreq       = Input(new CtrlRequest)
+    val exereq      = Input(new CtrlRequestExecute)
+    val memreq      = Input(new CtrlRequest)
+    val wbreq       = Input(new CtrlRequest)
+    val dCacheStall = Input(Bool())
+    val stall       = Output(UInt(CTRL_WIDTH.W))
+    val flush       = Output(UInt(CTRL_WIDTH.W))
   })
   val block: UInt = Cat(
     io.ifreq.block,
     io.idreq.block,
     io.exereq.block,
     io.memreq.block,
-    io.wbreq.block | io.cacheReq.iCacheReq, // | io.cacheReq.dCacheReq,
+    io.wbreq.block,
   )
   // clear : the inst in this unit will be passed, pre inst will be flush
   val clear: UInt = Cat(
     io.ifreq.clear,
-    io.idreq.clear,
+    io.idreq.clear | io.exereq.branchPause,
     io.exereq.clear,
     io.memreq.clear,
     io.wbreq.clear,
@@ -49,7 +46,7 @@ class StallFlushCtrl extends Module {
   val memflush = block(2) | clear(1) | clear(0)
 
   val wbstall = block(0)
-  val wbflush = block(1) | clear(0)
+  val wbflush = block(1) | clear(0) // | io.dCacheStall
 
   io.stall := Cat(ifstall, idstall, exestall, memstall, wbstall)
   io.flush := Cat(ifflush, idflush, exeflush, memflush, wbflush)

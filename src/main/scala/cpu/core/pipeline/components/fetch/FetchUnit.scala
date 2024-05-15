@@ -27,15 +27,19 @@ class FetchUnit extends Module {
   })
   val output = io.out.bits
 
-  val pcReg      = RegNext(io.iCache.pcNext, (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W))
-  val pcNextTmp  = pcReg + 4.U
-  val ctrlSignal = io.ctrl.stall || io.ctrl.ex
+  val ctrlSignal = io.ctrl.getStall || io.ctrl.ex
+  val exSignal   = io.cp0.isex      || io.cp0.eret
+  val pcReg = RegEnable(
+    io.iCache.pcNext,
+    (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W),
+    !io.iCache.stall && (!ctrlSignal || exSignal),
+  )
+  val pcNextTmp = pcReg + 4.U
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
       io.cp0.isex   -> EX_INIT_ADDR.U,
       io.cp0.eret   -> io.cp0.eretpc,
-      ctrlSignal    -> pcReg,
       io.jinfo.jwen -> io.jinfo.jwaddr,
       io.binfo.bwen -> io.binfo.bwaddr,
     ),
@@ -43,7 +47,7 @@ class FetchUnit extends Module {
   val resetTmp = RegNext(reset)
   io.iCache.pcNext    := pcNext
   io.iCache.valid     := !(reset.asBool)
-  io.iCache.coreReady := !io.ctrl.stall
+  io.iCache.coreReady := !io.ctrl.getStall
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 
@@ -53,7 +57,7 @@ class FetchUnit extends Module {
 
   output.slot     := io.slotSignal.decode || io.slotSignal.execute
   output.exInfo   := except
-  output.inst     := io.iCache.data
+  output.inst     := Mux(io.ctrl.flush, 0.U, io.iCache.data)
   output.pc       := pcNextTmp
   output.debug_pc := pcReg
 }

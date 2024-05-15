@@ -21,7 +21,6 @@ class CacheTop extends Module {
 
   val state       = RegInit(sIdle)
   val dataWorking = state === sData
-
   switch(state) {
     is(sIdle) {
       when(dCache.working) {
@@ -50,24 +49,19 @@ class CacheTop extends Module {
     }
   }
 
-  io.axi.ar.bits := Mux(
-    dataWorking,
-    dCache.axi.ar.bits,
-    iCache.axi.ar.bits,
-  )
-  io.axi.r.bits <> iCache.axi.r.bits
-  io.axi.r.bits <> dCache.axi.r.bits
+  val select = !dataWorking
+  io.axi.ar.bits := Mux(select, iCache.axi.ar.bits, dCache.axi.ar.bits)
+  io.axi.r.bits  <> iCache.axi.r.bits
+  io.axi.r.bits  <> dCache.axi.r.bits
 
-  when(dataWorking) {
-    iCache.axi.r.valid := false.B
-    dCache.axi.r.valid := io.axi.r.valid
-    io.axi.ar.valid    := dCache.axi.ar.valid
-  }.otherwise {
-    iCache.axi.r.valid := io.axi.r.valid
-    dCache.axi.r.valid := false.B
-    io.axi.ar.valid    := iCache.axi.ar.valid
-  }
-  io.axi.r.ready := true.B
+  iCache.axi.r.valid := Mux(select, io.axi.r.valid, false.B)
+  dCache.axi.r.valid := Mux(select, false.B, io.axi.r.valid)
+
+  iCache.axi.ar.ready := Mux(select, io.axi.ar.ready, false.B)
+  dCache.axi.ar.ready := Mux(select, false.B, io.axi.ar.ready)
+
+  io.axi.r.ready  := Mux(select, iCache.axi.r.ready, dCache.axi.r.ready)
+  io.axi.ar.valid := Mux(select, iCache.axi.ar.valid, dCache.axi.ar.valid)
 
   io.axi.aw <> dCache.axi.aw
   io.axi.w  <> dCache.axi.w

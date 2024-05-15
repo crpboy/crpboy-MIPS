@@ -12,22 +12,23 @@ class ICacheIO extends Bundle {
   val stall     = Input(Bool())
 }
 
-class DCacheIOExe extends Bundle {
-  val valid     = Output(Bool())
-  val wen       = Output(Bool())
-  val addr      = Output(UInt(ADDR_WIDTH.W))
-  val size      = Output(UInt(AXI_SIZE_WIDTH.W))
-  val wstrb     = Output(UInt(AXI_STRB_WIDTH.W))
-  val wdata     = Output(UInt(DATA_WIDTH.W))
-  val coreReady = Output(Bool())
-  val stall     = Input(Bool())
+class MemReqInfo extends Bundle {
+  val valid = Bool()
+  val wen   = Bool()
+  val addr  = UInt(ADDR_WIDTH.W)
+  val size  = UInt(AXI_SIZE_WIDTH.W)
+  val wstrb = UInt(AXI_STRB_WIDTH.W)
+  val wdata = UInt(DATA_WIDTH.W)
 }
-class DCacheIOMem extends Bundle {
-  val data      = Input(UInt(DATA_WIDTH.W))
-  val coreReady = Output(Bool())
-  val stall     = Input(Bool())
+class DCacheIOReq extends Bundle {
+  val info = Output(new MemReqInfo)
+}
+class DCacheIOResp extends Bundle {
+  val data = Input(UInt(DATA_WIDTH.W))
 }
 class DCacheIO extends Bundle {
-  val exe = new DCacheIOExe
-  val mem = new DCacheIOMem
+  val req       = new DCacheIOReq
+  val resp      = new DCacheIOResp
+  val coreReady = Output(Bool())
+  val stall     = Input(Bool())
 }

@@ -19,9 +19,10 @@ import components.writeback._
 
 class CoreTop extends Module {
   val io = IO(new Bundle {
-    val iCache = new ICacheIO
-    val dCache = new DCacheIO
-    val debug  = new DebugIO
+    val ext_int = Input(UInt(INT_WIDTH.W))
+    val iCache  = new ICacheIO
+    val dCache  = new DCacheIO
+    val debug   = new DebugIO
   })
 
   // pipeline unit
@@ -37,19 +38,17 @@ class CoreTop extends Module {
   val cp0    = Module(new CP0).io
 
   // sram connect
-  io.debug      <> writeback.debug
-  io.iCache     <> fetch.iCache
-  io.dCache.exe <> execute.dCache
-  io.dCache.mem <> memory.dCache
+  io.debug  <> writeback.debug
+  io.iCache <> fetch.iCache
+  io.dCache <> memory.dCache
 
   // stall and flush control
-  sfCtrl.ifreq  <> fetch.ctrlreq
-  sfCtrl.idreq  <> decode.ctrlreq
-  sfCtrl.exereq <> execute.ctrlreq
-  sfCtrl.memreq <> memory.ctrlreq
-  sfCtrl.wbreq  <> writeback.ctrlreq
-
-  sfCtrl.cacheReq.iCacheReq <> io.iCache.stall
+  sfCtrl.ifreq       <> fetch.ctrlreq
+  sfCtrl.idreq       <> decode.ctrlreq
+  sfCtrl.exereq      <> execute.ctrlreq
+  sfCtrl.memreq      <> memory.ctrlreq
+  sfCtrl.wbreq       <> writeback.ctrlreq
+  sfCtrl.dCacheStall <> io.dCache.stall
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -62,6 +61,19 @@ class CoreTop extends Module {
   sfCtrl.flush(2) <> execute.ctrl.flush
   sfCtrl.flush(1) <> memory.ctrl.flush
   sfCtrl.flush(0) <> writeback.ctrl.flush
+
+  // cache stall ctrl
+  io.iCache.stall <> fetch.ctrl.cache.iStall
+  io.iCache.stall <> decode.ctrl.cache.iStall
+  io.iCache.stall <> execute.ctrl.cache.iStall
+  io.iCache.stall <> memory.ctrl.cache.iStall
+  io.iCache.stall <> writeback.ctrl.cache.iStall
+
+  io.dCache.stall <> fetch.ctrl.cache.dStall
+  io.dCache.stall <> decode.ctrl.cache.dStall
+  io.dCache.stall <> execute.ctrl.cache.dStall
+  io.dCache.stall <> memory.ctrl.cache.dStall
+  io.dCache.stall <> writeback.ctrl.cache.dStall
 
   // exception ctrl
   exCtrl.exID  <> decode.out.bits.exInfo
@@ -103,7 +115,7 @@ class CoreTop extends Module {
   writeback.cp0.wCp0  <> cp0.write
   cp0.fetch           <> fetch.cp0
   execute.rCp0        <> cp0.read
-  cp0.extIntIn        := 0.U
+  cp0.extIntIn        <> io.ext_int
 
   // ex: slot judge (exe, mem) -> wb
   execute.out.bits.slot      <> writeback.exe.slot

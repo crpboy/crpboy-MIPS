@@ -69,6 +69,6 @@ class WriteBackUnit extends Module {
 
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := io.out.wdata
-  io.debug.wb_rf_wen   := Mux(io.out.wen, WB_EN, WB_NO)
+  io.debug.wb_rf_wen   := Mux(io.out.wen && !io.ctrl.cache.iStall, WB_EN, WB_NO)
   io.debug.wb_rf_wnum  := io.out.waddr
 }
