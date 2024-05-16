@@ -75,6 +75,8 @@ class CoreTop extends Module {
   io.dCache.stall <> memory.ctrl.cache.dStall
   io.dCache.stall <> writeback.ctrl.cache.dStall
 
+  io.iCache.stall <> cp0.stall // temp
+
   // exception ctrl
   exCtrl.exID  <> decode.out.bits.exInfo
   exCtrl.exEXE <> execute.out.bits.exInfo

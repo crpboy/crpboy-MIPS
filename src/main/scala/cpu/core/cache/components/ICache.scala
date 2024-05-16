@@ -15,6 +15,7 @@ class ICache extends Module {
   val sIdle :: sRead0 :: sRead1 :: sWait :: Nil = Enum(4)
 
   val state   = RegInit(sIdle)
+  val addrReg = RegInit(0.U(ADDR_WIDTH.W))
   val dataReg = RegInit(0.U(DATA_WIDTH.W))
   val dataTmp = RegInit(0.U(DATA_WIDTH.W))
 
@@ -30,6 +31,7 @@ class ICache extends Module {
       working := false.B
       when(io.core.valid) {
         stall   := true.B
+        addrReg := io.core.pcNext
         state   := sRead0
       }
     }
@@ -42,7 +44,12 @@ class ICache extends Module {
     }
     is(sRead1) {
       when(r.valid) {
-        when(io.core.coreReady) {
+        when(io.core.pcNext =/= addrReg) {
+          stall   := true.B
+          addrReg := io.core.pcNext
+          state   := sRead0
+          // same as idle -> read0
+        }.elsewhen(io.core.coreReady) {
           dataReg := r.bits.data
           state   := sIdle
         }.otherwise {
@@ -75,7 +82,7 @@ class ICache extends Module {
   ar.bits.prot  := 0.U
   ar.bits.cache := 0.U
   ar.bits.size  := 2.U
-  ar.bits.addr  := io.core.pcNext
+  ar.bits.addr  := addrReg
 
   ar.valid := arvalid
   r.ready  := true.B

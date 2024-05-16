@@ -109,7 +109,7 @@ class DCache extends Module {
       }
     }
     is(swWait) {
-      when(isWrite) {
+      when(req.valid) {
         stall := true.B
       }
       when(b.valid) {

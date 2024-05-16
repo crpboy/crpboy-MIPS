@@ -19,6 +19,7 @@ class CP0 extends Module {
       val eret   = Output(Bool())
       val eretpc = Output(UInt(PC_WIDTH.W))
     } // <> fetch
+    val stall    = Input(Bool()) // temp
     val extIntIn = Input(UInt(6.W))
     val exInfo   = Output(new ExInfo)
   })
@@ -52,14 +53,23 @@ class CP0 extends Module {
   // count
   val tick = RegInit(false.B)
   tick := !tick
-  when(tick && writepos =/= count.getId) { count.data := count.data + 1.U }
+  when( /*tick &&*/ writepos =/= count.getId && !io.stall) { count.data := count.data + 1.U }
 
   // cause
+  val timeOut = RegInit(false.B)
   when(count.data === compare.data && compare.data =/= 0.U) {
-    cause.data.TI := true.B
+    when(io.stall) {
+      timeOut := true.B
+    }.otherwise {
+      cause.data.TI := true.B
+    }
   }
   when(writepos === compare.getId && io.write.en) {
     cause.data.TI := false.B
+  }
+  when(timeOut && !io.stall) {
+    cause.data.TI := true.B
+    timeOut       := false.B
   }
   cause.data.IP(7) := cause.data.TI
 
@@ -85,7 +95,7 @@ class CP0 extends Module {
   io.exInfo := except
 
   // exception writeback
-  when(except.en) {
+  when(except.en && !io.stall) {
     cause.data.ExcCode := except.excode
     badvaddr.data      := except.badvaddr
     when(!status.data.EXL) {
@@ -93,7 +103,7 @@ class CP0 extends Module {
       cause.data.BD   := except.slot
       epc.data        := Mux(except.slot, except.pc - 4.U, except.pc)
     }
-  }.elsewhen(except.eret) {
+  }.elsewhen(except.eret && !io.stall) {
     status.data.EXL := false.B
   }
 

@@ -57,7 +57,7 @@ class WriteBackUnit extends Module {
   }
 
   // <> cp0 (mtc0)
-  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0 && valid
+  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0 && valid && !io.ctrl.cache.iStall
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel
