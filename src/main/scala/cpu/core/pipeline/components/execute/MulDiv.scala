@@ -19,13 +19,12 @@ class MulDiv extends Module {
   })
   val mul = Module(new Mul).io
   val div = Module(new Div).io
-  // val done = RegInit(false.B)
 
   val en       = io.inst.fu === fu_md
   val isSigned = io.inst.fuop === _md_signed && !io.ctrl.ex
   val ismul    = io.inst.fuop === _md_mul
-  mul.en       := (en && ismul && !io.ctrl.ex)  // && !done)
-  div.en       := (en && !ismul && !io.ctrl.ex) // && !done)
+  mul.en       := (en && ismul && !io.ctrl.ex)
+  div.en       := (en && !ismul && !io.ctrl.ex)
   mul.isSigned := isSigned
   div.isSigned := isSigned
 
@@ -39,11 +38,4 @@ class MulDiv extends Module {
   io.block := en && !ready && !io.ctrl.ex
   io.wen   := en && ready
   io.wdata := data
-
-  // when(en && done && !ready) {
-
-  // }
-  // when(ready) {
-  //   done := true.B
-  // }
 }

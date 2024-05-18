@@ -6,6 +6,7 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
+// TODO: 中断例外的发生应该放到decode
 class DecodeUnit extends Module {
   val io = IO(new Bundle {
     val wb      = Input(new WBInfo)
@@ -93,7 +94,6 @@ class DecodeUnit extends Module {
     except.excode := ex_RI
   }
 
-  // TODO: 添加依赖于memunit的阻塞
   // control request
   val isLoadHazard = io.exeDHazard.isload &&
     (io.exeDHazard.waddr === reg.rsaddr ||

@@ -9,6 +9,7 @@ import cpu.common.const.Const._
 // TODO: 需要添加例外优先级
 // TODO: mfc0 mtc0 暂时共用了写通用寄存器的前递数据通路
 // 这可能会引发 混用通用寄存器和c0寄存器读写操作时 出现错误的数据前递
+// TODO: count的自增逻辑有误，在解决stall导致的mfc0错误后再改回
 class CP0 extends Module {
   val io = IO(new Bundle {
     val wb    = Input(new ExInfo)       // <> wb

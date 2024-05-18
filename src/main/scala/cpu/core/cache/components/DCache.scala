@@ -102,16 +102,13 @@ class DCache extends Module {
     }
     is(swAddr) {
       awvalid := true.B
+      stall := true.B
       when(aw.ready) {
         state := swWait
-      }.otherwise {
-        stall := true.B
       }
     }
     is(swWait) {
-      when(req.valid) {
-        stall := true.B
-      }
+      stall := true.B
       when(b.valid) {
         state := sIdle
       }
