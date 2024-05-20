@@ -4,10 +4,10 @@ import chisel3._
 import chisel3.util._
 
 import cpu.core.pipeline._
-import cpu.core.cache.components._
 import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
+import cpu.core.cache.top._
 
 class TopIO extends Bundle {
   val ext_int = Input(UInt(INT_WIDTH.W))

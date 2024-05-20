@@ -11,5 +11,5 @@ class DataHazard extends Bundle {
 }
 class DataHazardMem extends DataHazard {}
 class DataHazardExe extends DataHazard {
-  val isload = Output(Bool())
+  val isload = Bool()
 }

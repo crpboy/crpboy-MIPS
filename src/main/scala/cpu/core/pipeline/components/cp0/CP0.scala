@@ -7,8 +7,6 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 
 // TODO: 需要添加例外优先级
-// TODO: mfc0 mtc0 暂时共用了写通用寄存器的前递数据通路
-// 这可能会引发 混用通用寄存器和c0寄存器读写操作时 出现错误的数据前递
 // TODO: count的自增逻辑有误，在解决stall导致的mfc0错误后再改回
 class CP0 extends Module {
   val io = IO(new Bundle {
@@ -26,15 +24,23 @@ class CP0 extends Module {
   })
 
   // reg init
+  val index    = new Cp0Index
+  val enrtyLo0 = new Cp0EntryLo0
+  val enrtyLo1 = new Cp0EntryLo1
   val badvaddr = new Cp0BadVAddr
   val count    = new Cp0Count
+  val entryHi  = new Cp0EntryHi
   val compare  = new Cp0Compare
   val status   = new Cp0Status
   val cause    = new Cp0Cause
   val epc      = new Cp0EPC
   val seq = Seq(
+    index,
+    enrtyLo0,
+    enrtyLo1,
     badvaddr,
     count,
+    entryHi,
     compare,
     status,
     cause,

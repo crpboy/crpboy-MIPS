@@ -9,24 +9,84 @@ trait Cp0Base {
   val sel: Int = 0
   val data: Data
   def getId = (id * 8 + sel).asUInt
-  def write(value: UInt) = {
+  def write(value: UInt): Unit = {
     data := value.asTypeOf(data)
   }
 }
 
+class Cp0IndexBundle extends Bundle {
+  val P     = Bool()
+  val blank = UInt((31 - TLB_INDEX_WIDTH).W)
+  val Index = UInt(TLB_INDEX_WIDTH.W)
+}
+class Cp0Index extends Cp0Base {
+  override val id = 0
+  override val data = RegInit(
+    0.U.asTypeOf(new Cp0IndexBundle),
+  ).suggestName("rIndex")
+}
+
+class Cp0EntryLo0Bundle extends Bundle {
+  val blank = UInt(6.W)
+  val PFN0  = UInt(20.W)
+  val C0    = UInt(3.W)
+  val D0    = UInt(1.W)
+  val V0    = UInt(1.W)
+  val G0    = UInt(1.W)
+}
+class Cp0EntryLo0 extends Cp0Base {
+  override val id = 2
+  override val data = RegInit(
+    0.U.asTypeOf(new Cp0EntryLo0Bundle),
+  ).suggestName("rEntryLo0")
+}
+
+class Cp0EntryLo1Bundle extends Bundle {
+  val blank = UInt(6.W)
+  val PFN1  = UInt(20.W)
+  val C1    = UInt(3.W)
+  val D1    = UInt(1.W)
+  val V1    = UInt(1.W)
+  val G1    = UInt(1.W)
+}
+class Cp0EntryLo1 extends Cp0Base {
+  override val id = 3
+  override val data = RegInit(
+    0.U.asTypeOf(new Cp0EntryLo1Bundle),
+  ).suggestName("rEntryLo1")
+}
+
 class Cp0BadVAddr extends Cp0Base {
-  override val id   = 8
-  override val data = RegInit(0.U(DATA_WIDTH.W)).suggestName("rBadVAddr")
+  override val id = 8
+  override val data = RegInit(
+    0.U(DATA_WIDTH.W),
+  ).suggestName("rBadVAddr")
 }
 
 class Cp0Count extends Cp0Base {
-  override val id   = 9
-  override val data = RegInit(0.U(DATA_WIDTH.W)).suggestName("rCount")
+  override val id = 9
+  override val data = RegInit(
+    0.U(DATA_WIDTH.W),
+  ).suggestName("rCount")
+}
+
+class Cp0EntryHiBundle extends Bundle {
+  val VPN2  = UInt(19.W)
+  val blank = UInt(5.W)
+  val ASID  = UInt(8.W)
+}
+class Cp0EntryHi extends Cp0Base {
+  override val id = 10
+  override val data = RegInit(
+    0.U.asTypeOf(new Cp0EntryHiBundle),
+  ).suggestName("rEntryHi")
 }
 
 class Cp0Compare extends Cp0Base {
-  override val id   = 11
-  override val data = RegInit(0.U(DATA_WIDTH.W)).suggestName("rCompare")
+  override val id = 11
+  override val data = RegInit(
+    0.U(DATA_WIDTH.W),
+  ).suggestName("rCompare")
 }
 
 class Cp0StatusBundle extends Bundle {
@@ -58,11 +118,15 @@ class Cp0CauseBundle extends Bundle {
 }
 
 class Cp0Cause extends Cp0Base {
-  override val id   = 13
-  override val data = RegInit(0.U.asTypeOf(new Cp0CauseBundle)).suggestName("rCause")
+  override val id = 13
+  override val data = RegInit(
+    0.U.asTypeOf(new Cp0CauseBundle),
+  ).suggestName("rCause")
 }
 
 class Cp0EPC extends Cp0Base {
-  override val id   = 14
-  override val data = RegInit(0.U(DATA_WIDTH.W)).suggestName("rEPC")
+  override val id = 14
+  override val data = RegInit(
+    0.U(DATA_WIDTH.W),
+  ).suggestName("rEPC")
 }

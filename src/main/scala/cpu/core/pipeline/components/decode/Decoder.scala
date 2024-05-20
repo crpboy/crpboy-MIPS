@@ -73,8 +73,8 @@ class Decoder extends Module {
       MTHI -> List(iy, instRN, wb_n, fu_mov, mov_mthi),
       MTLO -> List(iy, instRN, wb_n, fu_mov, mov_mtlo),
       // exception
-      BREAK   -> List(iy, instSP, wb_n, fu_cp0, cp0_break),
-      SYSCALL -> List(iy, instSP, wb_n, fu_cp0, cp0_syscall),
+      BREAK   -> List(iy, instSP, wb_n, fu_sp, cp0_break),
+      SYSCALL -> List(iy, instSP, wb_n, fu_sp, cp0_syscall),
       // load
       LB  -> List(iy, instIS, wb_y, fu_mem, mem_lb),
       LBU -> List(iy, instIS, wb_y, fu_mem, mem_lbu),
@@ -90,9 +90,9 @@ class Decoder extends Module {
       SWL -> List(iy, instIS, wb_n, fu_mem, mem_swl),
       SWR -> List(iy, instIS, wb_n, fu_mem, mem_swr),
       // cp0
-      ERET -> List(iy, instRN, wb_n, fu_cp0, cp0_eret),
-      MFC0 -> List(iy, instRN, wb_y, fu_cp0, cp0_mfc0),
-      MTC0 -> List(iy, instRN, wb_n, fu_cp0, cp0_mtc0),
+      ERET -> List(iy, instRN, wb_n, fu_sp, cp0_eret),
+      MFC0 -> List(iy, instRN, wb_y, fu_sp, cp0_mfc0),
+      MTC0 -> List(iy, instRN, wb_n, fu_sp, cp0_mtc0),
     ),
   )
   val validInst :: t :: wb :: fu :: fuop :: Nil = res

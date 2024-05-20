@@ -46,7 +46,7 @@ trait ConstDecode {
   val fu_md  = 4.U(FU_LEN.W)
   val fu_mov = 5.U(FU_LEN.W)
   val fu_mem = 6.U(FU_LEN.W)
-  val fu_cp0 = 7.U(FU_LEN.W)
+  val fu_sp  = 7.U(FU_LEN.W)
 
   // function operator
   val fuop_nop = "b0000".U
@@ -133,10 +133,17 @@ trait ConstDecode {
   val _mem_store = BitPat("b1???")
   val _mem_lw    = BitPat("b?0??")
 
-  // cp0
+  // cp0 & tlb & cache
   val cp0_break   = "b0001".U
   val cp0_syscall = "b0010".U
   val cp0_eret    = "b0011".U
   val cp0_mfc0    = "b0100".U
   val cp0_mtc0    = "b0101".U
+  val sp_tlbp     = "b1000".U
+  val sp_tlbr     = "b1001".U
+  val sp_tlbwi    = "b1010".U
+  val sp_cache    = "b1111".U
+
+  val _sp_cp0 = BitPat("b0???")
+  val _sp_tlb = BitPat("b10??")
 }

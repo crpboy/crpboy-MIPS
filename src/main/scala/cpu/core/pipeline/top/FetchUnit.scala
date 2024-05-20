@@ -1,4 +1,4 @@
-package cpu.core.pipeline.components.fetch
+package cpu.core.pipeline.top
 
 import chisel3._
 import chisel3.util._

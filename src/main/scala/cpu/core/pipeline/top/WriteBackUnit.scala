@@ -1,4 +1,4 @@
-package cpu.core.pipeline.components.writeback
+package cpu.core.pipeline.top
 
 import chisel3._
 import chisel3.util._
@@ -29,7 +29,6 @@ class WriteBackUnit extends Module {
     val debug = Output(new DebugIO)
   })
   val input = io.in.bits
-  val cp0en = input.inst.fu === fu_cp0
 
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
@@ -57,7 +56,10 @@ class WriteBackUnit extends Module {
   }
 
   // <> cp0 (mtc0)
-  io.cp0.wCp0.en   := cp0en && input.inst.fuop === cp0_mtc0 && valid && !io.ctrl.cache.iStall
+  io.cp0.wCp0.en := input.inst.fu === fu_sp &&
+    input.inst.fuop === cp0_mtc0 &&
+    valid &&
+    !io.ctrl.cache.iStall
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel

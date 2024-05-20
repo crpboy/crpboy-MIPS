@@ -1,4 +1,4 @@
-package cpu.core.pipeline.components.memory
+package cpu.core.pipeline.top
 
 import chisel3._
 import chisel3.util._
@@ -6,12 +6,14 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
+import cpu.core.pipeline.components.memory._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
     val dCache  = new DCacheIO
     val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
+    val execute = new Bundle { val isMTC0 = Output(Bool()) }
     val ctrl    = Input(new CtrlInfo)
     val in      = Flipped(Decoupled((new StageExecuteMemory)))
     val out     = Decoupled(new StageMemoryWriteback)
@@ -32,6 +34,8 @@ class MemoryUnit extends Module {
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := memAccess.out
+
+  io.execute.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
 
   val except = WireDefault(input.exInfo)
 

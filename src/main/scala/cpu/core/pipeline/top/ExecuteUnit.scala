@@ -1,4 +1,4 @@
-package cpu.core.pipeline.components.execute
+package cpu.core.pipeline.top
 
 import chisel3._
 import chisel3.util._
@@ -6,15 +6,18 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
+import cpu.core.pipeline.components.execute._
 
 class ExecuteUnit extends Module {
   val io = IO(new Bundle {
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
-    val ctrl    = Input(new CtrlInfo)
-    val rCp0    = Flipped(new ReadCp0Info)
-    val fetch   = new Bundle { val isBr = Output(Bool()) }
+
+    val ctrl   = Input(new CtrlInfo)
+    val rCp0   = Flipped(new ReadCp0Info)
+    val fetch  = new Bundle { val isBr = Output(Bool()) }
+    val memory = new Bundle { val isMTC0 = Input(Bool()) }
 
     val in  = Flipped(Decoupled((new StageDecodeExecute)))
     val out = Decoupled(new StageExecuteMemory)
@@ -73,7 +76,7 @@ class ExecuteUnit extends Module {
     Seq(
       fu_alu -> alu.out,
       fu_mem -> input.op2,
-      fu_cp0 -> Mux(
+      fu_sp -> Mux(
         cp0ismfc0,
         io.rCp0.data,
         input.op2,
@@ -89,7 +92,7 @@ class ExecuteUnit extends Module {
     ),
   )
   val rd = Mux(
-    input.inst.fu === fu_cp0 && cp0ismfc0,
+    input.inst.fu === fu_sp && cp0ismfc0,
     input.rtaddr,
     input.inst.rd,
   )
@@ -100,9 +103,10 @@ class ExecuteUnit extends Module {
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb && !io.ctrl.ex
 
   io.ctrlreq.clear := false.B
-  io.ctrlreq.block := muldiv.block
-  io.in.ready      := io.out.ready
-  io.out.valid     := io.in.valid
+  io.ctrlreq.block := muldiv.block ||
+    (input.inst.fu === fu_sp && input.inst.fuop === cp0_mfc0 && io.memory.isMTC0)
+  io.in.ready  := io.out.ready
+  io.out.valid := io.in.valid
 
   io.ctrlreq.branchPause := bra.binfo.bwen
 

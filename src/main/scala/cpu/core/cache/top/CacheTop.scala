@@ -1,10 +1,11 @@
-package cpu.core.cache.components
+package cpu.core.cache.top
 
 import chisel3._
 import chisel3.util._
 import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
+import cpu.core.cache.components._
 
 class CacheTop extends Module {
   val io = IO(new Bundle {

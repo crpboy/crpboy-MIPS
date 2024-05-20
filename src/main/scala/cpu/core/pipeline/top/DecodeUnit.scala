@@ -1,10 +1,11 @@
-package cpu.core.pipeline.components.decode
+package cpu.core.pipeline.top
 
 import chisel3._
 import chisel3.util._
 import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
+import cpu.core.pipeline.components.decode._
 
 // TODO: 中断例外的发生应该放到decode
 class DecodeUnit extends Module {
@@ -68,7 +69,7 @@ class DecodeUnit extends Module {
   val except   = WireDefault(input.exInfo)
   val instInfo = decoder.instInfo
   io.fetch.isJmp := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
-  when(instInfo.fu === fu_cp0) {
+  when(instInfo.fu === fu_sp) {
     when(instInfo.fuop === cp0_syscall) {
       except.en     := true.B
       except.excode := ex_Sys

@@ -2,7 +2,6 @@ package cpu.common.const
 
 import chisel3._
 import chisel3.util._
-import math._
 
 trait ConstWidth {
   val ADDR_WIDTH      = 32
@@ -17,6 +16,7 @@ trait ConstWidth {
   val CTRL_WIDTH      = 5
   val STRB_WIDTH      = 4
   val SRAM_SIZE_WIDTH = 2
+  val TLB_INDEX_WIDTH = 4
 }
 
 trait ConstWidthAxi {

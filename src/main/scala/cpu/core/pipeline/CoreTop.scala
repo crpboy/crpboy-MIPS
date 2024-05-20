@@ -8,14 +8,10 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.StageConnect._
 
+import top._
 import components._
 import components.cp0._
 import components.ctrl._
-import components.fetch._
-import components.decode._
-import components.execute._
-import components.memory._
-import components.writeback._
 
 class CoreTop extends Module {
   val io = IO(new Bundle {
@@ -118,6 +114,7 @@ class CoreTop extends Module {
   cp0.fetch           <> fetch.cp0
   execute.rCp0        <> cp0.read
   cp0.extIntIn        <> io.ext_int
+  execute.memory      <> memory.execute
 
   // ex: slot judge (exe, mem) -> wb
   execute.out.bits.slot      <> writeback.exe.slot
