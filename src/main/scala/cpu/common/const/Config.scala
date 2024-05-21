@@ -13,4 +13,6 @@ trait Config {
   // 上板时除法使用握手信号，不需要给定周期
   val mulClockNum = 2
   val divClockNum = 8
+
+  val tlbSearchPortNum = 2
 }

@@ -9,11 +9,11 @@ class CacheStallInfo extends Bundle {
   val dStall = Bool()
 }
 class CtrlInfo extends Bundle {
-  val stall = Bool()
-  val flush = Bool()
-  val cache = new CacheStallInfo
-  val ex = Bool()
-  def getStall = stall
+  val stall    = Bool()
+  val bubble   = Bool()
+  val flush    = Bool()
+  val cache    = new CacheStallInfo
+  val ex       = Bool()
 }
 class CtrlRequest extends Bundle {
   val block = Bool()

@@ -13,7 +13,7 @@ class MemoryUnit extends Module {
     val dCache  = new DCacheIO
     val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
-    val execute = new Bundle { val isMTC0 = Output(Bool()) }
+    val exe     = new Bundle { val isMTC0 = Output(Bool()) }
     val ctrl    = Input(new CtrlInfo)
     val in      = Flipped(Decoupled((new StageExecuteMemory)))
     val out     = Decoupled(new StageMemoryWriteback)
@@ -35,7 +35,7 @@ class MemoryUnit extends Module {
   io.dHazard.waddr := input.inst.rd
   io.dHazard.wdata := memAccess.out
 
-  io.execute.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
+  io.exe.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
 
   val except = WireDefault(input.exInfo)
 

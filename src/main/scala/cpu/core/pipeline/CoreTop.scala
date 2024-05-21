@@ -12,6 +12,7 @@ import top._
 import components._
 import components.cp0._
 import components.ctrl._
+import components.mmu._
 
 class CoreTop extends Module {
   val io = IO(new Bundle {
@@ -32,6 +33,7 @@ class CoreTop extends Module {
   val sfCtrl = Module(new StallFlushCtrl).io
   val exCtrl = Module(new ExCtrl).io
   val cp0    = Module(new CP0).io
+  // val tlb    = Module(new TLB).io
 
   // sram connect
   io.debug  <> writeback.debug
@@ -39,12 +41,11 @@ class CoreTop extends Module {
   io.dCache <> memory.dCache
 
   // stall and flush control
-  sfCtrl.ifreq       <> fetch.ctrlreq
-  sfCtrl.idreq       <> decode.ctrlreq
-  sfCtrl.exereq      <> execute.ctrlreq
-  sfCtrl.memreq      <> memory.ctrlreq
-  sfCtrl.wbreq       <> writeback.ctrlreq
-  sfCtrl.dCacheStall <> io.dCache.stall
+  sfCtrl.ifreq  <> fetch.ctrlreq
+  sfCtrl.idreq  <> decode.ctrlreq
+  sfCtrl.exereq <> execute.ctrlreq
+  sfCtrl.memreq <> memory.ctrlreq
+  sfCtrl.wbreq  <> writeback.ctrlreq
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -57,6 +58,12 @@ class CoreTop extends Module {
   sfCtrl.flush(2) <> execute.ctrl.flush
   sfCtrl.flush(1) <> memory.ctrl.flush
   sfCtrl.flush(0) <> writeback.ctrl.flush
+
+  sfCtrl.bubble(4) <> fetch.ctrl.bubble
+  sfCtrl.bubble(3) <> decode.ctrl.bubble
+  sfCtrl.bubble(2) <> execute.ctrl.bubble
+  sfCtrl.bubble(1) <> memory.ctrl.bubble
+  sfCtrl.bubble(0) <> writeback.ctrl.bubble
 
   // cache stall ctrl
   io.iCache.stall <> fetch.ctrl.cache.iStall
@@ -114,11 +121,18 @@ class CoreTop extends Module {
   cp0.fetch           <> fetch.cp0
   execute.rCp0        <> cp0.read
   cp0.extIntIn        <> io.ext_int
-  execute.memory      <> memory.execute
+
+  // ex: read-after-write stall signal
+  execute.mem.isMTC0 <> memory.exe.isMTC0
+  execute.wb.isMTC0  <> writeback.exe.isMTC0
 
   // ex: slot judge (exe, mem) -> wb
   execute.out.bits.slot      <> writeback.exe.slot
   execute.out.bits.exInfo.en <> writeback.exe.ex
   memory.out.bits.slot       <> writeback.mem.slot
   memory.out.bits.exInfo.en  <> writeback.mem.ex
+
+  // tlb <> cp0
+  // tlb.in  <> cp0.tlb.out
+  // tlb.out <> cp0.tlb.in
 }

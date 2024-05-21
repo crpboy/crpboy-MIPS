@@ -27,8 +27,8 @@ class FetchUnit extends Module {
   })
   val output = io.out.bits
 
-  val ctrlSignal = io.ctrl.getStall || io.ctrl.ex
-  val exSignal   = io.cp0.isex      || io.cp0.eret
+  val ctrlSignal = io.ctrl.stall || io.ctrl.ex
+  val exSignal   = io.cp0.isex   || io.cp0.eret
   val pcReg = RegEnable(
     io.iCache.pcNext,
     (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W),
@@ -47,7 +47,7 @@ class FetchUnit extends Module {
   val resetTmp = RegNext(reset)
   io.iCache.pcNext    := pcNext
   io.iCache.valid     := !(reset.asBool)
-  io.iCache.coreReady := !io.ctrl.getStall
+  io.iCache.coreReady := !io.ctrl.stall
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 

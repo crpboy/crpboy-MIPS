@@ -15,9 +15,9 @@ trait Cp0Base {
 }
 
 class Cp0IndexBundle extends Bundle {
-  val P     = Bool()
+  val p     = Bool()
   val blank = UInt((31 - TLB_INDEX_WIDTH).W)
-  val Index = UInt(TLB_INDEX_WIDTH.W)
+  val index = UInt(TLB_INDEX_WIDTH.W)
 }
 class Cp0Index extends Cp0Base {
   override val id = 0
@@ -28,11 +28,11 @@ class Cp0Index extends Cp0Base {
 
 class Cp0EntryLo0Bundle extends Bundle {
   val blank = UInt(6.W)
-  val PFN0  = UInt(20.W)
-  val C0    = UInt(3.W)
-  val D0    = UInt(1.W)
-  val V0    = UInt(1.W)
-  val G0    = UInt(1.W)
+  val pfn0  = UInt(TLB_PFN_WIDTH.W)
+  val c0    = UInt(TLB_C_WIDTH.W)
+  val d0    = Bool()
+  val v0    = Bool()
+  val g0    = Bool()
 }
 class Cp0EntryLo0 extends Cp0Base {
   override val id = 2
@@ -43,11 +43,11 @@ class Cp0EntryLo0 extends Cp0Base {
 
 class Cp0EntryLo1Bundle extends Bundle {
   val blank = UInt(6.W)
-  val PFN1  = UInt(20.W)
-  val C1    = UInt(3.W)
-  val D1    = UInt(1.W)
-  val V1    = UInt(1.W)
-  val G1    = UInt(1.W)
+  val pfn1  = UInt(TLB_PFN_WIDTH.W)
+  val c1    = UInt(TLB_C_WIDTH.W)
+  val d1    = Bool()
+  val v1    = Bool()
+  val g1    = Bool()
 }
 class Cp0EntryLo1 extends Cp0Base {
   override val id = 3
@@ -71,9 +71,9 @@ class Cp0Count extends Cp0Base {
 }
 
 class Cp0EntryHiBundle extends Bundle {
-  val VPN2  = UInt(19.W)
+  val vpn2  = UInt(TLB_VPN2_WIDTH.W)
   val blank = UInt(5.W)
-  val ASID  = UInt(8.W)
+  val asid  = UInt(TLB_ASID_WIDTH.W)
 }
 class Cp0EntryHi extends Cp0Base {
   override val id = 10

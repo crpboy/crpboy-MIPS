@@ -14,10 +14,11 @@ class ExecuteUnit extends Module {
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
 
-    val ctrl   = Input(new CtrlInfo)
-    val rCp0   = Flipped(new ReadCp0Info)
-    val fetch  = new Bundle { val isBr = Output(Bool()) }
-    val memory = new Bundle { val isMTC0 = Input(Bool()) }
+    val ctrl  = Input(new CtrlInfo)
+    val rCp0  = Flipped(new ReadCp0Info)
+    val fetch = new Bundle { val isBr = Output(Bool()) }
+    val mem   = new Bundle { val isMTC0 = Input(Bool()) }
+    val wb    = new Bundle { val isMTC0 = Input(Bool()) }
 
     val in  = Flipped(Decoupled((new StageDecodeExecute)))
     val out = Decoupled(new StageExecuteMemory)
@@ -104,7 +105,7 @@ class ExecuteUnit extends Module {
 
   io.ctrlreq.clear := false.B
   io.ctrlreq.block := muldiv.block ||
-    (input.inst.fu === fu_sp && input.inst.fuop === cp0_mfc0 && io.memory.isMTC0)
+    (input.inst.fu === fu_sp && input.inst.fuop === cp0_mfc0 && (io.mem.isMTC0 || io.wb.isMTC0))
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
 

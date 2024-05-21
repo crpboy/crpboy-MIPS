@@ -17,8 +17,9 @@ class WriteBackUnit extends Module {
       val exres = Input(new ExInfo)
     }
     val exe = new Bundle {
-      val slot = Input(Bool())
-      val ex   = Input(Bool())
+      val slot   = Input(Bool())
+      val ex     = Input(Bool())
+      val isMTC0 = Output(Bool())
     }
     val mem = new Bundle {
       val slot = Input(Bool())
@@ -35,6 +36,8 @@ class WriteBackUnit extends Module {
   io.dHazard.wdata := input.data
 
   val valid = io.in.valid
+
+  io.exe.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
 
   // <> regfile
   io.out.wen   := !io.cp0.exres.en && input.inst.wb && valid

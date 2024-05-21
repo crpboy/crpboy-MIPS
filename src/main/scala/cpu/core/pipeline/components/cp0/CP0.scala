@@ -18,15 +18,20 @@ class CP0 extends Module {
       val eret   = Output(Bool())
       val eretpc = Output(UInt(PC_WIDTH.W))
     } // <> fetch
-    val stall    = Input(Bool()) // temp
+    val stall    = Input(Bool()) // inst cache stall
     val extIntIn = Input(UInt(6.W))
     val exInfo   = Output(new ExInfo)
+    // val tlb = new Bundle {
+    //   val ren = Input(Bool())
+    //   val in  = Input(new TlbInfo)
+    //   val out = Output(new TlbInput)
+    // }
   })
 
   // reg init
   val index    = new Cp0Index
-  val enrtyLo0 = new Cp0EntryLo0
-  val enrtyLo1 = new Cp0EntryLo1
+  val entryLo0 = new Cp0EntryLo0
+  val entryLo1 = new Cp0EntryLo1
   val badvaddr = new Cp0BadVAddr
   val count    = new Cp0Count
   val entryHi  = new Cp0EntryHi
@@ -36,8 +41,8 @@ class CP0 extends Module {
   val epc      = new Cp0EPC
   val seq = Seq(
     index,
-    enrtyLo0,
-    enrtyLo1,
+    entryLo0,
+    entryLo1,
     badvaddr,
     count,
     entryHi,
@@ -124,6 +129,31 @@ class CP0 extends Module {
   io.read.data := MuxLookup(readpos, 0.U)(
     seq.map(it => it.getId -> it.data.asUInt),
   )
+
+  // tlb
+  // when(io.tlb.ren) {
+  //   val tlbInfo = io.tlb.in
+
+  //   entryHi.data.vpn2 := tlbInfo.vpn2
+  //   entryHi.data.asid := tlbInfo.asid
+
+  //   entryLo0.data.g0   := tlbInfo.g
+  //   entryLo0.data.pfn0 := tlbInfo.pfn0
+  //   entryLo0.data.c0   := tlbInfo.c0
+  //   entryLo0.data.d0   := tlbInfo.d0
+  //   entryLo0.data.v0   := tlbInfo.v0
+
+  //   entryLo1.data.g1   := tlbInfo.g
+  //   entryLo1.data.pfn1 := tlbInfo.pfn1
+  //   entryLo1.data.c1   := tlbInfo.c1
+  //   entryLo1.data.d1   := tlbInfo.d1
+  //   entryLo1.data.v1   := tlbInfo.v1
+  // }
+
+  // io.tlb.out.index    := index.data
+  // io.tlb.out.entryLo0 := entryLo0.data
+  // io.tlb.out.entryLo1 := entryLo1.data
+  // io.tlb.out.entryHi  := entryHi.data
 }
 
 /*
@@ -136,7 +166,7 @@ eret      : writeback
 
 一旦出现exception，就会使得前面所有指令被直接冲刷为0
 同时当i部件出现exception的时候 使得下一时钟周期 [1, i] 全部寄存器写使能无效
-目前仅有hilo寄存器的写使能发生在非wb阶段
+目前仅有hilo寄存器和访存的写使能发生在非wb阶段
 
 疑问：精确例外是否相当于取消后续指令对寄存器的写使能？
 
