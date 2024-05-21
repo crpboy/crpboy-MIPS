@@ -15,4 +15,7 @@ trait ConstEx {
   val ex_Bp   = "h09".U
   val ex_RI   = "h0a".U
   val ex_Ov   = "h0c".U
+
+  val EXENTRY_DEFAULT    = 0.U
+  val EXENTRY_TLB_REFILL = 1.U
 }

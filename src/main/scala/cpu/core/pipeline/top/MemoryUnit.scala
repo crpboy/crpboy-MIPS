@@ -10,7 +10,9 @@ import cpu.core.pipeline.components.memory._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
-    val dCache  = new DCacheIO
+    val dCache = new DCacheIO
+    val tlb    = Flipped(new TlbSearchIO)
+
     val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
     val exe     = new Bundle { val isMTC0 = Output(Bool()) }
@@ -24,12 +26,14 @@ class MemoryUnit extends Module {
 
   val memAccess = Module(new MemAccess).io
 
-  memAccess.dCache  <> io.dCache
-  memAccess.reqInfo <> input.memReqInfo
-  memAccess.inst    <> input.inst
-  memAccess.data    <> input.data
-  memAccess.memByte <> input.memByte
-  memAccess.ctrl    <> io.ctrl
+  memAccess.dCache   <> io.dCache
+  memAccess.reqInfo  <> input.memReqInfo
+  memAccess.inst     <> input.inst
+  memAccess.data     <> input.data
+  memAccess.memByte  <> input.memByte
+  memAccess.ctrl     <> io.ctrl
+  memAccess.tlb      <> io.tlb
+  memAccess.exInfoIn <> input.exInfo
 
   io.dHazard.wen   := input.inst.wb
   io.dHazard.waddr := input.inst.rd
@@ -37,14 +41,12 @@ class MemoryUnit extends Module {
 
   io.exe.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
 
-  val except = WireDefault(input.exInfo)
-
   io.ctrlreq.block := io.dCache.stall
   io.ctrlreq.clear := false.B
   io.in.ready      := io.out.ready
   io.out.valid     := io.in.valid
 
-  output.exInfo   := except
+  output.exInfo   := memAccess.exInfoOut
   output.slot     := input.slot
   output.exSel    := input.exSel
   output.data     := memAccess.out

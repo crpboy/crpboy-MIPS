@@ -6,21 +6,26 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
+import os.isLink
 
 class MemAccess extends Module {
   val io = IO(new Bundle {
     val reqInfo = Input(new MemReqInfo)
     val dCache  = new DCacheIO
+    val tlb     = Flipped(new TlbSearchIO)
+
     val inst    = Input(new InstInfo)
     val data    = Input(UInt(DATA_WIDTH.W))
     val memByte = Input(UInt(2.W))
-    val ctrl    = Input(new CtrlInfo)
-    val out     = Output(UInt(DATA_WIDTH.W))
+
+    val ctrl      = Input(new CtrlInfo)
+    val exInfoIn  = Input(new ExInfo)
+    val exInfoOut = Output(new ExInfo)
+    val out       = Output(UInt(DATA_WIDTH.W))
   })
   val rdata  = io.dCache.resp.data
   val isload = io.inst.fu === fu_mem && io.inst.wb
-  io.dCache.req.info := io.reqInfo
-  val done = RegInit(false.B)
+
   val word = Mux(
     io.inst.fuop === _mem_lw,
     rdata,
@@ -81,4 +86,32 @@ class MemAccess extends Module {
   )
   io.out              := data
   io.dCache.coreReady := !io.ctrl.stall && !io.ctrl.cache.iStall
+
+  // vaddr -> tlb
+  io.tlb.req.en     := io.reqInfo.valid
+  io.tlb.req.vaddr  := io.reqInfo.addr
+  io.tlb.req.isLoad := isload
+
+  // tlb exception
+  val except = WireDefault(io.exInfoIn)
+  when(io.tlb.exInfo.isTlbInvalid) {
+    except.en     := true.B
+    except.excode := Mux(isload, ex_TLBL, ex_TLBS)
+  }
+  when(io.tlb.exInfo.isTlbModified) {
+    except.en     := true.B
+    except.excode := ex_Mod
+  }
+  when(io.tlb.exInfo.isTlbRefill) {
+    except.en     := true.B
+    except.excode := Mux(isload, ex_TLBL, ex_TLBS)
+    except.entry  := EXENTRY_TLB_REFILL
+  }
+  io.exInfoOut := except
+
+  // request info (from execute, send to dCache)
+  val reqInfo = WireDefault(io.reqInfo)
+  reqInfo.addr       := io.tlb.paddr
+  reqInfo.valid      := !except.en && io.reqInfo.valid
+  io.dCache.req.info := io.reqInfo
 }

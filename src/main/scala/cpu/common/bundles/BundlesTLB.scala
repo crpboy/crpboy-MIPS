@@ -42,13 +42,15 @@ class TlbExInfo extends Bundle {
   val isTlbInvalid  = Bool()
   val isTlbModified = Bool()
 }
+class TlbVaddrInfo extends Bundle {
+  val en     = Bool()
+  val vaddr  = UInt(ADDR_WIDTH.W)
+  val isLoad = Bool()
+}
 class TlbSearchIO extends Bundle {
-  val vpn2    = Input(UInt(TLB_VPN2_WIDTH.W))
-  val oddPage = Input(Bool())
-  val asid    = Input(UInt(TLB_ASID_WIDTH.W))
-  val isLoad  = Input(Bool())
-  val res     = Output(new TlbSearchRes)
-  val exInfo  = Output(new TlbExInfo)
+  val req    = Input(new TlbVaddrInfo)
+  val paddr  = Output(UInt(ADDR_WIDTH.W))
+  val exInfo = Output(new TlbExInfo)
 }
 
 /*

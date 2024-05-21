@@ -25,6 +25,10 @@ class WriteBackUnit extends Module {
       val slot = Input(Bool())
       val ex   = Input(Bool())
     }
+    val tlb = new Bundle {
+      val wen = Output(Bool())
+      val ren = Output(Bool())
+    }
     val in    = Flipped(Decoupled(new StageMemoryWriteback))
     val out   = Output(new WBInfo)
     val debug = Output(new DebugIO)
@@ -37,7 +41,8 @@ class WriteBackUnit extends Module {
 
   val valid = io.in.valid
 
-  io.exe.isMTC0 := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0
+  val isSp = input.inst.fu === fu_sp
+  io.exe.isMTC0 := isSp && input.inst.fuop === cp0_mtc0
 
   // <> regfile
   io.out.wen   := !io.cp0.exres.en && input.inst.wb && valid
@@ -59,14 +64,17 @@ class WriteBackUnit extends Module {
   }
 
   // <> cp0 (mtc0)
-  io.cp0.wCp0.en := input.inst.fu === fu_sp &&
+  io.cp0.wCp0.en := isSp &&
     input.inst.fuop === cp0_mtc0 &&
-    valid &&
-    !io.ctrl.cache.iStall
+    valid && !io.ctrl.cache.iStall
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel
   io.cp0.exout     := except
+
+  // <> tlb, cp0.tlb
+  io.tlb.wen := isSp && input.inst.fuop === sp_tlbwi
+  io.tlb.ren := isSp && input.inst.fuop === sp_tlbr
 
   io.ctrlreq.block := false.B
   io.ctrlreq.clear := io.cp0.exres.en || io.cp0.exres.eret

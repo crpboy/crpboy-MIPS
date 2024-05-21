@@ -14,19 +14,21 @@ class CP0 extends Module {
     val write = Input(new WriteCp0Info) // <> wb
     val read  = new ReadCp0Info         // <> exe
     val fetch = new Bundle {
-      val isex   = Output(Bool())
-      val eret   = Output(Bool())
-      val eretpc = Output(UInt(PC_WIDTH.W))
+      val isex    = Output(Bool())
+      val exEntry = Output(UInt(EX_ENRTY_WIDTH.W))
+      val eret    = Output(Bool())
+      val eretpc  = Output(UInt(PC_WIDTH.W))
     } // <> fetch
-    val stall    = Input(Bool()) // inst cache stall
-    val extIntIn = Input(UInt(6.W))
-    val exInfo   = Output(new ExInfo)
-    // val tlb = new Bundle {
-    //   val ren = Input(Bool())
-    //   val in  = Input(new TlbInfo)
-    //   val out = Output(new TlbInput)
-    // }
+    val iCacheStall = Input(Bool())
+    val extIntIn    = Input(UInt(6.W))
+    val exInfo      = Output(new ExInfo)
+    val tlb = new Bundle {
+      val ren = Input(Bool())
+      val in  = Input(new TlbInfo)
+      val out = Output(new TlbInput)
+    }
   })
+  val allowGo = !io.iCacheStall
 
   // reg init
   val index    = new Cp0Index
@@ -65,12 +67,12 @@ class CP0 extends Module {
   // count
   val tick = RegInit(false.B)
   tick := !tick
-  when( /*tick &&*/ writepos =/= count.getId && !io.stall) { count.data := count.data + 1.U }
+  when( /*tick &&*/ writepos =/= count.getId && allowGo) { count.data := count.data + 1.U }
 
   // cause
   val timeOut = RegInit(false.B)
   when(count.data === compare.data && compare.data =/= 0.U) {
-    when(io.stall) {
+    when(!allowGo) {
       timeOut := true.B
     }.otherwise {
       cause.data.TI := true.B
@@ -79,7 +81,7 @@ class CP0 extends Module {
   when(writepos === compare.getId && io.write.en) {
     cause.data.TI := false.B
   }
-  when(timeOut && !io.stall) {
+  when(timeOut && allowGo) {
     cause.data.TI := true.B
     timeOut       := false.B
   }
@@ -107,7 +109,7 @@ class CP0 extends Module {
   io.exInfo := except
 
   // exception writeback
-  when(except.en && !io.stall) {
+  when(except.en && allowGo) {
     cause.data.ExcCode := except.excode
     badvaddr.data      := except.badvaddr
     when(!status.data.EXL) {
@@ -115,14 +117,15 @@ class CP0 extends Module {
       cause.data.BD   := except.slot
       epc.data        := Mux(except.slot, except.pc - 4.U, except.pc)
     }
-  }.elsewhen(except.eret && !io.stall) {
+  }.elsewhen(except.eret && allowGo) {
     status.data.EXL := false.B
   }
 
   // <> fetch
-  io.fetch.isex   := except.en
-  io.fetch.eret   := except.eret
-  io.fetch.eretpc := epc.data
+  io.fetch.isex    := except.en
+  io.fetch.exEntry := except.entry
+  io.fetch.eret    := except.eret
+  io.fetch.eretpc  := epc.data
 
   // read info
   val readpos = Cat(io.read.addr, io.read.sel)
@@ -131,29 +134,29 @@ class CP0 extends Module {
   )
 
   // tlb
-  // when(io.tlb.ren) {
-  //   val tlbInfo = io.tlb.in
+  when(io.tlb.ren && allowGo) {
+    val tlbInfo = io.tlb.in
 
-  //   entryHi.data.vpn2 := tlbInfo.vpn2
-  //   entryHi.data.asid := tlbInfo.asid
+    entryHi.data.vpn2 := tlbInfo.vpn2
+    entryHi.data.asid := tlbInfo.asid
 
-  //   entryLo0.data.g0   := tlbInfo.g
-  //   entryLo0.data.pfn0 := tlbInfo.pfn0
-  //   entryLo0.data.c0   := tlbInfo.c0
-  //   entryLo0.data.d0   := tlbInfo.d0
-  //   entryLo0.data.v0   := tlbInfo.v0
+    entryLo0.data.g0   := tlbInfo.g
+    entryLo0.data.pfn0 := tlbInfo.pfn0
+    entryLo0.data.c0   := tlbInfo.c0
+    entryLo0.data.d0   := tlbInfo.d0
+    entryLo0.data.v0   := tlbInfo.v0
 
-  //   entryLo1.data.g1   := tlbInfo.g
-  //   entryLo1.data.pfn1 := tlbInfo.pfn1
-  //   entryLo1.data.c1   := tlbInfo.c1
-  //   entryLo1.data.d1   := tlbInfo.d1
-  //   entryLo1.data.v1   := tlbInfo.v1
-  // }
+    entryLo1.data.g1   := tlbInfo.g
+    entryLo1.data.pfn1 := tlbInfo.pfn1
+    entryLo1.data.c1   := tlbInfo.c1
+    entryLo1.data.d1   := tlbInfo.d1
+    entryLo1.data.v1   := tlbInfo.v1
+  }
 
-  // io.tlb.out.index    := index.data
-  // io.tlb.out.entryLo0 := entryLo0.data
-  // io.tlb.out.entryLo1 := entryLo1.data
-  // io.tlb.out.entryHi  := entryHi.data
+  io.tlb.out.index    := index.data
+  io.tlb.out.entryLo0 := entryLo0.data
+  io.tlb.out.entryLo1 := entryLo1.data
+  io.tlb.out.entryHi  := entryHi.data
 }
 
 /*

@@ -33,7 +33,7 @@ class CoreTop extends Module {
   val sfCtrl = Module(new StallFlushCtrl).io
   val exCtrl = Module(new ExCtrl).io
   val cp0    = Module(new CP0).io
-  // val tlb    = Module(new TLB).io
+  val tlb    = Module(new TLB).io
 
   // sram connect
   io.debug  <> writeback.debug
@@ -78,7 +78,7 @@ class CoreTop extends Module {
   io.dCache.stall <> memory.ctrl.cache.dStall
   io.dCache.stall <> writeback.ctrl.cache.dStall
 
-  io.iCache.stall <> cp0.stall // temp
+  io.iCache.stall <> cp0.iCacheStall
 
   // exception ctrl
   exCtrl.exID  <> decode.out.bits.exInfo
@@ -132,7 +132,13 @@ class CoreTop extends Module {
   memory.out.bits.slot       <> writeback.mem.slot
   memory.out.bits.exInfo.en  <> writeback.mem.ex
 
-  // tlb <> cp0
-  // tlb.in  <> cp0.tlb.out
-  // tlb.out <> cp0.tlb.in
+  // tlb <> (cp0, wb)
+  tlb.wr.in         <> cp0.tlb.out
+  tlb.wr.out        <> cp0.tlb.in
+  writeback.tlb.ren <> cp0.tlb.ren
+  writeback.tlb.wen <> tlb.wr.wen
+
+  // tlb <> memory
+  tlb.s(0) <> fetch.tlb
+  tlb.s(1) <> memory.tlb
 }

@@ -69,32 +69,34 @@ class DecodeUnit extends Module {
   val except   = WireDefault(input.exInfo)
   val instInfo = decoder.instInfo
   io.fetch.isJmp := instInfo.fu === fu_jmp || instInfo.fu === fu_bra
-  when(instInfo.fu === fu_sp) {
-    when(instInfo.fuop === cp0_syscall) {
+  when(!input.exInfo.en) {
+    when(instInfo.fu === fu_sp) {
+      when(instInfo.fuop === cp0_syscall) {
+        except.en     := true.B
+        except.excode := ex_Sys
+        except.pc     := input.debug_pc
+      }
+      when(instInfo.fuop === cp0_break) {
+        except.en     := true.B
+        except.excode := ex_Bp
+        except.pc     := input.debug_pc
+      }
+      when(instInfo.fuop === cp0_eret) {
+        except.eret := true.B
+      }
+    }
+    when(jmp.isex) {
+      except.en       := true.B
+      except.excode   := ex_AdEL
+      except.pc       := jmp.out.jwaddr
+      except.badvaddr := jmp.out.jwaddr
+    }
+    when(decoder.isex) {
       except.en     := true.B
-      except.excode := ex_Sys
-      except.pc     := input.debug_pc
-    }
-    when(instInfo.fuop === cp0_break) {
-      except.en     := true.B
-      except.excode := ex_Bp
-      except.pc     := input.debug_pc
-    }
-    when(instInfo.fuop === cp0_eret) {
-      except.eret := true.B
+      except.excode := ex_RI
     }
   }
-  when(jmp.isex) {
-    except.en       := true.B
-    except.excode   := ex_AdEL
-    except.pc       := jmp.out.jwaddr
-    except.badvaddr := jmp.out.jwaddr
-  }
-  when(decoder.isex) {
-    except.en     := true.B
-    except.excode := ex_RI
-  }
-
+  
   // control request
   val isLoadHazard = io.exeDHazard.isload &&
     (io.exeDHazard.waddr === reg.rsaddr ||

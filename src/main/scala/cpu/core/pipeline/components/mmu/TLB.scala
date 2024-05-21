@@ -8,66 +8,83 @@ import cpu.common.const.Const._
 
 class TLB extends Module with Config {
   val io = IO(new Bundle {
-    val wen = Input(Bool())
-    val s   = Vec(tlbSearchPortNum, new TlbSearchIO)
-    val in  = Input(new TlbInput)
-    val out = Output(new TlbInfo)
+    val s = Vec(tlbSearchPortNum, new TlbSearchIO)
+    val wr = new Bundle {
+      val wen = Input(Bool())
+      val in  = Input(new TlbInput)
+      val out = Output(new TlbInfo)
+    }
   })
+  val output = io.wr.out
+  val input  = io.wr.in
+
   val tlb = RegInit(VecInit(Seq.fill(TLB_NUM)(0.U.asTypeOf(new TlbInfo))))
 
   for (searchId <- 0 to 1) {
-    val s      = io.s(searchId)
+    val s     = io.s(searchId)
+    val vaddr = s.req.vaddr
+
     val res    = WireDefault(0.U.asTypeOf(new TlbSearchRes))
     val exInfo = WireDefault(0.U.asTypeOf(new TlbExInfo))
-    val found  = WireDefault(false.B)
-    for (i <- 0 until TLB_NUM) {
-      when(tlb(i).vpn2 === s.vpn2 && (tlb(i).g || tlb(i).asid === io.in.entryHi.asid)) {
-        when(!s.oddPage) {
-          res.pfn := tlb(i).pfn0
-          res.v   := tlb(i).v0
-          res.c   := tlb(i).c0
-          res.d   := tlb(i).d0
-        }.otherwise {
-          res.pfn := tlb(i).pfn1
-          res.v   := tlb(i).v1
-          res.c   := tlb(i).c1
-          res.d   := tlb(i).d1
+    val paddr  = WireDefault(0.U(ADDR_WIDTH.W))
+    val mapped = vaddr < KSEG0_START_ADDR || vaddr >= KSEG23_START_ADDR
+
+    when(mapped) {
+      for (i <- 0 until TLB_NUM) {
+        when(
+          tlb(i).vpn2 === vaddr(31, 13) &&
+            (tlb(i).g || tlb(i).asid === io.wr.in.entryHi.asid),
+        ) {
+          when(!vaddr(12)) {
+            res.pfn := tlb(i).pfn0
+            res.v   := tlb(i).v0
+            res.c   := tlb(i).c0
+            res.d   := tlb(i).d0
+          }.otherwise {
+            res.pfn := tlb(i).pfn1
+            res.v   := tlb(i).v1
+            res.c   := tlb(i).c1
+            res.d   := tlb(i).d1
+          }
+          when(!res.v) {
+            exInfo.isTlbInvalid := true.B
+          }.elsewhen(!res.d && !s.req.isLoad) {
+            exInfo.isTlbModified := true.B
+          }
+          res.found := true.B
         }
-        when(!res.v) {
-          exInfo.isTlbInvalid := true.B
-        }
-        when(!res.d && !s.isLoad) {
-          exInfo.isTlbModified := true.B
-        }
-        found := true.B
+        paddr := Cat(res.pfn(19, 0), vaddr(11, 0))
       }
+      when(!res.found) { exInfo.isTlbRefill := true.B }
+    }.otherwise {
+      paddr := vaddr
     }
-    when(!found) {
-      exInfo.isTlbRefill := true.B
-    }
+    s.exInfo := Mux(s.req.en, exInfo, 0.U.asTypeOf(exInfo))
+    s.paddr  := paddr
   }
 
   // read & write
-  io.out := tlb(io.in.index.index).asTypeOf(new TlbInfo)
-  when(io.wen) {
+  val index = input.index.index
+  when(io.wr.wen) {
     val wdata = WireDefault(0.U.asTypeOf(new TlbInfo))
 
-    wdata.vpn2 := io.in.entryHi.vpn2
-    wdata.asid := io.in.entryHi.asid
+    wdata.vpn2 := input.entryHi.vpn2
+    wdata.asid := input.entryHi.asid
 
-    wdata.g    := io.in.entryLo0.g0 | io.in.entryLo1.g1
-    wdata.pfn0 := io.in.entryLo0.pfn0
-    wdata.c0   := io.in.entryLo0.c0
-    wdata.d0   := io.in.entryLo0.d0
-    wdata.v0   := io.in.entryLo0.v0
+    wdata.g    := input.entryLo0.g0 | input.entryLo1.g1
+    wdata.pfn0 := input.entryLo0.pfn0
+    wdata.c0   := input.entryLo0.c0
+    wdata.d0   := input.entryLo0.d0
+    wdata.v0   := input.entryLo0.v0
 
-    wdata.pfn1 := io.in.entryLo1.pfn1
-    wdata.c1   := io.in.entryLo1.c1
-    wdata.d1   := io.in.entryLo1.d1
-    wdata.v1   := io.in.entryLo1.v1
+    wdata.pfn1 := input.entryLo1.pfn1
+    wdata.c1   := input.entryLo1.c1
+    wdata.d1   := input.entryLo1.d1
+    wdata.v1   := input.entryLo1.v1
 
-    tlb(io.in.index.index) := wdata
+    tlb(index) := wdata
   }
+  output := tlb(index).asTypeOf(new TlbInfo)
 }
 
 /*

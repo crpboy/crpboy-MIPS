@@ -12,7 +12,7 @@ class ExInfo extends Bundle {
   val excode   = UInt(EX_LEN.W)
   val badvaddr = UInt(ADDR_WIDTH.W)
   val pc       = UInt(PC_WIDTH.W)
-  val enrty    = UInt(EX_ENRTY_WIDTH.W)
+  val entry    = UInt(EX_ENRTY_WIDTH.W)
 }
 
 // cp0 <> exe unit
