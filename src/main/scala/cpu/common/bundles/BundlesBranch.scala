@@ -9,6 +9,7 @@ class BraInfo extends Bundle {
   val bwaddr = UInt(PC_WIDTH.W)
 }
 class BraResult extends Bundle {
-  val isb  = Bool()
-  val bwen = Bool()
+  val isb   = Bool()
+  val bwen  = Bool()
+  val index = UInt(BPU_INDEX_WIDTH.W)
 }

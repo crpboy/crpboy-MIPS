@@ -74,6 +74,7 @@ class ExecuteUnit extends Module {
   // data select
   val pcNext = input.pc + 4.U
   bra.pcNext := pcNext
+  bra.pc     := input.pc
   val data = MuxLookup(input.inst.fu, 0.U)(
     Seq(
       fu_alu -> alu.out,

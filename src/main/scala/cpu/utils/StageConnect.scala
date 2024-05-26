@@ -23,7 +23,7 @@ object StageConnect {
     zero.pc       := mydata.pc
     zero.slot     := mydata.slot
 
-    val stallSignal = ctrl.getStall || ctrl.cache.iStall
+    val stallSignal = ctrl.stall || ctrl.cache.iStall
     val flushSignal = ctrl.flush || ctrl.ex
 
     when(right.fire) {

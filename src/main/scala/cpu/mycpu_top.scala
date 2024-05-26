@@ -56,7 +56,7 @@ class TopIO extends Bundle {
 
   // debug interface
   val debug_wb_pc       = Output(UInt(PC_WIDTH.W))
-  val debug_wb_rf_wen   = Output(UInt(WEN_WIDTH.W))
+  val debug_wb_rf_wen   = Output(UInt(DEBUG_WEN_WIDTH.W))
   val debug_wb_rf_wnum  = Output(UInt(REG_WIDTH.W))
   val debug_wb_rf_wdata = Output(UInt(DATA_WIDTH.W))
 }

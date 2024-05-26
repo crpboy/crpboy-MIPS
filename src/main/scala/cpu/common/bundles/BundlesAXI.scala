@@ -63,7 +63,7 @@ class AXIInst extends Bundle {
 // debug
 class DebugIO extends Bundle {
   val wb_pc       = Output(UInt(PC_WIDTH.W))
-  val wb_rf_wen   = Output(UInt(WEN_WIDTH.W))
+  val wb_rf_wen   = Output(UInt(DEBUG_WEN_WIDTH.W))
   val wb_rf_wnum  = Output(UInt(REG_WIDTH.W))
   val wb_rf_wdata = Output(UInt(DATA_WIDTH.W))
 }

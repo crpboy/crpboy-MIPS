@@ -73,6 +73,7 @@ class DecodeUnit extends Module {
   bpu.pc   := input.pc
   bpu.isb  := decoder.instInfo.fu === fu_bra
   bpu.bres := io.execute.bres
+  bpu.ctrl := io.ctrl
   io.binfo := bpu.binfo
 
   // except

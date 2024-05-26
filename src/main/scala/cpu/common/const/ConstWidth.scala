@@ -4,21 +4,30 @@ import chisel3._
 import chisel3.util._
 
 trait ConstWidth {
+  // base def
   val ADDR_WIDTH      = 32
   val ADDR_INST_WIDTH = 32
   val DATA_WIDTH      = 32
-  val HILO_WIDTH      = 64
-  val WEN_WIDTH       = 4
   val INST_WIDTH      = 32
   val PC_WIDTH        = ADDR_WIDTH
-  val REG_NUM         = 32
-  val REG_WIDTH       = 5
-  val BPU_NUM         = 32
-  val BPU_STATE_WIDTH = 5
-  val BPU_CNT_WIDTH   = 2
-  val CTRL_WIDTH      = 5
+
+  // top IO
+  val DEBUG_WEN_WIDTH = 4
   val STRB_WIDTH      = 4
   val SRAM_SIZE_WIDTH = 2
+
+  // reg
+  val HILO_WIDTH = 64
+  val REG_NUM    = 32
+  val REG_WIDTH  = 5
+
+  // branch predict
+  val BPU_PREDICT_WIDTH = 2
+  val BPU_HISTORY_WIDTH = 5
+  val BPU_INDEX_WIDTH   = 6
+
+  // others
+  val CTRL_WIDTH      = 5
   val TLB_INDEX_WIDTH = 4
 }
 
