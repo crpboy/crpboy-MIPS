@@ -16,16 +16,18 @@ class BranchPredict extends Module {
     val binfo = Output(new BraInfo)
     val bres  = Input(new BraResult) // from exe
   })
-  val predict = RegInit(VecInit(Seq.fill(1 << BPU_HISTORY_WIDTH)("b11".U(BPU_PREDICT_WIDTH.W))))
-  val history = RegInit(VecInit(Seq.fill(1 << BPU_INDEX_WIDTH)(0.U(BPU_HISTORY_WIDTH.W))))
+  val pht = RegInit(VecInit(Seq.fill(1 << BPU_BHT_WIDTH)("b11".U)))
+  val bht = RegInit(VecInit(Seq.fill(1 << BPU_INDEX_WIDTH)(0.U(BPU_BHT_WIDTH.W))))
 
   // cnt train
   when(io.bres.isb && !io.ctrl.stall && !io.ctrl.cache.iStall) {
-    val bwen = io.bres.bwen
-    val cur  = history(io.bres.index)
-    val nxt  = Cat(cur(BPU_HISTORY_WIDTH - 2, 0), bwen)
-    val data = predict(cur)
+    val bwen   = io.bres.bwen
+    val pcHash = io.bres.index
 
+    val phtId = bht(pcHash)
+    val data  = pht(phtId)
+
+    phtId := bhtUpdate(phtId, bwen)
     when(bwen) {
       when(data =/= "b11".U) {
         data := data + 1.U
@@ -35,12 +37,12 @@ class BranchPredict extends Module {
         data := data - 1.U
       }
     }
-    cur := nxt
   }
 
   // send prediction
-  val index = io.pc(BPU_INDEX_WIDTH + 1, 2)
-  io.binfo.bwen   := Mux(io.isb, (predict(history(index)))(1).asBool, false.B)
+  val pcHash = io.pc(BPU_INDEX_WIDTH + 1, 2)
+  val phtId = bht(pcHash)
+  io.binfo.bwen   := Mux(io.isb, (pht(phtId))(1).asBool, false.B)
   io.binfo.bwaddr := io.pc + signedExtend(Cat(io.inst(15, 0), 0.U(2.W)))
 }
 

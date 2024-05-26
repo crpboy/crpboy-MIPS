@@ -25,4 +25,7 @@ object Functions {
   def getclz(data: UInt): UInt = {
     data.getWidth.U - PopCount(data)
   }
+  def bhtUpdate(data: UInt, bit: Bool): UInt = {
+    Cat(data(data.getWidth - 2, 1), bit)
+  }
 }

@@ -22,9 +22,8 @@ trait ConstWidth {
   val REG_WIDTH  = 5
 
   // branch predict
-  val BPU_PREDICT_WIDTH = 2
-  val BPU_HISTORY_WIDTH = 5
-  val BPU_INDEX_WIDTH   = 6
+  val BPU_BHT_WIDTH   = 6
+  val BPU_INDEX_WIDTH = 6
 
   // others
   val CTRL_WIDTH      = 5
