@@ -71,7 +71,7 @@ class CoreTop extends Module {
   io.dCache.stall <> memory.ctrl.cache.dStall
   io.dCache.stall <> writeback.ctrl.cache.dStall
 
-  io.iCache.stall <> cp0.stall // temp
+  io.iCache.stall <> cp0.stall
 
   // exception ctrl
   exCtrl.exID  <> decode.out.bits.exInfo
@@ -93,7 +93,6 @@ class CoreTop extends Module {
 
   // forward: to fetch
   fetch.jinfo              <> decode.jinfo
-  fetch.binfo              <> execute.binfo
   fetch.slotSignal.decode  <> decode.fetch.isJmp
   fetch.slotSignal.execute <> execute.fetch.isBr
 
@@ -121,4 +120,9 @@ class CoreTop extends Module {
   execute.out.bits.exInfo.en <> writeback.exe.ex
   memory.out.bits.slot       <> writeback.mem.slot
   memory.out.bits.exInfo.en  <> writeback.mem.ex
+
+  // branch predict
+  fetch.execute.binfo <> execute.binfo
+  fetch.decode.binfo  <> decode.binfo
+  execute.decode.bres <> decode.execute.bres
 }

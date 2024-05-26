@@ -18,6 +18,7 @@ class StageDecodeExecute extends PipelineStage {
   val inst   = new InstInfoExt
   val op1    = UInt(DATA_WIDTH.W)
   val op2    = UInt(DATA_WIDTH.W)
+  val binfo  = new BraInfo
   val rsaddr = UInt(REG_WIDTH.W)
   val rtaddr = UInt(REG_WIDTH.W)
 }

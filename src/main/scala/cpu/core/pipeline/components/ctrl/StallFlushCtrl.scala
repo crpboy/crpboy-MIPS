@@ -27,7 +27,7 @@ class StallFlushCtrl extends Module {
   // clear : the inst in this unit will be passed, pre inst will be flush
   val clear: UInt = Cat(
     io.ifreq.clear,
-    io.idreq.clear | io.exereq.branchPause,
+    io.idreq.clear,
     io.exereq.clear,
     io.memreq.clear,
     io.wbreq.clear,
@@ -37,7 +37,7 @@ class StallFlushCtrl extends Module {
   val ifflush = clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
 
   val idstall = block(3) | block(2) | block(1) | block(0)
-  val idflush = block(4) | clear(3) | clear(2) | clear(1) | clear(0)
+  val idflush = block(4) | clear(3) | clear(2) | clear(1) | clear(0) | io.exereq.branchPause
 
   val exestall = block(2) | block(1) | block(0)
   val exeflush = block(3) | clear(2) | clear(1) | clear(0)

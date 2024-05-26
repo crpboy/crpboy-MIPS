@@ -49,7 +49,8 @@ endef
 define SOC_SIM_COMMAND
 cd $(SIMULATOR_HOME) && make clean
 cd $(SIMULATOR_HOME) && make
-cd $(SIMULATOR_HOME) && make trace
+# cd $(SIMULATOR_HOME) && make trace
+cd $(SIMULATOR_HOME) && make perf
 $(SOC_SIM_ASK_TO_WAVE_COMMAND)
 endef
 
@@ -80,3 +81,7 @@ run:
 
 wave:
 	$(SOC_SIM_WAVE_COMMAND)
+
+count:
+	@echo "count the lines"
+	find ./src -name "*.scala" | xargs wc -l

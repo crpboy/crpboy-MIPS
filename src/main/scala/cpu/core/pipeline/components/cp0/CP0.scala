@@ -24,23 +24,23 @@ class CP0 extends Module {
   })
 
   // reg init
-  val index    = new Cp0Index
-  val enrtyLo0 = new Cp0EntryLo0
-  val enrtyLo1 = new Cp0EntryLo1
+  // val index    = new Cp0Index
+  // val enrtyLo0 = new Cp0EntryLo0
+  // val enrtyLo1 = new Cp0EntryLo1
   val badvaddr = new Cp0BadVAddr
   val count    = new Cp0Count
-  val entryHi  = new Cp0EntryHi
+  // val entryHi  = new Cp0EntryHi
   val compare  = new Cp0Compare
   val status   = new Cp0Status
   val cause    = new Cp0Cause
   val epc      = new Cp0EPC
   val seq = Seq(
-    index,
-    enrtyLo0,
-    enrtyLo1,
+    // index,
+    // enrtyLo0,
+    // enrtyLo1,
     badvaddr,
     count,
-    entryHi,
+    // entryHi,
     compare,
     status,
     cause,

@@ -13,6 +13,9 @@ trait ConstWidth {
   val PC_WIDTH        = ADDR_WIDTH
   val REG_NUM         = 32
   val REG_WIDTH       = 5
+  val BPU_NUM         = 32
+  val BPU_STATE_WIDTH = 5
+  val BPU_CNT_WIDTH   = 2
   val CTRL_WIDTH      = 5
   val STRB_WIDTH      = 4
   val SRAM_SIZE_WIDTH = 2

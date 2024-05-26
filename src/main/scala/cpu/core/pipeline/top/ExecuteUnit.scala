@@ -18,6 +18,7 @@ class ExecuteUnit extends Module {
     val rCp0   = Flipped(new ReadCp0Info)
     val fetch  = new Bundle { val isBr = Output(Bool()) }
     val memory = new Bundle { val isMTC0 = Input(Bool()) }
+    val decode = new Bundle { val bres = Output(new BraResult) }
 
     val in  = Flipped(Decoupled((new StageDecodeExecute)))
     val out = Decoupled(new StageExecuteMemory)
@@ -44,7 +45,7 @@ class ExecuteUnit extends Module {
   input.op1        <> bra.op1
   input.op2        <> bra.op2
   input.inst       <> bra.inst
-  input.pc         <> bra.pc
+  input.binfo      <> bra.predict
   io.ctrl          <> bra.ctrl
   bra.binfo.bwen   <> io.binfo.bwen
   bra.binfo.bwaddr <> io.binfo.bwaddr
@@ -72,6 +73,7 @@ class ExecuteUnit extends Module {
 
   // data select
   val pcNext = input.pc + 4.U
+  bra.pcNext := pcNext
   val data = MuxLookup(input.inst.fu, 0.U)(
     Seq(
       fu_alu -> alu.out,
@@ -124,6 +126,8 @@ class ExecuteUnit extends Module {
   }
 
   io.fetch.isBr := input.inst.fu === fu_bra && io.binfo.bwen
+
+  io.decode.bres := bra.bres
 
   output.exInfo     := except
   output.slot       := input.slot

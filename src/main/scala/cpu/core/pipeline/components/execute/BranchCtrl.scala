@@ -8,12 +8,15 @@ import cpu.common.const.Const._
 
 class BranchCtrl extends Module {
   val io = IO(new Bundle {
-    val ctrl  = Input(new CtrlInfo)
-    val inst  = Input(new InstInfoExt)
-    val pc    = Input(UInt(PC_WIDTH.W))
-    val op1   = Input(UInt(DATA_WIDTH.W))
-    val op2   = Input(UInt(DATA_WIDTH.W))
-    val binfo = Output(new BraInfo)
+    val ctrl    = Input(new CtrlInfo)
+    val inst    = Input(new InstInfoExt)
+    // val pc      = Input(UInt(PC_WIDTH.W))
+    val pcNext  = Input(UInt(PC_WIDTH.W))
+    val op1     = Input(UInt(DATA_WIDTH.W))
+    val op2     = Input(UInt(DATA_WIDTH.W))
+    val predict = Input(new BraInfo)
+    val bres    = Output(new BraResult)
+    val binfo   = Output(new BraInfo)
   })
 
   val op1 = io.op1.asSInt
@@ -21,13 +24,14 @@ class BranchCtrl extends Module {
 
   val eqRes  = op1 === op2
   val neRes  = op1 =/= op2
-  val gezRes = op1 >= 0.S
-  val lezRes = op1 <= 0.S
   val gtzRes = op1 > 0.S
   val ltzRes = op1 < 0.S
+  val eqzRes = op1 === 0.S
+  val gezRes = gtzRes || eqzRes // >=
+  val lezRes = ltzRes || eqzRes // <=
 
-  io.binfo.bwen := !io.ctrl.ex &&
-    (io.inst.fu === fu_bra) &&
+  io.bres.isb := !io.ctrl.ex && io.inst.fu === fu_bra
+  io.bres.bwen := io.bres.isb &&
     MuxLookup(io.inst.fuop, false.B)(
       Seq(
         bra_beq    -> eqRes,
@@ -40,5 +44,6 @@ class BranchCtrl extends Module {
         bra_bltzal -> ltzRes,
       ),
     )
-  io.binfo.bwaddr := io.pc + (io.inst.imm << 2)
+  io.binfo.bwen   := io.bres.bwen =/= io.predict.bwen
+  io.binfo.bwaddr := Mux(io.bres.bwen, io.predict.bwaddr, io.pcNext)
 }

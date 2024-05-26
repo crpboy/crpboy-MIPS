@@ -8,9 +8,10 @@ import cpu.common.const.Const._
 
 class FetchUnit extends Module {
   val io = IO(new Bundle {
-    val iCache = new ICacheIO
-    val jinfo  = Input(new JmpInfo)
-    val binfo  = Input(new BraInfo)
+    val iCache  = new ICacheIO
+    val jinfo   = Input(new JmpInfo)
+    val execute = new Bundle { val binfo = Input(new BraInfo) }
+    val decode  = new Bundle { val binfo = Input(new BraInfo) }
     val cp0 = Input(new Bundle {
       val isex   = Input(Bool())
       val eret   = Input(Bool())
@@ -27,8 +28,8 @@ class FetchUnit extends Module {
   })
   val output = io.out.bits
 
-  val ctrlSignal = io.ctrl.getStall || io.ctrl.ex
-  val exSignal   = io.cp0.isex      || io.cp0.eret
+  val ctrlSignal = io.ctrl.stall || io.ctrl.ex
+  val exSignal   = io.cp0.isex   || io.cp0.eret
   val pcReg = RegEnable(
     io.iCache.pcNext,
     (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W),
@@ -38,10 +39,11 @@ class FetchUnit extends Module {
   val pcNext = MuxCase(
     pcNextTmp,
     Seq(
-      io.cp0.isex   -> EX_INIT_ADDR.U,
-      io.cp0.eret   -> io.cp0.eretpc,
-      io.jinfo.jwen -> io.jinfo.jwaddr,
-      io.binfo.bwen -> io.binfo.bwaddr,
+      io.cp0.isex           -> EX_INIT_ADDR.U,
+      io.cp0.eret           -> io.cp0.eretpc,
+      io.jinfo.jwen         -> io.jinfo.jwaddr,
+      io.execute.binfo.bwen -> io.execute.binfo.bwaddr,
+      io.decode.binfo.bwen  -> io.decode.binfo.bwaddr,
     ),
   )
   val resetTmp = RegNext(reset)

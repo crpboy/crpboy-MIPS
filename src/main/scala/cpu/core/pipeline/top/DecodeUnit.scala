@@ -13,6 +13,8 @@ class DecodeUnit extends Module {
     val wb      = Input(new WBInfo)
     val jinfo   = Output(new JmpInfo)
     val ctrlreq = Output(new CtrlRequest)
+    val binfo   = Output(new BraInfo)
+    val execute = new Bundle { val bres = Input(new BraResult) }
     val fetch   = new Bundle { val isJmp = Output(Bool()) }
 
     val exeDHazard = Input(new DataHazardExe)
@@ -27,6 +29,7 @@ class DecodeUnit extends Module {
   val decoder = Module(new Decoder).io
   val reg     = Module(new RegFile).io
   val jmp     = Module(new JumpCtrl).io
+  val bpu     = Module(new BranchPredict).io
 
   val input  = io.in.bits
   val output = io.out.bits
@@ -64,6 +67,13 @@ class DecodeUnit extends Module {
   io.ctrl          <> jmp.ctrl
   io.jinfo.jwen    := jmp.out.jwen
   io.jinfo.jwaddr  := jmp.out.jwaddr
+
+  // branch
+  bpu.inst := input.inst
+  bpu.pc   := input.pc
+  bpu.isb  := decoder.instInfo.fu === fu_bra
+  bpu.bres := io.execute.bres
+  io.binfo := bpu.binfo
 
   // except
   val except   = WireDefault(input.exInfo)
@@ -110,6 +120,7 @@ class DecodeUnit extends Module {
   output.op1      := rsdata
   output.op2      := rtdata
   output.pc       := input.pc
+  output.binfo    := bpu.binfo
   output.debug_pc := input.debug_pc
   output.rsaddr   := decoder.rsaddr
   output.rtaddr   := decoder.rtaddr
