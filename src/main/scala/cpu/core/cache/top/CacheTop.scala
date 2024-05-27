@@ -15,8 +15,8 @@ class CacheTop extends Module {
   })
   val sIdle :: sInst :: sData :: Nil = Enum(3)
 
-  val iCache = Module(new ICache).io
-  val dCache = Module(new DCache).io
+  val iCache = Module(new ICacheInterface).io
+  val dCache = Module(new DCacheInterface).io
   io.iCache <> iCache.core
   io.dCache <> dCache.core
 

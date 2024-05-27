@@ -6,13 +6,18 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
-class ICache extends Module {
+class ICacheInterface extends Module {
   val io = IO(new Bundle {
     val core    = Flipped(new ICacheIO)
     val axi     = new AXIInst
     val working = Output(Bool())
   })
-  val sIdle :: sRead0 :: sRead1 :: sWait :: Nil = Enum(4)
+  val (sIdle
+    :: suRead0
+    :: suRead1
+    :: suWait
+    :: scWait
+    :: Nil) = Enum(5)
 
   val state   = RegInit(sIdle)
   val addrReg = RegInit(0.U(ADDR_WIDTH.W))
@@ -32,35 +37,35 @@ class ICache extends Module {
       when(io.core.valid) {
         stall   := true.B
         addrReg := io.core.pcNext
-        state   := sRead0
+        state   := suRead0
       }
     }
-    is(sRead0) {
+    is(suRead0) {
       stall   := true.B
       arvalid := true.B
       when(ar.ready) {
-        state := sRead1
+        state := suRead1
       }
     }
-    is(sRead1) {
+    is(suRead1) {
       when(r.valid) {
         when(io.core.pcNext =/= addrReg) {
           stall   := true.B
           addrReg := io.core.pcNext
-          state   := sRead0
+          state   := suRead0
           // same as idle -> read0
         }.elsewhen(io.core.coreReady) {
           dataReg := r.bits.data
           state   := sIdle
         }.otherwise {
           dataTmp := r.bits.data
-          state   := sWait
+          state   := suWait
         }
       }.otherwise {
         stall := true.B
       }
     }
-    is(sWait) {
+    is(suWait) {
       working := false.B
       when(io.core.coreReady) {
         dataReg := dataTmp

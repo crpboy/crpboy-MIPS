@@ -6,13 +6,35 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
-class DCache extends Module {
+class DCacheInterface extends Module {
   val io = IO(new Bundle {
     val core    = Flipped(new DCacheIO)
     val axi     = new AXI
     val working = Output(Bool())
   })
-  val sIdle :: srAddr :: srData :: srWait :: swBoth :: swAddr :: swData :: swWait :: Nil = Enum(8)
+
+  // dCache state table
+  // don't change order
+  val (sIdle ::
+
+    // read uncached
+    sruAddr ::
+    sruData ::
+    sruWait ::
+
+    // read cached
+    srcWait ::
+
+    // write uncached
+    swuBoth ::
+    swuAddr ::
+    swuData ::
+    swuWait ::
+
+    // write cached
+    swcWait ::
+
+    Nil) = Enum(10)
 
   val state   = RegInit(sIdle)
   val dataTmp = RegInit(0.U(DATA_WIDTH.W))
@@ -39,37 +61,37 @@ class DCache extends Module {
     is(sIdle) {
       when(isRead) {
         stall := true.B
-        state := srAddr
+        state := sruAddr
       }.otherwise {
         working := false.B
         when(isWrite) {
           stall := true.B
-          state := swBoth
+          state := swuBoth
         }
       }
     }
 
     // read
-    is(srAddr) {
+    is(sruAddr) {
       arvalid := true.B
       stall   := true.B
       when(ar.ready) {
-        state := srData
+        state := sruData
       }
     }
-    is(srData) {
+    is(sruData) {
       when(r.valid) {
         when(io.core.coreReady) {
           state := sIdle
         }.otherwise {
           dataTmp := r.bits.data
-          state   := srWait
+          state   := sruWait
         }
       }.otherwise {
         stall := true.B
       }
     }
-    is(srWait) {
+    is(sruWait) {
       working := false.B
       memData := dataTmp
       when(io.core.coreReady) {
@@ -78,7 +100,7 @@ class DCache extends Module {
     }
 
     // write
-    is(swBoth) {
+    is(swuBoth) {
       awvalid := true.B
       wvalid  := true.B
       when(aw.ready && w.ready) {
@@ -86,28 +108,28 @@ class DCache extends Module {
       }.otherwise {
         stall := true.B
         when(aw.ready) {
-          state := swData
+          state := swuData
         }.elsewhen(w.ready) {
-          state := swAddr
+          state := swuAddr
         }
       }
     }
-    is(swData) {
+    is(swuData) {
       wvalid := true.B
       when(w.ready) {
-        state := swWait
+        state := swuWait
       }.otherwise {
         stall := true.B
       }
     }
-    is(swAddr) {
+    is(swuAddr) {
       awvalid := true.B
-      stall := true.B
+      stall   := true.B
       when(aw.ready) {
-        state := swWait
+        state := swuWait
       }
     }
-    is(swWait) {
+    is(swuWait) {
       stall := true.B
       when(b.valid) {
         state := sIdle
@@ -115,7 +137,7 @@ class DCache extends Module {
     }
   }
 
-  when(state > srWait) {
+  when(state >= swuBoth) {
     working := false.B
   }
 
