@@ -6,35 +6,31 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
-class DCacheInterface extends Module {
-  val io = IO(new Bundle {
-    val core    = Flipped(new DCacheIO)
-    val axi     = new AXI
-    val working = Output(Bool())
-  })
-
-  // dCache state table
-  // don't change order
+// don't change order
+trait DCacheStateTable {
   val (sIdle ::
-
     // read uncached
     sruAddr ::
     sruData ::
     sruWait ::
-
     // read cached
     srcWait ::
-
     // write uncached
     swuBoth ::
     swuAddr ::
     swuData ::
     swuWait ::
-
     // write cached
     swcWait ::
-
     Nil) = Enum(10)
+}
+
+class DCache extends Module with DCacheStateTable {
+  val io = IO(new Bundle {
+    val core    = Flipped(new DCacheIO)
+    val axi     = new AXI
+    val working = Output(Bool())
+  })
 
   val state   = RegInit(sIdle)
   val dataTmp = RegInit(0.U(DATA_WIDTH.W))

@@ -8,6 +8,7 @@ trait ConstWidth {
   val ADDR_WIDTH      = 32
   val ADDR_INST_WIDTH = 32
   val DATA_WIDTH      = 32
+  val BYTE_WIDTH      = 8
   val INST_WIDTH      = 32
   val PC_WIDTH        = ADDR_WIDTH
 
@@ -24,6 +25,21 @@ trait ConstWidth {
   // branch predict
   val BPU_BHT_WIDTH   = 6
   val BPU_INDEX_WIDTH = 6
+
+  // cache
+  val CACHE_OFFSET_WIDTH = 4
+  val CACHE_INDEX_WIDTH  = 8
+  val CACHE_TAG_WIDTH    = DATA_WIDTH - CACHE_INDEX_WIDTH - CACHE_OFFSET_WIDTH
+
+  val CACHE_WAY_WIDTH = 1
+  val CACHE_WAY_NUM   = 1 << CACHE_WAY_WIDTH
+
+  val CACHE_LINE_BYTE_NUM = 1 << CACHE_OFFSET_WIDTH
+  val CACHE_LINE_WIDTH    = CACHE_LINE_BYTE_NUM * BYTE_WIDTH
+  val CACHE_LINE_DEPTH    = 1 << CACHE_INDEX_WIDTH
+
+  val CACHE_BANK_WIDTH = DATA_WIDTH
+  val CACHE_BANK_NUM   = CACHE_LINE_WIDTH / CACHE_BANK_WIDTH
 
   // others
   val CTRL_WIDTH      = 5

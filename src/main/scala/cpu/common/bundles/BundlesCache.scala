@@ -6,7 +6,8 @@ import cpu.common.const.Const._
 
 class ICacheIO extends Bundle {
   val valid     = Output(Bool())
-  val pcNext    = Output(UInt(PC_WIDTH.W))
+  val uncached  = Output(Bool())
+  val addr      = Output(UInt(PC_WIDTH.W))
   val coreReady = Output(Bool())
   val data      = Input(UInt(DATA_WIDTH.W))
   val stall     = Input(Bool())

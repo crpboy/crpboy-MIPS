@@ -28,4 +28,13 @@ object Functions {
   def bhtUpdate(data: UInt, bit: Bool): UInt = {
     Cat(data(data.getWidth - 2, 1), bit)
   }
+  def cacheGetTag(data: UInt): UInt = {
+    data(data.getWidth - 1, CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH)
+  }
+  def cacheGetIndex(data: UInt): UInt = {
+    data(CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH - 1, CACHE_OFFSET_WIDTH)
+  }
+  def cacheGetOffset(data: UInt): UInt = {
+    data(CACHE_OFFSET_WIDTH - 1, 0)
+  }
 }

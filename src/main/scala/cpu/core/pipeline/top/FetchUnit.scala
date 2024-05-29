@@ -21,8 +21,7 @@ class FetchUnit extends Module {
       val decode  = Input(Bool())
       val execute = Input(Bool())
     })
-    val ctrl = Input(new CtrlInfo)
-
+    val ctrl    = Input(new CtrlInfo)
     val ctrlreq = Output(new CtrlRequest)
     val out     = Decoupled(new StageFetchDecode)
   })
@@ -31,7 +30,7 @@ class FetchUnit extends Module {
   val ctrlSignal = io.ctrl.stall || io.ctrl.ex
   val exSignal   = io.cp0.isex   || io.cp0.eret
   val pcReg = RegEnable(
-    io.iCache.pcNext,
+    io.iCache.addr,
     (PC_INIT_ADDR_SUB.U)(PC_WIDTH.W),
     !io.iCache.stall && (!ctrlSignal || exSignal),
   )
@@ -47,9 +46,10 @@ class FetchUnit extends Module {
     ),
   )
   val resetTmp = RegNext(reset)
-  io.iCache.pcNext    := pcNext
+  io.iCache.addr      := pcNext
   io.iCache.valid     := !(reset.asBool)
   io.iCache.coreReady := !io.ctrl.getStall
+  io.iCache.uncached  := false.B
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 
