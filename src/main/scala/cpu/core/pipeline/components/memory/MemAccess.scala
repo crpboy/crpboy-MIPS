@@ -20,7 +20,6 @@ class MemAccess extends Module {
   val rdata  = io.dCache.resp.data
   val isload = io.inst.fu === fu_mem && io.inst.wb
   io.dCache.req.info := io.reqInfo
-  val done = RegInit(false.B)
   val word = Mux(
     io.inst.fuop === _mem_lw,
     rdata,

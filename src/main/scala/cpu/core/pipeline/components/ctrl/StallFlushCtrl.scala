@@ -8,14 +8,14 @@ import cpu.common.const.Const._
 
 class StallFlushCtrl extends Module {
   val io = IO(new Bundle {
-    val ifreq       = Input(new CtrlRequest)
-    val idreq       = Input(new CtrlRequest)
-    val exereq      = Input(new CtrlRequestExecute)
-    val memreq      = Input(new CtrlRequest)
-    val wbreq       = Input(new CtrlRequest)
-    val dCacheStall = Input(Bool())
-    val stall       = Output(UInt(CTRL_WIDTH.W))
-    val flush       = Output(UInt(CTRL_WIDTH.W))
+    val ifreq  = Input(new CtrlRequest)
+    val idreq  = Input(new CtrlRequest)
+    val exereq = Input(new CtrlRequestExecute)
+    val memreq = Input(new CtrlRequest)
+    val wbreq  = Input(new CtrlRequest)
+    val stall  = Output(UInt(CTRL_WIDTH.W))
+    val bubble = Output(UInt(CTRL_WIDTH.W))
+    val flush  = Output(UInt(CTRL_WIDTH.W))
   })
   val block: UInt = Cat(
     io.ifreq.block,
@@ -24,7 +24,6 @@ class StallFlushCtrl extends Module {
     io.memreq.block,
     io.wbreq.block,
   )
-  // clear : the inst in this unit will be passed, pre inst will be flush
   val clear: UInt = Cat(
     io.ifreq.clear,
     io.idreq.clear,
@@ -32,24 +31,31 @@ class StallFlushCtrl extends Module {
     io.memreq.clear,
     io.wbreq.clear,
   )
+  val branch = io.exereq.branchPause
 
-  val ifstall = block(4) | block(3) | block(2) | block(1) | block(0)
-  val ifflush = clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
+  val ifstall  = block(4) | block(3) | block(2) | block(1) | block(0)
+  val ifbubble = false.B
+  val ifflush  = clear(4) | clear(3) | clear(2) | clear(1) | clear(0)
 
-  val idstall = block(3) | block(2) | block(1) | block(0)
-  val idflush = block(4) | clear(3) | clear(2) | clear(1) | clear(0) | io.exereq.branchPause
+  val idstall  = block(3) | block(2) | block(1) | block(0)
+  val idbubble = block(4) | branch
+  val idflush  = clear(3) | clear(2) | clear(1) | clear(0)
 
-  val exestall = block(2) | block(1) | block(0)
-  val exeflush = block(3) | clear(2) | clear(1) | clear(0)
+  val exestall  = block(2) | block(1) | block(0)
+  val exebubble = block(3)
+  val exeflush  = clear(2) | clear(1) | clear(0)
 
-  val memstall = block(1) | block(0)
-  val memflush = block(2) | clear(1) | clear(0)
+  val memstall  = block(1) | block(0)
+  val membubble = block(2)
+  val memflush  = clear(1) | clear(0)
 
-  val wbstall = block(0)
-  val wbflush = block(1) | clear(0) // | io.dCacheStall
+  val wbstall  = block(0)
+  val wbbubble = block(1)
+  val wbflush  = clear(0)
 
-  io.stall := Cat(ifstall, idstall, exestall, memstall, wbstall)
-  io.flush := Cat(ifflush, idflush, exeflush, memflush, wbflush)
+  io.stall  := Cat(ifstall, idstall, exestall, memstall, wbstall)
+  io.flush  := Cat(ifflush, idflush, exeflush, memflush, wbflush)
+  io.bubble := Cat(ifbubble, idbubble, exebubble, membubble, wbbubble)
 }
 
 /*

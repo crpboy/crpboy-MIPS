@@ -6,7 +6,7 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
-class FetchUnit extends Module {
+class FetchUnit extends Module with Config {
   val io = IO(new Bundle {
     val iCache  = new ICacheIO
     val jinfo   = Input(new JmpInfo)
@@ -48,8 +48,8 @@ class FetchUnit extends Module {
   val resetTmp = RegNext(reset)
   io.iCache.addr      := pcNext
   io.iCache.valid     := !(reset.asBool)
-  io.iCache.coreReady := !io.ctrl.getStall
-  io.iCache.uncached  := false.B
+  io.iCache.coreReady := !io.ctrl.stall
+  io.iCache.uncached  := isUncached.B // false.B
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 

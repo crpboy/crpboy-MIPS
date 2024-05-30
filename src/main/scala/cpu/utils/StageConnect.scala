@@ -23,15 +23,20 @@ object StageConnect {
     zero.pc       := mydata.pc
     zero.slot     := mydata.slot
 
-    val stallSignal = ctrl.stall || ctrl.cache.iStall
-    val flushSignal = ctrl.flush || ctrl.ex
+    val stallSignal  = ctrl.stall  || ctrl.cache.iStall
+    val bubbleSignal = ctrl.bubble || ctrl.ex
+    val flushSignal  = ctrl.flush
+
+    val strongFlush = flushSignal && !ctrl.cache.iStall
+    val weakFlush   = bubbleSignal || flushSignal
 
     when(right.fire) {
       reg := MuxCase(
         predata,
         Seq(
+          strongFlush -> zero,
           stallSignal -> mydata,
-          flushSignal -> zero,
+          weakFlush   -> zero,
         ),
       )
     }

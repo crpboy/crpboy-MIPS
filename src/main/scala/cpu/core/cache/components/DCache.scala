@@ -20,9 +20,10 @@ trait DCacheStateTable {
     swuAddr ::
     swuData ::
     swuWait ::
+    swuWaitCore ::
     // write cached
     swcWait ::
-    Nil) = Enum(10)
+    Nil) = Enum(11)
 }
 
 class DCache extends Module with DCacheStateTable {
@@ -47,7 +48,6 @@ class DCache extends Module with DCacheStateTable {
 
   val stall   = WireDefault(false.B)
   val working = WireDefault(true.B)
-  val rsent   = WireDefault(false.B)
   val memData = WireDefault(io.axi.r.bits.data)
 
   val req     = io.core.req.info
@@ -129,8 +129,19 @@ class DCache extends Module with DCacheStateTable {
       stall := true.B
       when(b.valid) {
         state := sIdle
+        // when(io.core.coreReady) {
+        //   state := sIdle
+        // }.otherwise {
+        //   state := swuWaitCore
+        // }
       }
     }
+  //   is(swuWaitCore) {
+  //     stall := true.B
+  //     when(io.core.coreReady) {
+  //       state := sIdle
+  //     }
+  //   }
   }
 
   when(state >= swuBoth) {

@@ -33,3 +33,14 @@ class DCacheIO extends Bundle {
   val coreReady = Output(Bool())
   val stall     = Input(Bool())
 }
+
+class CacheLine extends Bundle {
+  val bits = Vec(CACHE_BANK_NUM, UInt(DATA_WIDTH.W))
+  def read(id: UInt): UInt = {
+    bits(id)
+  }
+  def write(id: UInt, value: UInt): Unit = {
+    bits(id) := value
+    val valueWidth = value.getWidth
+  }
+}

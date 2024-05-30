@@ -12,6 +12,10 @@ trait Config {
   // 是否处于统计状态
   val isStatistic = true
 
+  // debug
+  val isDebug    = true
+  val isUncached = false
+
   // 乘除法器需要的时钟周期
   // 上板时除法使用握手信号，不需要给定周期
   val mulClockNum = 2

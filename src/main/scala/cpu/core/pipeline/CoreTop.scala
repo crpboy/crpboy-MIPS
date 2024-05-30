@@ -39,12 +39,11 @@ class CoreTop extends Module {
   io.dCache <> memory.dCache
 
   // stall and flush control
-  sfCtrl.ifreq       <> fetch.ctrlreq
-  sfCtrl.idreq       <> decode.ctrlreq
-  sfCtrl.exereq      <> execute.ctrlreq
-  sfCtrl.memreq      <> memory.ctrlreq
-  sfCtrl.wbreq       <> writeback.ctrlreq
-  sfCtrl.dCacheStall <> io.dCache.stall
+  sfCtrl.ifreq  <> fetch.ctrlreq
+  sfCtrl.idreq  <> decode.ctrlreq
+  sfCtrl.exereq <> execute.ctrlreq
+  sfCtrl.memreq <> memory.ctrlreq
+  sfCtrl.wbreq  <> writeback.ctrlreq
 
   sfCtrl.stall(4) <> fetch.ctrl.stall
   sfCtrl.stall(3) <> decode.ctrl.stall
@@ -57,6 +56,12 @@ class CoreTop extends Module {
   sfCtrl.flush(2) <> execute.ctrl.flush
   sfCtrl.flush(1) <> memory.ctrl.flush
   sfCtrl.flush(0) <> writeback.ctrl.flush
+
+  sfCtrl.bubble(4) <> fetch.ctrl.bubble
+  sfCtrl.bubble(3) <> decode.ctrl.bubble
+  sfCtrl.bubble(2) <> execute.ctrl.bubble
+  sfCtrl.bubble(1) <> memory.ctrl.bubble
+  sfCtrl.bubble(0) <> writeback.ctrl.bubble
 
   // cache stall ctrl
   io.iCache.stall <> fetch.ctrl.cache.iStall
