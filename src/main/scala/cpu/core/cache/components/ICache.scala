@@ -137,6 +137,22 @@ class ICache extends Module with ICacheStateTable with Config {
     }
   }
 
+  // statistic
+  val debug_totalAddSignal   = WireDefault(false.B)
+  val debug_successAddSignal = WireDefault(false.B)
+  if (isStatistic) {
+    val debug_total   = RegInit(0.U(DATA_WIDTH.W))
+    val debug_success = RegInit(0.U(DATA_WIDTH.W))
+    dontTouch(debug_total)
+    dontTouch(debug_success)
+    when(debug_totalAddSignal) {
+      debug_total := debug_total + 1.U
+    }
+    when(debug_successAddSignal) {
+      debug_success := debug_success + 1.U
+    }
+  }
+
   switch(state) {
     is(sIdle) {
       working := false.B
@@ -147,14 +163,20 @@ class ICache extends Module with ICacheStateTable with Config {
           addrReg     := io.core.addr
           state       := suRead0
           lastIsCache := false.B
-        }.elsewhen(!overallHit && lastIsCache) {
-          // cache miss: idle -> replace0
-          // missing target is the last addr
-          stall := true.B
-          state := scReplace0
-        }.elsewhen(io.core.coreReady) {
-          addrReg     := io.core.addr
-          lastIsCache := true.B
+        }.otherwise {
+          if (isStatistic) { debug_totalAddSignal := true.B }
+          when(!overallHit && lastIsCache) {
+            // cache miss: idle -> replace0
+            // missing target is the last addr
+            stall := true.B
+            state := scReplace0
+          }.otherwise {
+            if (isStatistic) { debug_successAddSignal := true.B }
+            when(io.core.coreReady) {
+              addrReg     := io.core.addr
+              lastIsCache := true.B
+            }
+          }
         }
       }
     }
