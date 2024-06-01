@@ -23,8 +23,8 @@ endef
 # sed -i 's/\bint_0\b/int/g' $(TOP_HOME)
 # sed -i 's/\bassign CoreTop_reset = resetn\b/assign CoreTop_reset = ~resetn/g' $(TOP_HOME)
 
-SIMULATOR_HOME = ./soc-simulator/work
-CPY_HOME1 = ./soc-simulator/resource/mycpu/mycpu_top.sv
+SIMULATOR_HOME = ./simulator/work
+CPY_HOME1 = ./simulator/resource/mycpu/mycpu_top.sv
 CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab11/CPU_CDE_AXI/mycpu_axi_verify/rtl/myCPU/mycpu_top.v
 
 define COPYFILE_COMMAND
@@ -61,7 +61,7 @@ run:
 	@cd $(SIMULATOR_HOME) && make clean
 	@cd $(SIMULATOR_HOME) && make
 	@cd $(SIMULATOR_HOME) && make trace
-	@cd $(SIMULATOR_HOME) && make perf
+# @cd $(SIMULATOR_HOME) && make perf
 # @$(SOC_SIM_WAVE_COMMAND)
 
 wave:

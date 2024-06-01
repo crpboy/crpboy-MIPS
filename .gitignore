@@ -16,3 +16,4 @@ simulator/
 soc-simulator/
 src/main/scala/resources
 mycpu_top.sv
+tmp/
