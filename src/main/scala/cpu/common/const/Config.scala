@@ -13,8 +13,9 @@ trait Config {
   val isStatistic = true
 
   // debug
-  val isDebug    = true
-  val isUncached = false
+  val isDebug       = true
+  val isNormalCache = false
+  val isAllUncached = false
 
   // 乘除法器需要的时钟周期
   // 上板时除法使用握手信号，不需要给定周期

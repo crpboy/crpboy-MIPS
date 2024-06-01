@@ -28,9 +28,9 @@ class MemReq extends Module {
   io.reqInfo.valid := en && !io.exLoad && !io.exStore && !io.ctrl.ex
   io.reqInfo.wen   := !io.inst.wb
   io.reqInfo.addr := Mux(
-    io.inst.fuop === mem_lwl || io.inst.fuop === mem_swl,
+    io.inst.fu === _mem_store || io.inst.fuop === mem_lwl || io.inst.fuop === mem_swl,
+    Cat(vaddr(ADDR_WIDTH - 1, 2), 0.U(2.W)),
     vaddr,
-    Cat(vaddr(DATA_WIDTH - 1, 2), 0.U(2.W)),
   )
   io.reqInfo.size := MuxLookup(io.inst.fuop, 0.U)(
     Seq(

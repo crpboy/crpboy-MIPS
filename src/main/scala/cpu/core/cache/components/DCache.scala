@@ -53,6 +53,8 @@ class DCache extends Module with DCacheStateTable {
   val req     = io.core.req.info
   val isRead  = req.valid && !req.wen
   val isWrite = req.valid && req.wen
+  val addr    = Mux(io.core.unmappped, Cat(0.U(3.W), req.addr(28, 0)), req.addr)
+
   switch(state) {
     is(sIdle) {
       when(isRead) {
@@ -136,12 +138,12 @@ class DCache extends Module with DCacheStateTable {
         // }
       }
     }
-  //   is(swuWaitCore) {
-  //     stall := true.B
-  //     when(io.core.coreReady) {
-  //       state := sIdle
-  //     }
-  //   }
+    //   is(swuWaitCore) {
+    //     stall := true.B
+    //     when(io.core.coreReady) {
+    //       state := sIdle
+    //     }
+    //   }
   }
 
   when(state >= swuBoth) {
@@ -161,7 +163,7 @@ class DCache extends Module with DCacheStateTable {
   ar.bits.prot  := 0.U
   ar.bits.cache := 0.U
   ar.bits.size  := req.size
-  ar.bits.addr  := req.addr
+  ar.bits.addr  := addr
 
   // axi (aw)
   aw.bits.id    := 1.U
@@ -171,7 +173,7 @@ class DCache extends Module with DCacheStateTable {
   aw.bits.prot  := 0.U
   aw.bits.cache := 0.U
   aw.bits.size  := req.size
-  aw.bits.addr  := req.addr
+  aw.bits.addr  := addr
 
   // axi (w)
   w.bits.id   := 1.U

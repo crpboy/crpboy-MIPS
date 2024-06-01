@@ -37,4 +37,10 @@ object Functions {
   def cacheGetOffset(data: UInt): UInt = {
     data(CACHE_OFFSET_WIDTH - 1, 0)
   }
+  def mmuJudgeUnmapped(addr: UInt): Bool = {
+    KSEG0_BEGIN <= addr && addr < KSEG2_BEGIN
+  }
+  def mmuJudgeUncached(addr: UInt): Bool = {
+    KSEG1_BEGIN <= addr && addr < KSEG2_BEGIN
+  }
 }

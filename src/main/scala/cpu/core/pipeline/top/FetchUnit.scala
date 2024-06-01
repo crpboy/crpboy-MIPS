@@ -5,6 +5,7 @@ import chisel3.util._
 import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
+import cpu.utils.Functions._
 
 class FetchUnit extends Module with Config {
   val io = IO(new Bundle {
@@ -48,8 +49,10 @@ class FetchUnit extends Module with Config {
   val resetTmp = RegNext(reset)
   io.iCache.addr      := pcNext
   io.iCache.valid     := !(reset.asBool)
-  io.iCache.coreReady := !io.ctrl.stall
-  io.iCache.uncached  := isUncached.B // false.B
+  io.iCache.coreReady := !io.ctrl.stall 
+  io.iCache.uncached := (if (isNormalCache) { mmuJudgeUncached(io.iCache.addr) }
+                         else { isAllUncached.B })
+  io.iCache.unmappped := mmuJudgeUnmapped(io.iCache.addr)
 
   val except = WireDefault(0.U.asTypeOf(new ExInfo))
 

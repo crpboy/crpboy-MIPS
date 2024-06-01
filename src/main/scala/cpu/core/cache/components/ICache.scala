@@ -73,9 +73,11 @@ class ICache extends Module with ICacheStateTable with Config {
   val lastIsCache = RegInit(false.B)
 
   // get cur & last addr info
-  val curTag    = cacheGetTag(io.core.addr)
-  val curIndex  = cacheGetIndex(io.core.addr)
-  val curOffset = cacheGetOffset(io.core.addr)
+  val addr = Mux(io.core.unmappped, Cat(0.U(3.W), io.core.addr(28, 0)), io.core.addr)
+
+  val curTag    = cacheGetTag(addr)
+  val curIndex  = cacheGetIndex(addr)
+  val curOffset = cacheGetOffset(addr)
 
   val lastTag    = cacheGetTag(addrReg)
   val lastIndex  = cacheGetIndex(addrReg)
@@ -160,7 +162,7 @@ class ICache extends Module with ICacheStateTable with Config {
         when(io.core.uncached) {
           // uncached: idle -> read0
           stall       := true.B
-          addrReg     := io.core.addr
+          addrReg     := addr
           state       := suRead0
           lastIsCache := false.B
         }.otherwise {
@@ -173,7 +175,7 @@ class ICache extends Module with ICacheStateTable with Config {
           }.otherwise {
             if (isStatistic) { debug_successAddSignal := true.B }
             when(io.core.coreReady) {
-              addrReg     := io.core.addr
+              addrReg     := addr
               lastIsCache := true.B
             }
           }
@@ -217,7 +219,7 @@ class ICache extends Module with ICacheStateTable with Config {
       stall     := false.B
       writeSram := true.B
       when(io.core.coreReady) {
-        addrReg     := io.core.addr
+        addrReg     := addr
         state       := sIdle
         lastIsCache := true.B
       }
@@ -233,10 +235,10 @@ class ICache extends Module with ICacheStateTable with Config {
     }
     is(suRead1) {
       when(r.valid) {
-        when(io.core.addr =/= addrReg) {
+        when(addr =/= addrReg) {
           // same as idle -> read0
           stall   := true.B
-          addrReg := io.core.addr
+          addrReg := addr
           state   := suRead0
         }.elsewhen(io.core.coreReady) {
           dataReg := r.bits.data

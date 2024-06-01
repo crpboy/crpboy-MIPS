@@ -6,6 +6,7 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.core.cache.components._
+import dataclass.data
 
 class CacheTop extends Module {
   val io = IO(new Bundle {
@@ -20,8 +21,7 @@ class CacheTop extends Module {
   io.iCache <> iCache.core
   io.dCache <> dCache.core
 
-  val state       = RegInit(sIdle)
-  val dataWorking = state === sData
+  val state = RegInit(sIdle)
   switch(state) {
     is(sIdle) {
       when(dCache.working) {
@@ -50,19 +50,33 @@ class CacheTop extends Module {
     }
   }
 
-  val select = !dataWorking
-  io.axi.ar.bits := Mux(select, iCache.axi.ar.bits, dCache.axi.ar.bits)
+  val instWorking = state === sInst
+  val dataWorking = state === sData
+
+  io.axi.ar.bits := Mux(instWorking, iCache.axi.ar.bits, dCache.axi.ar.bits)
   io.axi.r.bits  <> iCache.axi.r.bits
   io.axi.r.bits  <> dCache.axi.r.bits
 
-  iCache.axi.r.valid := Mux(select, io.axi.r.valid, false.B)
-  dCache.axi.r.valid := Mux(select, false.B, io.axi.r.valid)
+  iCache.axi.r.valid := Mux(instWorking, io.axi.r.valid, false.B)
+  dCache.axi.r.valid := Mux(dataWorking, io.axi.r.valid, false.B)
 
-  iCache.axi.ar.ready := Mux(select, io.axi.ar.ready, false.B)
-  dCache.axi.ar.ready := Mux(select, false.B, io.axi.ar.ready)
+  iCache.axi.ar.ready := Mux(instWorking, io.axi.ar.ready, false.B)
+  dCache.axi.ar.ready := Mux(dataWorking, io.axi.ar.ready, false.B)
 
-  io.axi.r.ready  := Mux(select, iCache.axi.r.ready, dCache.axi.r.ready)
-  io.axi.ar.valid := Mux(select, iCache.axi.ar.valid, dCache.axi.ar.valid)
+  io.axi.r.ready := MuxCase(
+    false.B,
+    Seq(
+      instWorking -> iCache.axi.r.ready,
+      dataWorking -> dCache.axi.r.ready,
+    ),
+  )
+  io.axi.ar.valid := MuxCase(
+    false.B,
+    Seq(
+      instWorking -> iCache.axi.ar.valid,
+      dataWorking -> dCache.axi.ar.valid,
+    ),
+  )
 
   io.axi.aw <> dCache.axi.aw
   io.axi.w  <> dCache.axi.w

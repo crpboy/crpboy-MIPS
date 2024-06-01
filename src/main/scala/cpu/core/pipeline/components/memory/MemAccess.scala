@@ -7,7 +7,7 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
 
-class MemAccess extends Module {
+class MemAccess extends Module with Config {
   val io = IO(new Bundle {
     val reqInfo = Input(new MemReqInfo)
     val dCache  = new DCacheIO
@@ -80,4 +80,9 @@ class MemAccess extends Module {
   )
   io.out              := data
   io.dCache.coreReady := !io.ctrl.stall && !io.ctrl.cache.iStall
+
+  val reqAddr = io.dCache.req.info.addr
+  io.dCache.uncached := (if (isNormalCache) { mmuJudgeUncached(reqAddr) }
+                         else { isAllUncached.B })
+  io.dCache.unmappped := mmuJudgeUnmapped(reqAddr)
 }

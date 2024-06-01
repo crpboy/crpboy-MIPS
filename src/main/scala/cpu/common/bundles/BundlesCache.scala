@@ -4,9 +4,13 @@ import chisel3._
 import chisel3.util._
 import cpu.common.const.Const._
 
-class ICacheIO extends Bundle {
-  val valid     = Output(Bool())
+class CacheIOBase extends Bundle {
   val uncached  = Output(Bool())
+  val unmappped = Output(Bool())
+}
+
+class ICacheIO extends CacheIOBase {
+  val valid     = Output(Bool())
   val addr      = Output(UInt(PC_WIDTH.W))
   val coreReady = Output(Bool())
   val data      = Input(UInt(DATA_WIDTH.W))
@@ -27,7 +31,7 @@ class DCacheIOReq extends Bundle {
 class DCacheIOResp extends Bundle {
   val data = Input(UInt(DATA_WIDTH.W))
 }
-class DCacheIO extends Bundle {
+class DCacheIO extends CacheIOBase {
   val req       = new DCacheIOReq
   val resp      = new DCacheIOResp
   val coreReady = Output(Bool())

@@ -7,7 +7,14 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
 
-class BranchPredict extends Module {
+trait BranchPredictStateTable {
+  val sStronglyTaken    = "b10".U
+  val sWeaklyTaken      = "b11".U
+  val sWeaklyNotTaken   = "b01".U
+  val sStronglyNotTaken = "b00".U
+}
+
+class BranchPredict extends Module with BranchPredictStateTable {
   val io = IO(new Bundle {
     val ctrl  = Input(new CtrlInfo)
     val pc    = Input(UInt(PC_WIDTH.W))
@@ -16,7 +23,8 @@ class BranchPredict extends Module {
     val binfo = Output(new BraInfo)
     val bres  = Input(new BraResult) // from exe
   })
-  val pht = RegInit(VecInit(Seq.fill(1 << BPU_BHT_WIDTH)("b11".U)))
+
+  val pht = RegInit(VecInit(Seq.fill(1 << BPU_BHT_WIDTH)(sStronglyTaken)))
   val bht = RegInit(VecInit(Seq.fill(1 << BPU_INDEX_WIDTH)(0.U(BPU_BHT_WIDTH.W))))
 
   // cnt train
@@ -25,23 +33,44 @@ class BranchPredict extends Module {
     val pcHash = io.bres.index
 
     val phtId = bht(pcHash)
-    val data  = pht(phtId)
+    val state = pht(phtId)
 
     phtId := bhtUpdate(phtId, bwen)
-    when(bwen) {
-      when(data =/= "b11".U) {
-        data := data + 1.U
+    switch(state) {
+      is(sStronglyTaken) {
+        when(bwen) {
+          state := sStronglyTaken
+        }.otherwise {
+          state := sWeaklyTaken
+        }
       }
-    }.otherwise {
-      when(data =/= "b00".U) {
-        data := data - 1.U
+      is(sWeaklyTaken) {
+        when(bwen) {
+          state := sStronglyTaken
+        }.otherwise {
+          state := sWeaklyNotTaken
+        }
+      }
+      is(sWeaklyNotTaken) {
+        when(bwen) {
+          state := sWeaklyTaken
+        }.otherwise {
+          state := sStronglyNotTaken
+        }
+      }
+      is(sStronglyNotTaken) {
+        when(bwen) {
+          state := sWeaklyNotTaken
+        }.otherwise {
+          state := sStronglyNotTaken
+        }
       }
     }
   }
 
   // send prediction
   val pcHash = io.pc(BPU_INDEX_WIDTH + 1, 2)
-  val phtId = bht(pcHash)
+  val phtId  = bht(pcHash)
   io.binfo.bwen   := Mux(io.isb, (pht(phtId))(1).asBool, false.B)
   io.binfo.bwaddr := io.pc + signedExtend(Cat(io.inst(15, 0), 0.U(2.W)))
 }
