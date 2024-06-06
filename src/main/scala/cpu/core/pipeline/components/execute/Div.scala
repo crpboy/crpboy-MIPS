@@ -46,7 +46,7 @@ class UnsignedDiv extends BlackBox with HasBlackBoxResource {
   })
 }
 
-class Div extends Module with Config {
+class Div extends Module {
   val io = IO(new Bundle {
     val en       = Input(Bool())
     val op1      = Input(UInt(DATA_WIDTH.W))

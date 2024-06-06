@@ -28,7 +28,7 @@ class BranchPredict extends Module with BranchPredictStateTable {
   val bht = RegInit(VecInit(Seq.fill(1 << BPU_INDEX_WIDTH)(0.U(BPU_BHT_WIDTH.W))))
 
   // cnt train
-  when(io.bres.isb && !io.ctrl.stall && !io.ctrl.cache.iStall) {
+  when(io.bres.isb && !io.ctrl.stall && !io.ctrl.iStall) {
     val bwen   = io.bres.bwen
     val pcHash = io.bres.index
 

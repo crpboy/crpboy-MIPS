@@ -43,4 +43,11 @@ object Functions {
   def mmuJudgeUncached(addr: UInt): Bool = {
     KSEG1_BEGIN <= addr && addr < KSEG2_BEGIN
   }
+  def getUncached(addr: UInt): Bool = {
+    if (isNormalCache) {
+      mmuJudgeUncached(addr)
+    } else {
+      isAllUncached.B
+    }
+  }
 }

@@ -6,7 +6,7 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 
-class BranchCtrl extends Module with Config {
+class BranchCtrl extends Module {
   val io = IO(new Bundle {
     val ctrl    = Input(new CtrlInfo)
     val inst    = Input(new InstInfoExt)
@@ -53,7 +53,7 @@ class BranchCtrl extends Module with Config {
     val debug_success = RegInit(0.U(32.W))
     dontTouch(debug_total)
     dontTouch(debug_success)
-    val cango = !io.ctrl.cache.iStall && !io.ctrl.stall
+    val cango = !io.ctrl.iStall && !io.ctrl.stall
     when(cango && io.bres.isb) {
       debug_total := debug_total + 1.U
     }

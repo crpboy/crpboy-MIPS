@@ -7,7 +7,7 @@ import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.utils.Functions._
 
-class FetchUnit extends Module with Config {
+class FetchUnit extends Module {
   val io = IO(new Bundle {
     val iCache  = new ICacheIO
     val jinfo   = Input(new JmpInfo)

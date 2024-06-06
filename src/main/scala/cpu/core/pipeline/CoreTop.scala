@@ -34,9 +34,10 @@ class CoreTop extends Module {
   val cp0    = Module(new CP0).io
 
   // sram connect
-  io.debug  <> writeback.debug
-  io.iCache <> fetch.iCache
-  io.dCache <> memory.dCache
+  io.debug          <> writeback.debug
+  io.iCache         <> fetch.iCache
+  io.dCache.execute <> execute.dCache
+  io.dCache.memory  <> memory.dCache
 
   // stall and flush control
   sfCtrl.ifreq  <> fetch.ctrlreq
@@ -64,17 +65,11 @@ class CoreTop extends Module {
   sfCtrl.bubble(0) <> writeback.ctrl.bubble
 
   // cache stall ctrl
-  io.iCache.stall <> fetch.ctrl.cache.iStall
-  io.iCache.stall <> decode.ctrl.cache.iStall
-  io.iCache.stall <> execute.ctrl.cache.iStall
-  io.iCache.stall <> memory.ctrl.cache.iStall
-  io.iCache.stall <> writeback.ctrl.cache.iStall
-
-  io.dCache.stall <> fetch.ctrl.cache.dStall
-  io.dCache.stall <> decode.ctrl.cache.dStall
-  io.dCache.stall <> execute.ctrl.cache.dStall
-  io.dCache.stall <> memory.ctrl.cache.dStall
-  io.dCache.stall <> writeback.ctrl.cache.dStall
+  io.iCache.stall <> fetch.ctrl.iStall
+  io.iCache.stall <> decode.ctrl.iStall
+  io.iCache.stall <> execute.ctrl.iStall
+  io.iCache.stall <> memory.ctrl.iStall
+  io.iCache.stall <> writeback.ctrl.iStall
 
   io.iCache.stall <> cp0.stall
 

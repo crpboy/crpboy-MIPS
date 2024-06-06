@@ -61,7 +61,7 @@ class TopIO extends Bundle {
   val debug_wb_rf_wdata = Output(UInt(DATA_WIDTH.W))
 }
 
-class mycpu_top extends Module with Config {
+class mycpu_top extends Module {
   val io    = FlatIO(new TopIO)
   val core  = Module(new CoreTop)
   val cache = Module(new CacheTop)

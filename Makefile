@@ -1,6 +1,6 @@
 # Makefile
 
-all: run
+all: trace
 
 .PHONY: all
 
@@ -38,6 +38,13 @@ define SOC_SIM_WAVE_COMMAND
 @cd $(SIMULATOR_HOME) && make wave
 endef
 
+define GENERATE_COMMAND
+$(REPLACE_COMMAND)
+$(COPYFILE_COMMAND)
+@cd $(SIMULATOR_HOME) && make clean
+@cd $(SIMULATOR_HOME) && make
+endef
+
 replace:
 	$(REPLACE_COMMAND)
 
@@ -55,14 +62,20 @@ submit:
 	$(COPYFILE_COMMAND)
 	@echo "submit successfully!"
 
-run:
-	$(REPLACE_COMMAND)
-	$(COPYFILE_COMMAND)
-	@cd $(SIMULATOR_HOME) && make clean
-	@cd $(SIMULATOR_HOME) && make
+gene:
+	$(GENERATE_COMMAND)
+
+trace:
+	$(GENERATE_COMMAND)
 	@cd $(SIMULATOR_HOME) && make trace
-# @cd $(SIMULATOR_HOME) && make perf
-# @$(SOC_SIM_WAVE_COMMAND)
+
+perf:
+	$(GENERATE_COMMAND)
+	@cd $(SIMULATOR_HOME) && make perf
+
+diff:
+	$(GENERATE_COMMAND)
+	@cd $(SIMULATOR_HOME) && make perfdiff
 
 wave:
 	@$(SOC_SIM_WAVE_COMMAND)

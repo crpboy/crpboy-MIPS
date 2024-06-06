@@ -17,7 +17,7 @@ class SignedMul extends BlackBox with HasBlackBoxResource {
   })
 }
 
-class Mul extends Module with Config {
+class Mul extends Module {
   val io = IO(new Bundle {
     val en       = Input(Bool())
     val op1      = Input(UInt(DATA_WIDTH.W))

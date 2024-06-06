@@ -56,10 +56,7 @@ class WriteBackUnit extends Module {
   }
 
   // <> cp0 (mtc0)
-  io.cp0.wCp0.en := input.inst.fu === fu_sp &&
-    input.inst.fuop === cp0_mtc0 &&
-    valid &&
-    !io.ctrl.cache.iStall
+  io.cp0.wCp0.en   := input.inst.fu === fu_sp && input.inst.fuop === cp0_mtc0 && valid && !io.ctrl.iStall
   io.cp0.wCp0.data := input.data
   io.cp0.wCp0.addr := input.inst.rd
   io.cp0.wCp0.sel  := input.exSel
@@ -71,6 +68,6 @@ class WriteBackUnit extends Module {
 
   io.debug.wb_pc       := input.debug_pc
   io.debug.wb_rf_wdata := io.out.wdata
-  io.debug.wb_rf_wen   := Mux(io.out.wen && !io.ctrl.cache.iStall, WB_EN, WB_NO)
+  io.debug.wb_rf_wen   := Mux(io.out.wen && !io.ctrl.iStall, WB_EN, WB_NO)
   io.debug.wb_rf_wnum  := io.out.waddr
 }

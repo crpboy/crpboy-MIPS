@@ -13,12 +13,13 @@ class ExecuteUnit extends Module {
     val binfo   = Output(new BraInfo)
     val dHazard = Output(new DataHazardExe)
     val ctrlreq = Output(new CtrlRequestExecute)
+    val dCache  = new DCacheIOExe
 
     val ctrl   = Input(new CtrlInfo)
     val rCp0   = Flipped(new ReadCp0Info)
     val fetch  = new Bundle { val isBr = Output(Bool()) }
-    val memory = new Bundle { val isMTC0 = Input(Bool()) }
     val decode = new Bundle { val bres = Output(new BraResult) }
+    val memory = new Bundle { val isMTC0 = Input(Bool()) }
 
     val in  = Flipped(Decoupled((new StageDecodeExecute)))
     val out = Decoupled(new StageExecuteMemory)
@@ -106,7 +107,7 @@ class ExecuteUnit extends Module {
   io.dHazard.isload := input.inst.fu === fu_mem && input.inst.wb && !io.ctrl.ex
 
   io.ctrlreq.clear := false.B
-  io.ctrlreq.block := muldiv.block ||
+  io.ctrlreq.block := muldiv.block || io.dCache.stall ||
     (input.inst.fu === fu_sp && input.inst.fuop === cp0_mfc0 && io.memory.isMTC0)
   io.in.ready  := io.out.ready
   io.out.valid := io.in.valid
@@ -126,9 +127,9 @@ class ExecuteUnit extends Module {
     except.badvaddr := memReq.badvaddr
   }
 
-  io.fetch.isBr := input.inst.fu === fu_bra && io.binfo.bwen
-
+  io.fetch.isBr  := input.inst.fu === fu_bra && io.binfo.bwen
   io.decode.bres := bra.bres
+  io.dCache.req  := memReq.reqInfo
 
   output.exInfo     := except
   output.slot       := input.slot

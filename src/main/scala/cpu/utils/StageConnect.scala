@@ -23,11 +23,11 @@ object StageConnect {
     zero.pc       := mydata.pc
     zero.slot     := mydata.slot
 
-    val stallSignal  = ctrl.stall  || ctrl.cache.iStall
+    val stallSignal  = ctrl.stall  || ctrl.iStall
     val bubbleSignal = ctrl.bubble || ctrl.ex
     val flushSignal  = ctrl.flush
 
-    val strongFlush = flushSignal && !ctrl.cache.iStall
+    val strongFlush = flushSignal && !ctrl.iStall
     val weakFlush   = bubbleSignal || flushSignal
 
     when(right.fire) {

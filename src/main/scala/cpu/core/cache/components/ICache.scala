@@ -21,25 +21,10 @@ trait ICacheStateTable {
     Nil) = Enum(8)
 }
 
-class CacheSramInfo extends Bundle {
-  val index = UInt(CACHE_INDEX_WIDTH.W)
-  val data  = UInt(CACHE_LINE_WIDTH.W)
-  val tag   = UInt(CACHE_TAG_WIDTH.W)
-  val valid = Bool()
-  val wen   = Bool()
-}
-
-class CacheSramResult extends Bundle {
-  val data  = UInt(CACHE_LINE_WIDTH.W)
-  val tag   = UInt(CACHE_TAG_WIDTH.W)
-  val valid = Bool()
-  val hit   = Bool()
-}
-
-class ICache extends Module with ICacheStateTable with Config {
+class ICache extends Module with ICacheStateTable {
   val io = IO(new Bundle {
     val core    = Flipped(new ICacheIO)
-    val axi     = new AXIInst
+    val axi     = new AXIRead
     val working = Output(Bool())
   })
 
@@ -85,7 +70,7 @@ class ICache extends Module with ICacheStateTable with Config {
 
   // send to cache
   val sramSend = WireDefault(VecInit.fill(CACHE_WAY_NUM)({
-    val info = WireDefault(0.U.asTypeOf(new CacheSramInfo))
+    val info = WireDefault(0.U.asTypeOf(new ICacheSramInfo))
     info.index := Mux(
       VecInit(scReplace0, scReplace1, scReplace2, scWait).contains(state) || !io.core.coreReady,
       lastIndex,
@@ -96,11 +81,12 @@ class ICache extends Module with ICacheStateTable with Config {
     info
   }))
   for (i <- 0 until CACHE_WAY_NUM) {
+    // data
     dataSram(i).addra := sramSend(i).index
     dataSram(i).dina  := sramSend(i).data
     dataSram(i).clka  := clock
     dataSram(i).wea   := sramSend(i).wen
-
+    // tagv
     tagvSram(i).addra := sramSend(i).index
     tagvSram(i).dina  := Cat(sramSend(i).valid, sramSend(i).tag)
     tagvSram(i).clka  := clock
@@ -124,20 +110,17 @@ class ICache extends Module with ICacheStateTable with Config {
   }
 
   // cache result hit check
-  val cacheSel   = WireDefault(0.U(CACHE_WAY_WIDTH.W))
-  val sramRes    = WireDefault(VecInit.fill(CACHE_WAY_NUM)(0.U.asTypeOf(new CacheSramResult)))
-  val overallHit = WireDefault(false.B)
+  val sramRes = WireDefault(VecInit.fill(CACHE_WAY_NUM)(0.U.asTypeOf(new CacheSramResult)))
   for (i <- 0 until CACHE_WAY_NUM) {
     val tagv = tagvSram(i).douta
     sramRes(i).data  := dataSram(i).douta
     sramRes(i).tag   := tagv(tagv.getWidth - 2, 0)
     sramRes(i).valid := tagv(tagv.getWidth - 1)
     sramRes(i).hit   := sramRes(i).tag === lastTag && sramRes(i).valid
-    when(sramRes(i).hit) {
-      cacheSel   := i.asUInt
-      overallHit := true.B
-    }
   }
+  val hitVec     = VecInit((0 until CACHE_WAY_WIDTH).map(i => sramRes(i).hit))
+  val overallHit = hitVec.asUInt.orR
+  val cacheSel   = PriorityEncoder(hitVec)
 
   // statistic
   val debug_totalAddSignal   = WireDefault(false.B)
@@ -155,6 +138,7 @@ class ICache extends Module with ICacheStateTable with Config {
     }
   }
 
+  // FSM
   switch(state) {
     is(sIdle) {
       working := false.B

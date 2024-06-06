@@ -6,7 +6,6 @@ import cpu.common.const._
 import cpu.common.bundles._
 import cpu.common.const.Const._
 import cpu.core.cache.components._
-import dataclass.data
 
 class CacheTop extends Module {
   val io = IO(new Bundle {
@@ -18,8 +17,10 @@ class CacheTop extends Module {
 
   val iCache = Module(new ICache).io
   val dCache = Module(new DCache).io
-  io.iCache <> iCache.core
-  io.dCache <> dCache.core
+  val buffer = Module(new WriteBuffer).io
+  io.iCache     <> iCache.core
+  io.dCache     <> dCache.core
+  dCache.buffer <> buffer.dCache
 
   val state = RegInit(sIdle)
   switch(state) {
@@ -78,7 +79,7 @@ class CacheTop extends Module {
     ),
   )
 
-  io.axi.aw <> dCache.axi.aw
-  io.axi.w  <> dCache.axi.w
-  io.axi.b  <> dCache.axi.b
+  io.axi.aw <> buffer.axi.aw
+  io.axi.w  <> buffer.axi.w
+  io.axi.b  <> buffer.axi.b
 }

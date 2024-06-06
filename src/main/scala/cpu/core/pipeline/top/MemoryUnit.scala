@@ -10,7 +10,7 @@ import cpu.core.pipeline.components.memory._
 
 class MemoryUnit extends Module {
   val io = IO(new Bundle {
-    val dCache  = new DCacheIO
+    val dCache  = new DCacheIOMem
     val dHazard = Output(new DataHazardMem)
     val ctrlreq = Output(new CtrlRequest)
     val execute = new Bundle { val isMTC0 = Output(Bool()) }
@@ -25,7 +25,7 @@ class MemoryUnit extends Module {
   val memAccess = Module(new MemAccess).io
 
   memAccess.dCache  <> io.dCache
-  memAccess.reqInfo <> input.memReqInfo
+  memAccess.preInfo <> input.memReqInfo
   memAccess.inst    <> input.inst
   memAccess.data    <> input.data
   memAccess.memByte <> input.memByte

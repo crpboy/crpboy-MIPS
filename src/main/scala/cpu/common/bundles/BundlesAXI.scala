@@ -55,9 +55,14 @@ class AXI extends Bundle {
   val ar = Decoupled(new AxiReadAddr)
   val r  = Flipped(Decoupled(new AxiReadData))
 }
-class AXIInst extends Bundle {
+class AXIRead extends Bundle {
   val ar = Decoupled(new AxiReadAddr)
   val r  = Flipped(Decoupled(new AxiReadData))
+}
+class AXIWrite extends Bundle {
+  val aw = Decoupled(new AxiWriteAddr)
+  val w  = Decoupled(new AxiWriteData)
+  val b  = Flipped(Decoupled(new AxiWriteResp))
 }
 
 // debug

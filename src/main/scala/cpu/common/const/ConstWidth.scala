@@ -9,6 +9,7 @@ trait ConstWidth {
   val ADDR_INST_WIDTH = 32
   val DATA_WIDTH      = 32
   val BYTE_WIDTH      = 8
+  val BYTE_NUM        = DATA_WIDTH / BYTE_WIDTH
   val INST_WIDTH      = 32
   val PC_WIDTH        = ADDR_WIDTH
 
@@ -27,9 +28,10 @@ trait ConstWidth {
   val BPU_INDEX_WIDTH = 6
 
   // cache
-  val CACHE_OFFSET_WIDTH = 4
-  val CACHE_INDEX_WIDTH  = 8
-  val CACHE_TAG_WIDTH    = DATA_WIDTH - CACHE_INDEX_WIDTH - CACHE_OFFSET_WIDTH
+  val CACHE_OFFSET_WIDTH    = 4
+  val CACHE_INDEX_WIDTH     = 8
+  val CACHE_TAG_WIDTH       = DATA_WIDTH - CACHE_INDEX_WIDTH - CACHE_OFFSET_WIDTH
+  val CACHE_NO_OFFSET_WIDTH = DATA_WIDTH - CACHE_OFFSET_WIDTH
 
   val CACHE_WAY_WIDTH = 1
   val CACHE_WAY_NUM   = 1 << CACHE_WAY_WIDTH
@@ -40,6 +42,8 @@ trait ConstWidth {
 
   val CACHE_BANK_WIDTH = DATA_WIDTH
   val CACHE_BANK_NUM   = CACHE_LINE_WIDTH / CACHE_BANK_WIDTH
+
+  val CACHE_BUFFER_DEPTH = 2 // actually I prefer 4
 
   // others
   val CTRL_WIDTH      = 5
