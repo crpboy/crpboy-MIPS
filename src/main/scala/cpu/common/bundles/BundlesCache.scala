@@ -36,6 +36,7 @@ class DCacheIOExe extends Bundle {
   val req   = Output(new MemPreReqInfo)
   val stall = Input(Bool())
 }
+class UncachedDCacheIO extends DCacheIOMem {}
 class DCacheIO extends Bundle {
   val execute = new DCacheIOExe
   val memory  = new DCacheIOMem

@@ -21,13 +21,13 @@ class WriteBufferReadQueryIO extends Bundle {
 
 // modified from chisel3.util.Queue
 // a queue providing read/write hit check
+// we can assert that the addr in buffer won't be confilct with cache's
 class WriteBufferQueue(val entries: Int) extends Module {
   val io = IO(new Bundle {
-    val enq       = Flipped(EnqIO(new WriteBufferReq)) // chisel define
-    val deq       = Flipped(DeqIO(new WriteBufferReq)) // chisel define
-    val rReq      = new WriteBufferReadQueryIO
-    val strb      = Input(Vec(CACHE_LINE_BYTE_NUM, Bool()))
-    val writeDone = Output(Bool())
+    val enq  = Flipped(EnqIO(new WriteBufferReq)) // chisel define
+    val deq  = Flipped(DeqIO(new WriteBufferReq)) // chisel define
+    val rReq = new WriteBufferReadQueryIO
+    val strb = Input(Vec(CACHE_LINE_BYTE_NUM, Bool()))
   })
   // reg def, maybe should apply chisel3.util.SyncMem to data mem?
   def lineType = Vec(CACHE_LINE_BYTE_NUM, UInt(BYTE_WIDTH.W))
@@ -56,7 +56,6 @@ class WriteBufferQueue(val entries: Int) extends Module {
   when(writeEnable) {
     dataMem.write(writeHitId, writeInfo.data.asTypeOf(lineType), io.strb)
   }
-  io.writeDone := writeEnable
 
   // full & empty judge
   val maybe_full = RegInit(false.B)
@@ -86,7 +85,7 @@ class WriteBufferQueue(val entries: Int) extends Module {
 
   // output
   io.deq.valid := !empty
-  io.enq.ready := !full && !writeEnable
+  io.enq.ready := !full
 
   val tailId = deq_ptr.value
   io.deq.bits.addr := addrMem(tailId)
@@ -98,13 +97,22 @@ trait WriteBufferStateTable {
     sAddr ::
     sData ::
     sWait ::
-    Nil) = Enum(4)
+    suwBoth ::
+    suwAddr ::
+    suwData ::
+    suwWait ::
+    Nil) = Enum(8)
+}
+class UncachedWriteBufferReq extends Bundle {
+  val addr = UInt(ADDR_WIDTH.W)
+  val data = UInt(DATA_WIDTH.W)
+  val strb = UInt(AXI_STRB_WIDTH.W)
 }
 class WriteBufferDCacheIO extends Bundle {
-  val wReq      = Flipped(Decoupled(new WriteBufferReq))
-  val strb      = Input(Vec(CACHE_LINE_BYTE_NUM, Bool()))
-  val writeDone = Output(Bool())
-  val rReq      = new WriteBufferReadQueryIO
+  val wReq  = Flipped(Decoupled(new WriteBufferReq))
+  val uwReq = Flipped(Decoupled())
+  val strb  = Input(Vec(CACHE_LINE_BYTE_NUM, Bool()))
+  val rReq  = new WriteBufferReadQueryIO
 }
 // only for cache line write
 class WriteBuffer extends Module with WriteBufferStateTable {
@@ -114,11 +122,11 @@ class WriteBuffer extends Module with WriteBufferStateTable {
   })
   // queue define
   val queue    = Module(new WriteBufferQueue(CACHE_BUFFER_DEPTH)).io
+  val uQueue   = Module(new Queue(new UncachedWriteBufferReq, CACHE_UNCACHED_BUFFER_DEPTH)).io
   val deqReady = WireDefault(false.B)
   queue.enq       <> io.dCache.wReq
   queue.strb      <> io.dCache.strb
   queue.rReq      <> io.dCache.rReq
-  queue.writeDone <> io.dCache.writeDone
   queue.deq.ready := deqReady
 
   // axi signal

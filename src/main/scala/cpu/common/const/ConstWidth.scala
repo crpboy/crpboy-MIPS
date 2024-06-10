@@ -15,7 +15,6 @@ trait ConstWidth {
 
   // top IO
   val DEBUG_WEN_WIDTH = 4
-  val STRB_WIDTH      = 4
   val SRAM_SIZE_WIDTH = 2
 
   // reg
@@ -43,7 +42,8 @@ trait ConstWidth {
   val CACHE_BANK_WIDTH = DATA_WIDTH
   val CACHE_BANK_NUM   = CACHE_LINE_WIDTH / CACHE_BANK_WIDTH
 
-  val CACHE_BUFFER_DEPTH = 2 // actually I prefer 4
+  val CACHE_BUFFER_DEPTH          = 2
+  val CACHE_UNCACHED_BUFFER_DEPTH = 4
 
   // others
   val CTRL_WIDTH      = 5

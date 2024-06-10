@@ -25,7 +25,8 @@ class DCache extends Module with DCacheStateTable {
     val buffer  = Flipped(new WriteBufferDCacheIO)
     val working = Output(Bool())
   })
-  val state = RegInit(sIdle)
+  val state  = RegInit(sIdle)
+  val ucUnit = Module(new UncachedUnit).io
 
   // axi define
   val ar = io.axi.ar
@@ -197,9 +198,13 @@ class DCache extends Module with DCacheStateTable {
   switch(state) {
     is(sIdle) {
       working := false.B
-      when(!overallHit) {
-        stall := true.B
-        state := sRead0
+      when(mem.valid) {
+        when(overallHit) {
+          addrReg := reqAddr
+        }.otherwise {
+          stall := true.B
+          state := sRead0
+        }
       }
     }
     is(sRead0) {
@@ -219,6 +224,8 @@ class DCache extends Module with DCacheStateTable {
           replaceNotDone := true.B
           when(sramRes(replaceWayNum).dirty) {
             state := sWriteBack
+          }.otherwise {
+            state := sReplace
           }
         }
       }
@@ -226,7 +233,7 @@ class DCache extends Module with DCacheStateTable {
     is(sWriteBack) {
       stall       := true.B
       bufferValid := true.B
-      when(io.buffer.wReq.fire || io.buffer.writeDone) {
+      when(io.buffer.wReq.fire) {
         state := sReplace
       }
     }

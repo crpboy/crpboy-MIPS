@@ -24,7 +24,7 @@ trait UncachedStateTable {
 
 class UncachedUnit extends Module with UncachedStateTable {
   val io = IO(new Bundle {
-    val core    = Flipped(new DCacheIO)
+    val core    = Flipped(new UncachedDCacheIO)
     val axi     = new AXI
     val working = Output(Bool())
   })
@@ -46,12 +46,12 @@ class UncachedUnit extends Module with UncachedStateTable {
   val working = WireDefault(true.B)
   val memData = WireDefault(io.axi.r.bits.data)
 
-  val req       = io.core.memory.req
+  val req       = io.core.req
   val isRead    = req.valid && !req.wen
   val isWrite   = req.valid && req.wen
   val unmappped = mmuJudgeUnmapped(req.addr)
   val addr      = Mux(unmappped, Cat(0.U(3.W), req.addr(28, 0)), req.addr)
-  val coreReady = io.core.memory.coreReady
+  val coreReady = io.core.coreReady
 
   switch(state) {
     is(sIdle) {
@@ -138,9 +138,9 @@ class UncachedUnit extends Module with UncachedStateTable {
   }
 
   // cache <> core (exe, mem)
-  io.working              := working
-  io.core.memory.stall    := stall
-  io.core.memory.respData := memData
+  io.working       := working
+  io.core.stall    := stall
+  io.core.respData := memData
 
   // axi (ar)
   ar.bits.id    := 1.U
