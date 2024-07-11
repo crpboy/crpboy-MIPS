@@ -2,9 +2,11 @@
 
 ## 说明
 
-本项目仍在开发中。
+本项目的DCache尚未通过测试。
 
-DCache难到爆炸！！！
+本项目已弃用，转至NoAXI团队进行LoongArch架构CPU的开发。
+
+link: [NoAXI](https://github.com/NoAXI/NoAXI-LoongArch-CPU)
 
 ## 开发环境
 

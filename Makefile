@@ -29,7 +29,7 @@ CPY_HOME2 = /mnt/e/crpboy/file/NSCSCC/cpu-resources/lab/lab/lab11/CPU_CDE_AXI/my
 
 define COPYFILE_COMMAND
 @cp $(TOP_HOME) $(CPY_HOME1)
-@cp $(TOP_HOME) $(CPY_HOME2)
+# @cp $(TOP_HOME) $(CPY_HOME2)
 @echo "copy done."
 endef
 
